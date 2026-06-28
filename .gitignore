@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.venv/
+venv/
+
+# Node / frontend tooling
+node_modules/
+dist/
+build/
+.next/
+.vite/
+
+# Local secrets and machine state
+.env
+.env.*
+!.env.example
+.DS_Store
+
+# MEMEX runtime scratch space
+data/runtime/
+data/tmp/
+data/cache/
+.memex/
+
+# MEMEX local user state and generated wiki output
+data/wiki-ledger.json
+data/wiki-registry.json
+data/sources/
+data/source-assets/
+vault/**
+!vault/
+!vault/README.md

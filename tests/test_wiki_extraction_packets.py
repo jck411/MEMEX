@@ -1,0 +1,64 @@
+import unittest
+
+from app.wiki.extraction_packets import (
+    ExtractionPacketError,
+    source_record_from_extraction_packet,
+    validate_extraction_packet,
+)
+from tests.helpers import extraction_packet
+
+
+def _packet(source_id="source-1"):
+    payload = extraction_packet(
+        source_id,
+        date="2026-06-22",
+        summary="Alice joined Example Co.",
+        fact_text="Alice joined Example Co. in 2024.",
+        issues=(
+            {
+                "id": "issue_review",
+                "message": "Review employment dates.",
+                "evidence_ids": ["ev_joined"],
+            },
+        ),
+    )
+    payload["run"] = {
+        "provider": "anthropic",
+        "model": "claude-sonnet-4-6",
+        "prompt": "test",
+        "schema": "memex_wiki_prep_extraction",
+        "extracted_at": "2026-06-22T00:00:00Z",
+    }
+    return payload
+
+
+class WikiExtractionPacketTests(unittest.TestCase):
+    def test_packet_normalizes_to_source_record_with_evidence_provenance(self):
+        source = source_record_from_extraction_packet(
+            _packet(),
+            expected_source_id="source-1",
+        )
+
+        self.assertEqual("source-1", source.source_id)
+        self.assertEqual("Profile", source.title)
+        self.assertEqual("Alice joined Example Co.", source.summary)
+        self.assertEqual("2026-06-22", source.document_date)
+        self.assertEqual("text", source.source_type)
+        self.assertEqual(("Review employment dates.",), source.extraction_issues)
+        self.assertEqual("fact_joined", source.facts[0].fact_id)
+        self.assertNotIn("sensitivity", source.facts[0].provenance)
+        self.assertEqual("ev_joined", source.facts[0].provenance["evidence"][0]["id"])
+
+    def test_packet_validation_fails_closed_on_shape_errors(self):
+        packet = _packet()
+        packet["facts"][0]["evidence_ids"] = ["missing"]
+
+        with self.assertRaises(ExtractionPacketError):
+            validate_extraction_packet(packet)
+
+        with self.assertRaises(ExtractionPacketError):
+            validate_extraction_packet(_packet("other"), expected_source_id="source-1")
+
+
+if __name__ == "__main__":
+    unittest.main()

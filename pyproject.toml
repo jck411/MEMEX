@@ -1,0 +1,38 @@
+[project]
+name = "memex"
+version = "0.1.0"
+description = "Personal Wiki LLM rebuilt around persistent markdown knowledge bases."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "pytest>=9,<10",
+    "ruff>=0.15.20",
+]
+
+[tool.pytest]
+minversion = "9.0"
+addopts = ["-ra"]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["app", "scripts", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "B",
+    "C90",
+    "E4",
+    "E7",
+    "E9",
+    "F",
+    "I",
+]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 18

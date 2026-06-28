@@ -1,0 +1,35 @@
+/* -- Ingest / forms -- */
+.ingest-heading { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-bottom: 12px; }
+.ingest-heading h2 { margin-bottom: 0; }
+.ingest-forms { display: grid; gap: 12px; max-width: 760px; }
+.extract-form { display: grid; gap: 8px; }
+.upload-form { grid-template-columns: 1fr auto; align-items: center; }
+.extract-form textarea { min-height: 52px; resize: vertical; }
+.model-select { min-height: 36px; display: inline-flex; align-items: center; gap: 8px; }
+.model-select span { color: var(--muted); font-size: 12px; }
+
+/* -- File picker -- */
+.file-picker {
+  display: flex; align-items: center; height: 38px;
+  border: 1px solid var(--line); border-radius: var(--radius);
+  background: var(--bg); cursor: pointer; overflow: hidden;
+  transition: border-color var(--transition);
+}
+.file-picker:hover { border-color: var(--accent); }
+.file-picker input[type="file"] { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; pointer-events: none; }
+.file-picker-btn {
+  height: 100%; padding: 0 14px;
+  display: flex; align-items: center;
+  background: var(--surface-alt); color: var(--ink);
+  font-size: 13px; font-weight: 600;
+  border-right: 1px solid var(--line);
+  transition: background var(--transition);
+}
+.file-picker:hover .file-picker-btn { background: var(--accent-dim); }
+.file-picker-name { padding: 0 12px; color: var(--muted); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* -- Duplicate dialog -- */
+.duplicate-dialog { width: min(420px, calc(100vw - 32px)); padding: 20px; color: var(--ink); }
+.duplicate-dialog::backdrop { background: rgba(0, 0, 0, 0.55); backdrop-filter: blur(4px); }
+.duplicate-dialog p { margin: 0 0 16px; }
+.dialog-actions { display: flex; justify-content: flex-end; gap: 8px; }

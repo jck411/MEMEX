@@ -1,0 +1,24 @@
+/* -- Responsive -- */
+@media (max-width: 760px) {
+  main { padding: 16px; }
+  .topbar, .wiki-row, .source-row, .detail-heading, .detail-actions { display: block; }
+  .topbar-side { justify-items: start; margin-top: 12px; }
+  .metrics, .wiki-stats, .bubbles, .balances, .acceptance-list { margin-top: 12px; justify-content: flex-start; }
+  .wiki-row { position: relative; }
+  .wiki-actions {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    border-left: none;
+    padding-left: 0;
+  }
+  .upload-form { grid-template-columns: 1fr; }
+  .wiki-create-actions { justify-content: stretch; }
+  .wiki-create-actions .button { width: 100%; }
+  .decision-tool-group, .llm-review-inline { flex-wrap: wrap; }
+  .issue-row, .wiki-description-form { display: block; }
+  .wiki-description-form button { margin-top: 8px; }
+  .row-tools { margin-top: 8px; }
+  .source-actions-row { justify-content: stretch; }
+  .source-actions-row form { width: 100%; }
+}

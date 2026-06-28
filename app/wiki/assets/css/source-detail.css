@@ -1,0 +1,79 @@
+/* -- Detail heading -- */
+.detail-heading { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 18px; align-items: start; }
+.detail-title { max-width: 72ch; margin: 2px 0 4px; font-size: 20px; font-weight: 800; }
+.detail-actions { display: grid; justify-items: end; gap: 14px; }
+.source-actions-row { display: flex; justify-content: flex-end; }
+.source-actions-row form { width: min(100%, 220px); }
+.source-actions-row .delete-button { width: 100%; }
+
+/* -- Fact / metadata rows -- */
+.fact-row, .metadata-row { display: grid; gap: 10px; padding: 14px 0; border-top: 1px solid var(--line); }
+.fact-row p { margin: 0; }
+.row-tools { display: inline-flex; align-items: start; gap: 6px; }
+
+/* -- Editable text -- */
+.editable-text-form { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: start; }
+.editable-textarea {
+  width: 100%; padding: 8px 12px;
+  border-color: transparent; background: transparent;
+  line-height: 1.45; resize: vertical;
+}
+.editable-textarea:hover { border-color: var(--line); background: var(--surface); }
+.editable-textarea:focus { border-color: var(--accent); background: var(--surface); outline: none; box-shadow: 0 0 0 2px var(--accent-dim); }
+.fact-text-editor { min-height: 64px; }
+.metadata-editor { min-height: 40px; }
+.issue-text-form .editable-textarea { min-height: 48px; }
+
+/* -- Inline repair -- */
+.inline-repair-form { display: grid; gap: 8px; min-width: min(520px, calc(100vw - 48px)); margin-top: 8px; padding: 12px; }
+.inline-action-form { margin: 0; }
+.add-fact-inline { padding-top: 8px; }
+.add-fact-inline > summary { width: fit-content; display: inline-flex; align-items: center; }
+.add-fact-inline[open] > summary { margin-bottom: 8px; }
+
+/* -- Fact ID -- */
+.fact-id { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; color: var(--muted); }
+.field-label { color: var(--muted); font-size: 12px; font-weight: 700; }
+
+/* -- Decisions -- */
+.decision-pill { min-height: 26px; display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 999px; padding: 0 9px; font-size: 12px; font-weight: 600; }
+.decision-accepted { border-color: #3a8c7a; color: var(--accent); background: var(--accent-dim); }
+.decision-rejected { border-color: #5a7090; color: #8aaccc; }
+.decision-pending, .decision-staleaccepted, .decision-stalerejected { border-color: #a08040; color: var(--warn); background: var(--warn-dim); }
+.source-decisions-form, .acceptance-group { display: grid; gap: 10px; }
+.decision-tool-group {
+  min-height: 38px; display: inline-flex; align-items: center; gap: 6px;
+  padding: 0 10px; background: var(--surface-alt);
+}
+.llm-review-inline { display: inline-flex; align-items: center; gap: 6px; margin: 0; }
+.source-save-bar { display: flex; justify-content: flex-end; padding-top: 12px; }
+.acceptance-option { min-height: 34px; display: inline-grid; gap: 6px; padding: 4px 12px; }
+.acceptance-line { min-height: 32px; display: inline-flex; align-items: center; gap: 6px; }
+.decision-reason { max-width: 520px; padding: 0 0 6px 22px; color: var(--muted); font-size: 12px; line-height: 1.35; }
+
+/* -- Evidence / metadata -- */
+.evidence-item { padding-left: 10px; border-left: 3px solid var(--line); }
+blockquote { margin: 4px 0 0; color: var(--muted); font-style: italic; }
+.metadata-list span { color: var(--muted); font-size: 12px; }
+
+/* -- Repair forms -- */
+.compact-source-repair { display: grid; gap: 12px; }
+.fix-form { max-width: 760px; }
+.fix-instruction { position: relative; display: grid; gap: 8px; }
+@media (min-width: 761px) {
+  .fix-form .fix-instruction .source-save-bar {
+    position: absolute;
+    right: 6px;
+    bottom: 6px;
+    padding-top: 0;
+  }
+  .fix-form .fix-instruction textarea { padding-right: 92px; }
+}
+
+/* -- Issue rows -- */
+.issue-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 10px; padding: 10px 0; border-top: 1px solid var(--line); }
+.issue-row p { margin: 0; }
+
+/* -- Delta facts -- */
+.delta-facts { margin: 0; padding-left: 20px; }
+.delta-facts li + li { margin-top: 6px; }
