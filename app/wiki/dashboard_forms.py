@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from email.parser import BytesParser
 from email.policy import default
 from pathlib import Path
-from urllib.parse import parse_qs, quote_plus, urlparse
+from urllib.parse import parse_qs, urlparse
 
 
 @dataclass(frozen=True)
@@ -92,10 +92,6 @@ def safe_return_to(value: str) -> str:
     if parsed.scheme or parsed.netloc:
         return "/"
     return value if value.startswith("/") else "/"
-
-
-def quote_message(message: str) -> str:
-    return quote_plus(message)
 
 
 def safe_upload_filename(filename: str | None) -> str:

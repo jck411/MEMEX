@@ -8,6 +8,7 @@ from urllib.parse import quote
 from .dashboard import WikiAssignmentBubble, WikiDashboardSnapshot
 from .dashboard_busy_scripts import BUSY_OVERLAY_JS
 from .dashboard_styles import DASHBOARD_CSS
+from .dashboard_toasts import render_toast
 from .provider_balances import (
     ProviderBalance,
     provider_balance_value,
@@ -61,6 +62,7 @@ def render_dashboard_page(
     provider_balances: tuple[ProviderBalance, ...],
     message: str,
     body: str,
+    message_type: str = "",
     scripts: str = "",
 ) -> str:
     return "\n".join(
@@ -78,7 +80,8 @@ def render_dashboard_page(
             render_dashboard_header(snapshot, provider_balances, page_heading),
             body,
             "</main>",
-            render_toast(message),
+            render_toast(message, message_type),
+            render_busy_overlay(),
             _SHARED_SCRIPTS,
             scripts,
             "</body>",
@@ -111,18 +114,6 @@ def render_dashboard_header(
   </div>
 </header>
 """
-
-
-def render_toast(message: str) -> str:
-    if not message:
-        return ""
-    return (
-        '<div id="toast" class="toast" role="status" aria-live="polite">'
-        f"{escape(message)}"
-        '<button type="button" class="toast-close" aria-label="Dismiss" '
-        "onclick=\"document.getElementById('toast')?.remove()\">&times;</button>"
-        "</div>"
-    )
 
 
 def render_busy_overlay(

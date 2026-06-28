@@ -20,6 +20,7 @@ def render_wiki_page_html(
     markdown: str,
     provider_balances: tuple[ProviderBalance, ...] = (),
     message: str = "",
+    message_type: str = "",
 ) -> str:
     state = render_status_pill(_status_state(status))
     body = f"""
@@ -41,6 +42,7 @@ def render_wiki_page_html(
         snapshot=snapshot,
         provider_balances=provider_balances,
         message=message,
+        message_type=message_type,
         body=body,
     )
 

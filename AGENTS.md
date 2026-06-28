@@ -107,7 +107,11 @@ starts mixing those concerns, split it before adding more behavior.
 
 ## Current Operations
 
-- Run the dashboard with `uv run python scripts/wiki_server.py`.
+- Run the dashboard with `uv run python scripts/wiki_server.py`. Use the
+  canonical dashboard port (`127.0.0.1:8765`) for local and production-like
+  validation. Do not start dashboard servers on alternate ports; if the port or
+  process state is stale, rerun the start script so it kills existing MEMEX
+  dashboard processes and restarts the canonical port.
 - Validate persisted V2 state with `uv run python scripts/wiki_validate.py`.
 - Run tests with `uv run pytest` or targeted `uv run pytest tests/<file>.py`.
 - Create a wiki from the dashboard with name and description scope; the

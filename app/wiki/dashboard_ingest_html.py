@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from html import escape
 
-from .dashboard_components_html import render_busy_overlay
 from .dashboard_ingest_hints import DuplicateSourceHint
 from .dashboard_ingest_scripts import render_ingest_script
 from .model_profiles import (
@@ -33,7 +32,6 @@ def render_ingest_forms(
     {_render_text_form(extraction_model_spec)}
   </div>
   {_render_duplicate_dialog()}
-  {render_busy_overlay(title="Uploading source", detail="Extracting durable facts with the selected model.")}
 </section>
 {render_ingest_script(duplicate_sources)}
 """

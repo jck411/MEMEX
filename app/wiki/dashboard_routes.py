@@ -75,6 +75,7 @@ def _render_wiki_page(
             markdown=page.markdown,
             provider_balances=_safe_provider_balances(runtime.balance_provider),
             message=_first(params, "message"),
+            message_type=_first(params, "message_type"),
         )
     )
 
@@ -108,6 +109,7 @@ def _dashboard_render_options(
     return DashboardRenderOptions(
         source_filter=_filter_from_params(params),
         message=options.message,
+        message_type=options.message_type,
         provider_balances=options.provider_balances,
         extraction_enabled=options.extraction_enabled,
         extraction_model_spec=options.extraction_model_spec,
@@ -123,6 +125,7 @@ def _source_render_options(
 ) -> DashboardRenderOptions:
     return DashboardRenderOptions(
         message=_first(params, "message"),
+        message_type=_first(params, "message_type"),
         provider_balances=_safe_provider_balances(runtime.balance_provider),
         extraction_enabled=runtime.source_extractor is not None,
         extraction_model_spec=runtime.extraction_model_spec,

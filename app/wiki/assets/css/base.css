@@ -213,6 +213,16 @@ a.balance-chip:hover { border-color: var(--accent); background: var(--accent-dim
   box-shadow: 0 10px 28px rgba(0,0,0,0.5);
   animation: toast-in 220ms ease-out both;
 }
+.toast-success {
+  border-color: var(--accent);
+  background: #12241f;
+  color: var(--ink);
+}
+.toast-error {
+  border-color: var(--issue);
+  background: #2a1519;
+  color: #ffd8dd;
+}
 .toast.toast-out { animation: toast-out 280ms ease-in forwards; }
 .toast-close {
   margin-left: auto; border: none; background: transparent;
@@ -230,8 +240,8 @@ a.balance-chip:hover { border-color: var(--accent); background: var(--accent-dim
 }
 
 /* -- Busy overlay -- */
-.extract-form.is-submitting, .fix-form.is-submitting, .llm-review-inline.is-submitting { opacity: 0.6; }
-.extract-form button[disabled], .fix-form button[disabled], .llm-review-inline button[disabled] { cursor: wait; color: var(--muted); }
+.extract-form.is-submitting, .fix-form.is-submitting, .llm-review-inline.is-submitting, .wiki-build-form.is-submitting { opacity: 0.6; }
+.extract-form button[disabled], .fix-form button[disabled], .llm-review-inline button[disabled], .wiki-build-form button[disabled] { cursor: wait; color: var(--muted); }
 html.busy-lock, html.busy-lock body { overflow: hidden; }
 .busy-overlay {
   position: fixed;

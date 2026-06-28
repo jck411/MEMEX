@@ -54,7 +54,7 @@ def _render_wiki(row: WikiDashboardRow) -> str:
     build = ""
     if row.state == "needs_build":
         build = f"""
-      <form method="post" action="/build">
+      <form method="post" action="/build" class="wiki-build-form">
         <input type="hidden" name="wiki_id" value="{escape(row.wiki_id)}">
         <button type="submit" class="button button-build build-button">Build</button>
       </form>

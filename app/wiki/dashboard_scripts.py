@@ -1,4 +1,4 @@
-"""Client-side behavior for the dashboard source list."""
+"""Client-side behavior for dashboard action forms."""
 
 from __future__ import annotations
 
@@ -85,6 +85,19 @@ def dashboard_script() -> str:
       window.scrollTo(x, Math.max(0, y));
     });
   }
+
+  document.addEventListener("submit", function (event) {
+    var buildForm = event.target.closest(".wiki-build-form");
+    if (!buildForm) return;
+    if (!memexSetFormBusy(
+      buildForm,
+      "Building...",
+      "Building wiki",
+      "Synthesizing accepted facts into markdown."
+    )) {
+      event.preventDefault();
+    }
+  });
 
   document.addEventListener("submit", function (event) {
     var deleteForm = event.target.closest('form[data-source-delete-form="1"]');

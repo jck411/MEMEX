@@ -13,8 +13,10 @@ python scripts/wiki_extract.py --help
 ```
 
 Use `python scripts/wiki_server.py` for the usual local dashboard. It clears
-stale MEMEX dashboard processes and anything listening on the dashboard port,
-then starts a fresh server at `http://127.0.0.1:8765/`.
+stale MEMEX dashboard processes on any port plus anything listening on the
+canonical dashboard port, then starts a fresh server at
+`http://127.0.0.1:8765/`. Alternate dashboard ports are rejected by the start
+script.
 
 Use it to register a wiki from scripts, import source JSON or extract a local
 text/Markdown file into a source record, assign a source, inspect

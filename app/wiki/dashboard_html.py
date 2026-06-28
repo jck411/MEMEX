@@ -29,6 +29,7 @@ from .provider_balances import ProviderBalance
 class DashboardRenderOptions:
     source_filter: SourceDashboardFilter = field(default_factory=SourceDashboardFilter)
     message: str = ""
+    message_type: str = ""
     provider_balances: tuple[ProviderBalance, ...] = ()
     extraction_enabled: bool = False
     extraction_model_spec: str = ""
@@ -62,6 +63,7 @@ def render_dashboard_html(
         snapshot=snapshot,
         provider_balances=options.provider_balances,
         message=options.message,
+        message_type=options.message_type,
         body=body,
         scripts=dashboard_script(),
     )

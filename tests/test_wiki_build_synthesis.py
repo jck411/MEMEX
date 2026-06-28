@@ -85,6 +85,17 @@ class WikiBuildSynthesisTests(unittest.TestCase):
 
         self.assertEqual(markdown, validate_synthesis_markdown(packet, markdown))
 
+    def test_guardrails_allow_structural_list_labels_with_cited_claims(self):
+        packet = reviewed_packet()
+        markdown = (
+            "## Wiki Brief\n\n"
+            "- **Roles:**\n"
+            "  - Alice joined Example Co. (S1:ev1,fact-1)\n"
+            "  - Alice led the platform team. (S1:ev2,fact-2)"
+        )
+
+        self.assertEqual(markdown, validate_synthesis_markdown(packet, markdown))
+
     def test_guardrails_reject_unknown_or_missing_citations(self):
         packet = reviewed_packet()
 

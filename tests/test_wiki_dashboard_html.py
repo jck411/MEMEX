@@ -3,7 +3,7 @@ from decimal import Decimal
 
 from app.wiki.dashboard import SourceDashboardFilter, dashboard_snapshot
 from app.wiki.dashboard_html import DashboardRenderOptions, render_dashboard_html
-from app.wiki.ledger import WikiLedger
+from app.wiki.ledger import ReviewDecision, WikiLedger
 from app.wiki.model_profiles import DEFAULT_EXTRACTION_PROFILE_ID
 from app.wiki.provider_balances import (
     ANTHROPIC_DASHBOARD_URL,
@@ -12,6 +12,7 @@ from app.wiki.provider_balances import (
     OPENROUTER_LOGS_URL,
     ProviderBalance,
 )
+from app.wiki.wiki_scope import wiki_scope_signature
 from tests.helpers import fact_record, source_record, wiki_record, wiki_registry
 from tests.html_helpers import parse_html
 
@@ -131,6 +132,45 @@ class WikiDashboardHtmlTests(unittest.TestCase):
             page.by_testid("sources-section").order,
         )
 
+    def test_render_dashboard_html_build_form_uses_shared_busy_overlay(self):
+        wiki = wiki_record("career", "Career", "career.md")
+        registry = wiki_registry(wiki)
+        source = source_record(
+            "source-1",
+            fact_record("fact-1", "Alice joined Example Co."),
+        )
+        ledger = WikiLedger.empty()
+        ledger.assign_source("career", "source-1")
+        ledger.set_decision(
+            "career",
+            "source-1",
+            "fact-1",
+            ReviewDecision(
+                ticked=True,
+                fact_signature=source.facts[0].signature(),
+                wiki_scope_signature=wiki_scope_signature(wiki),
+                reason="Career history.",
+            ),
+        )
+
+        html = render_dashboard_html(dashboard_snapshot(registry, ledger, [source]))
+        page = parse_html(html)
+        wikis = page.by_testid("wikis-section")
+        build_form = wikis.require(
+            "form",
+            {
+                "method": "post",
+                "action": "/build",
+                "class": "wiki-build-form",
+            },
+        )
+
+        build_form.require("button", {"type": "submit"})
+        page.require("div", {"id": "memex-busy-loader", "hidden": True})
+        self.assertIn("memexSetFormBusy", html)
+        self.assertIn("Building wiki", html)
+        self.assertIn("wiki-build-form", html)
+
     def test_render_dashboard_html_includes_add_wiki_form_when_registry_is_empty(self):
         html = render_dashboard_html(
             dashboard_snapshot(wiki_registry(), WikiLedger.empty(), []),
@@ -239,6 +279,30 @@ class WikiDashboardHtmlTests(unittest.TestCase):
         self.assertNotIn("<span>Current</span>", html)
         self.assertNotIn(">current</span>", html)
         self.assertNotIn("state-current", html)
+
+    def test_render_dashboard_html_styles_error_and_success_toasts(self):
+        snapshot = dashboard_snapshot(wiki_registry(), WikiLedger.empty(), [])
+
+        error_html = render_dashboard_html(
+            snapshot,
+            DashboardRenderOptions(message="build failed", message_type="error"),
+        )
+        success_html = render_dashboard_html(
+            snapshot,
+            DashboardRenderOptions(message="successfully built career", message_type="success"),
+        )
+        error_page = parse_html(error_html)
+        success_page = parse_html(success_html)
+
+        error_toast = error_page.require("div", {"id": "toast"})
+        success_toast = success_page.require("div", {"id": "toast"})
+        self.assertEqual("toast toast-error", error_toast.attrs["class"])
+        self.assertEqual("alert", error_toast.attrs["role"])
+        self.assertEqual("assertive", error_toast.attrs["aria-live"])
+        self.assertIn("build failed", error_toast.normalized_text())
+        self.assertEqual("toast toast-success", success_toast.attrs["class"])
+        self.assertEqual("status", success_toast.attrs["role"])
+        self.assertIn("successfully built career", success_toast.normalized_text())
 
 if __name__ == "__main__":
     unittest.main()

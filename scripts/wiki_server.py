@@ -20,7 +20,12 @@ TERMINATE_TIMEOUT_SECONDS = 2.0
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Fresh-start the local MEMEX dashboard server")
     parser.add_argument("--host", default=DEFAULT_HOST)
-    parser.add_argument("--port", type=int, default=DEFAULT_PORT)
+    parser.add_argument(
+        "--port",
+        type=_canonical_port,
+        default=DEFAULT_PORT,
+        help=f"canonical dashboard port; alternate ports are not supported (default: {DEFAULT_PORT})",
+    )
     parser.add_argument("--env-file", default=str(ROOT / ".env"))
     parser.add_argument("--repo-root", default=str(ROOT))
     parser.add_argument(
@@ -29,6 +34,15 @@ def build_parser() -> argparse.ArgumentParser:
         help="show what would be killed and started without changing processes",
     )
     return parser
+
+
+def _canonical_port(value: str) -> int:
+    port = int(value)
+    if port != DEFAULT_PORT:
+        raise argparse.ArgumentTypeError(
+            f"MEMEX dashboard must run on canonical port {DEFAULT_PORT}"
+        )
+    return port
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -78,16 +92,19 @@ def server_command(
 
 
 def cleanup_targets(repo_root: Path, port: int) -> dict[int, str]:
+    repo_root = repo_root.resolve(strict=False)
+    commands = process_commands()
+    cwds = process_cwds()
     targets: dict[int, str] = {}
-    for pid, command in process_commands().items():
+    for pid, command in commands.items():
         if pid == os.getpid():
             continue
-        if is_memex_dashboard_command(command, repo_root):
+        if is_memex_dashboard_process(command, repo_root, cwds.get(pid)):
             targets[pid] = command
     for pid in pids_listening_on_port(port):
         if pid == os.getpid():
             continue
-        targets.setdefault(pid, process_commands().get(pid, f"pid {pid}"))
+        targets.setdefault(pid, commands.get(pid, f"pid {pid}"))
     return targets
 
 
@@ -107,9 +124,25 @@ def terminate_processes(targets: tuple[int, ...]) -> None:
 
 
 def is_memex_dashboard_command(command: str, repo_root: Path) -> bool:
+    return is_memex_dashboard_process(command, repo_root.resolve(strict=False), None)
+
+
+def is_memex_dashboard_process(
+    command: str,
+    repo_root: Path,
+    cwd: Path | None,
+) -> bool:
     normalized = command.replace("\\", "/")
+    if "serve-dashboard" not in normalized or "wiki_dev.py" not in normalized:
+        return False
     script = str(repo_root / "scripts" / "wiki_dev.py").replace("\\", "/")
-    return script in normalized and "serve-dashboard" in normalized
+    if script in normalized:
+        return True
+    if cwd is None:
+        return False
+    return _path_is_inside(cwd.resolve(strict=False), repo_root) and (
+        "scripts/wiki_dev.py" in normalized or "wiki_dev.py" in normalized
+    )
 
 
 def process_commands() -> dict[int, str]:
@@ -135,6 +168,20 @@ def process_commands() -> dict[int, str]:
         if pid_text.isdigit() and command:
             commands[int(pid_text)] = command
     return commands
+
+
+def process_cwds() -> dict[int, Path]:
+    cwds: dict[int, Path] = {}
+    proc_root = Path("/proc")
+    if not proc_root.exists():
+        return cwds
+    for entry in proc_root.iterdir():
+        if not entry.name.isdigit():
+            continue
+        cwd = _proc_cwd(entry / "cwd")
+        if cwd is not None:
+            cwds[int(entry.name)] = cwd
+    return cwds
 
 
 def pids_listening_on_port(port: int) -> set[int]:
@@ -185,6 +232,21 @@ def _proc_cmdline(path: Path) -> str:
     except OSError:
         return ""
     return " ".join(part.decode("utf-8", errors="replace") for part in raw.split(b"\0") if part)
+
+
+def _proc_cwd(path: Path) -> Path | None:
+    try:
+        return Path(os.readlink(path)).resolve(strict=False)
+    except OSError:
+        return None
+
+
+def _path_is_inside(path: Path, root: Path) -> bool:
+    try:
+        path.relative_to(root)
+    except ValueError:
+        return False
+    return True
 
 
 def _process_exists(pid: int) -> bool:

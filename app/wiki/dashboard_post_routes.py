@@ -5,12 +5,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Callable
 
+from .dashboard_action_urls import dashboard_location
 from .dashboard_assignment_actions import apply_assignment
 from .dashboard_forms import (
     DashboardForm,
     parse_multipart_form,
     parse_urlencoded_form,
-    quote_message,
     safe_return_to,
 )
 from .dashboard_review_actions import apply_source_decisions, apply_source_llm_review
@@ -26,6 +26,7 @@ from .dashboard_wiki_actions import (
     apply_wiki_delete,
     apply_wiki_description,
 )
+from .workspace_queries import wiki_page_view
 
 PostHandler = Callable[[DashboardRuntime, DashboardForm], str]
 
@@ -43,7 +44,7 @@ def dashboard_post_location(
         form = route.parse(content_type, body)
         return route.handle(runtime, form)
     except Exception as error:  # pragma: no cover - surfaced in UI
-        return f"/?message={quote_message(str(error))}"
+        return dashboard_location(str(error), message_type="error")
 
 
 @dataclass(frozen=True)
@@ -114,7 +115,27 @@ def _post_build(runtime: DashboardRuntime, form: DashboardForm) -> str:
     if runtime.wiki_builder is None:
         raise ValueError("wiki build is not configured")
     runtime.wiki_builder(wiki_id)
-    return f"/?message=built+{wiki_id}"
+    _require_built_wiki(runtime, wiki_id)
+    return dashboard_location(f"successfully built {wiki_id}", message_type="success")
+
+
+def _require_built_wiki(runtime: DashboardRuntime, wiki_id: str) -> None:
+    page = wiki_page_view(runtime.workspace, wiki_id)
+    if not page.markdown.strip():
+        raise ValueError(f"wiki build for {wiki_id!r} did not write markdown")
+    if not page.status.current:
+        raise ValueError(
+            f"wiki build for {wiki_id!r} left {_status_description(page.status)}"
+        )
+
+
+def _status_description(status) -> str:
+    pending: list[str] = []
+    if status.needs_review:
+        pending.append("pending review")
+    if status.needs_build:
+        pending.append("pending build")
+    return " and ".join(pending) or "a non-current status"
 
 
 def _post_wiki_description(runtime: DashboardRuntime, form: DashboardForm) -> str:

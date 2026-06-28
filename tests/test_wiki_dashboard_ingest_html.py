@@ -61,8 +61,9 @@ class WikiDashboardIngestHtmlTests(unittest.TestCase):
         self.assertIn("Cancel", dialog.normalized_text())
         self.assertIn("Keep Duplicate", dialog.normalized_text())
         self.assertIn("MEMEX_DUPLICATE_SOURCES = {}", html)
-        busy = ingest.require("div", {"id": "memex-busy-loader", "hidden": True})
-        self.assertIn("Uploading source", busy.normalized_text())
+        busy = page.require("div", {"id": "memex-busy-loader", "hidden": True})
+        self.assertIn("Working", busy.normalized_text())
+        self.assertIn("Uploading source", html)
         self.assertEqual(
             DEFAULT_EXTRACTION_PROFILE_ID,
             ingest.require("option", {"selected": True}).attrs["value"],

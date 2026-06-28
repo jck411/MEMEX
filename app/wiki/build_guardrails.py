@@ -108,7 +108,7 @@ def _uncited_substantive_blocks(markdown: str) -> list[str]:
             uncited.extend(
                 line
                 for line in list_items
-                if not _COMPACT_CITATION_RE.search(line)
+                if not _is_nonclaim_line(line) and not _COMPACT_CITATION_RE.search(line)
             )
             continue
         if not _COMPACT_CITATION_RE.search(block):
@@ -126,6 +126,7 @@ def _is_nonclaim_line(line: str) -> bool:
         or line.startswith("<!--")
         or line in {"---", "***"}
         or _is_table_separator(line)
+        or _is_structural_list_label(line)
     )
 
 
@@ -140,6 +141,14 @@ def _is_table_separator(line: str) -> bool:
 
 def _is_list_item(line: str) -> bool:
     return bool(re.match(r"^([-*+]|\d+\.)\s+", line))
+
+
+def _is_structural_list_label(line: str) -> bool:
+    if not _is_list_item(line):
+        return False
+    label = re.sub(r"^([-*+]|\d+\.)\s+", "", line).strip()
+    label = re.sub(r"[*_`~]", "", label).strip()
+    return bool(re.fullmatch(r"[A-Za-z][A-Za-z0-9 /&()'.,-]{0,80}:", label))
 
 
 def _preview(text: str) -> str:

@@ -28,6 +28,7 @@ Rules:
 - Cite every substantive claim with exact compact citations copied from facts[].citation.
 - Represent every accepted fact at least once; merge duplicates by putting multiple exact citations on one synthesized claim.
 - Cite only accepted facts in the packet.
+- Prefer markdown headings for section labels. If you use list items, every list item that contains a claim must include citations; do not create citationless label-only bullets such as "- **Contact:**".
 - Do not invent facts, dates, relationships, causes, or interpretations that are not supported by accepted facts.
 - Existing markdown is style and structure context only; it is not evidence.
 - Do not include a page title, YAML frontmatter, MEMEX comments, source IDs outside citations, an Accepted Facts section, a References section, restricted facts sections, or Default Conversation Context.
@@ -74,7 +75,8 @@ def build_prompt_payload(packet: WikiBuildPacket) -> dict[str, Any]:
             "required_heading": "## Wiki Brief",
             "body_policy": (
                 "Every substantive claim needs an exact allowed citation. "
-                "Every accepted fact must be represented at least once."
+                "Every accepted fact must be represented at least once. "
+                "Use headings for structure instead of citationless list labels."
             ),
         },
         "existing_markdown_context": {

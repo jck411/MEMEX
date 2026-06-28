@@ -9,7 +9,6 @@ from .dashboard_components_html import (
     CLOSE_ICON,
     hidden_input,
     pluralize,
-    render_busy_overlay,
     render_dashboard_page,
     render_delete_source_form,
     render_icon_button,
@@ -43,6 +42,7 @@ def render_source_detail_html(
         snapshot=snapshot,
         provider_balances=options.provider_balances,
         message=options.message,
+        message_type=options.message_type,
         body=body,
         scripts=source_detail_script(),
     )
@@ -66,7 +66,6 @@ def _render_source_detail(
         if item
     )
     detail_path = source_detail_path(detail.source_id)
-    busy_overlay = render_busy_overlay() if fix_enabled or llm_review_enabled else ""
     bubbles = "\n".join(
         render_source_assignment_bubble(detail.source_id, bubble, return_to=detail_path)
         for bubble in detail.wiki_bubbles
@@ -89,7 +88,6 @@ def _render_source_detail(
 {_render_detail_issues(detail)}
 {render_detail_facts(detail, llm_review_enabled)}
 {_render_source_actions(detail.source_id)}
-{busy_overlay}
 """
 
 

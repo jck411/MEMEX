@@ -242,3 +242,95 @@ class WikiDashboardServerPostTests(DashboardServerTestCase):
                 body = self.request(host, port, "GET", "/")[2]
                 self.assertIn("Track public speaking history.", body)
                 self.assertIn("needs_review+build", body)
+
+    def test_dashboard_server_build_verifies_markdown_before_success_message(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            workspace = wiki_workspace(root)
+            workspace.add_wiki("career", "Career", "career.md")
+            workspace.save_source(
+                source_record(
+                    "source-1",
+                    fact_record("fact-1", "Alice joined Example Co."),
+                )
+            )
+            workspace.assign_source("career", "source-1")
+            workspace.review_source(
+                "career",
+                "source-1",
+                [ReviewResult("fact-1", True, "Career history.")],
+            )
+
+            with self.serving(
+                create_dashboard_server(
+                    workspace,
+                    port=0,
+                    wiki_builder=lambda wiki_id: None,
+                )
+            ) as (host, port):
+                status, location, _ = self.request(
+                    host,
+                    port,
+                    "POST",
+                    "/build",
+                    {"wiki_id": "career"},
+                )
+
+                self.assertEqual(303, status)
+                self.assertIn("message_type=error", location)
+                self.assertIn("did+not+write+markdown", location)
+                self.assertNotIn("built+career", location)
+                self.assertFalse((root / "vault" / "career.md").exists())
+                self.assertTrue(workspace.status("career").needs_build)
+                body = self.request(host, port, "GET", location)[2]
+                toast = parse_html(body).require("div", {"id": "toast"})
+                self.assertEqual("toast toast-error", toast.attrs["class"])
+
+    def test_dashboard_server_build_success_writes_readable_wiki_page(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            workspace = wiki_workspace(root)
+            workspace.add_wiki("career", "Career", "career.md")
+            workspace.save_source(
+                source_record(
+                    "source-1",
+                    fact_record("fact-1", "Alice joined Example Co."),
+                )
+            )
+            workspace.assign_source("career", "source-1")
+            workspace.review_source(
+                "career",
+                "source-1",
+                [ReviewResult("fact-1", True, "Career history.")],
+            )
+
+            with self.serving(
+                create_dashboard_server(
+                    workspace,
+                    port=0,
+                    wiki_builder=lambda wiki_id: workspace.build_wiki(
+                        wiki_id,
+                        fixture_wiki_build_provider(),
+                    ),
+                )
+            ) as (host, port):
+                status, location, _ = self.request(
+                    host,
+                    port,
+                    "POST",
+                    "/build",
+                    {"wiki_id": "career"},
+                )
+                _, _, body = self.request(host, port, "GET", "/wiki/career")
+
+                self.assertEqual(303, status)
+                self.assertIn("successfully+built+career", location)
+                self.assertIn("message_type=success", location)
+                self.assertFalse(workspace.status("career").needs_build)
+                self.assertIn(
+                    "Alice joined Example Co.",
+                    parse_html(body).normalized_text(),
+                )
+                body = self.request(host, port, "GET", location)[2]
+                toast = parse_html(body).require("div", {"id": "toast"})
+                self.assertEqual("toast toast-success", toast.attrs["class"])
