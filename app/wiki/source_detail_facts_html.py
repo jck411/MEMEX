@@ -31,11 +31,6 @@ def render_detail_facts(detail: SourceDetailView, llm_review_enabled: bool) -> s
     decision_form_id = "source-decisions-form"
     facts = "\n".join(_render_detail_fact(detail, fact, decision_form_id) for fact in detail.facts)
     detail_path = source_detail_path(detail.source_id)
-    save = (
-        f'<div class="source-save-bar"><button type="submit" class="button button-save" form="{decision_form_id}">Save Decisions</button></div>'
-        if any(fact.decisions for fact in detail.facts)
-        else ""
-    )
     tools = _render_decision_tools(detail, decision_form_id, llm_review_enabled)
     return f"""
 <section class="section" data-testid="source-facts">
@@ -48,7 +43,6 @@ def render_detail_facts(detail: SourceDetailView, llm_review_enabled: bool) -> s
   {tools}
   <div class="fact-list">{facts}</div>
   {add_fact}
-  {save}
 </section>
 """
 

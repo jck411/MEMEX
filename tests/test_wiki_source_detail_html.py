@@ -12,7 +12,7 @@ from tests.html_helpers import parse_html
 
 
 class WikiSourceDetailHtmlTests(unittest.TestCase):
-    def test_source_rows_link_to_detail_with_source_level_decision_save(self):
+    def test_source_rows_link_to_detail_with_automatic_decision_save(self):
         registry = wiki_registry(
             wiki_record("career", "Career", "career.md"),
             wiki_record("tax", "Tax", "tax.md"),
@@ -179,12 +179,11 @@ class WikiSourceDetailHtmlTests(unittest.TestCase):
                 ]
             ),
         )
-        save_decisions = [
-            button
-            for button in facts.find_all("button", {"form": "source-decisions-form"})
-            if button.normalized_text() == "Save Decisions"
-        ]
-        self.assertEqual(1, len(save_decisions))
+        self.assertNotIn("Save Decisions", facts.normalized_text())
+        self.assertEqual(0, facts.count("button", {"form": "source-decisions-form"}))
+        self.assertIn("submitDecisionForm", detail_html)
+        self.assertIn("requestSubmit", detail_html)
+        self.assertIn("Saving decisions", detail_html)
         delete_form = source_actions.require(
             "form",
             {"method": "post", "action": "/delete-source"},

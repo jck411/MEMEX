@@ -81,7 +81,7 @@ class WikiDashboardServerPostTests(DashboardServerTestCase):
                 self.assertIn("fact-1", page.normalized_text())
                 page.require("form", {"action": "/source-decisions"})
                 page.require("input", {"name": "accepted_decision"})
-                self.assertIn("Save Decisions", page.normalized_text())
+                self.assertNotIn("Save Decisions", page.normalized_text())
 
                 status, location, _ = self.request(
                     host,
