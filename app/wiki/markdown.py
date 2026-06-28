@@ -5,8 +5,8 @@ from __future__ import annotations
 import re
 from typing import Any, Iterable, Mapping
 
+from .fact_visibility import VisibleFact, group_visible_facts
 from .ledger import WikiLedger
-from .markdown_context import ContextFact, classify_context_facts, render_llm_context_section
 from .records import FactRecord, SourceRecord, WikiRecord, source_index
 from .status import AcceptedFact, accepted_facts_for_wiki
 from .wiki_scope import wiki_description
@@ -37,32 +37,31 @@ def render_reviewed_facts_section(
         )
         for fact in facts
     }
-    context_facts = classify_context_facts(facts, source_map, citation_by_fact)
-    context = render_llm_context_section(wiki, context_facts)
-    lines = [FACTS_START, context, "", "## Accepted Facts", ""]
+    fact_groups = group_visible_facts(facts, source_map, citation_by_fact)
+    lines = [FACTS_START, "## Accepted Facts", ""]
     description = wiki_description(wiki)
     if description:
         lines.append(f"**Wiki description:** {_inline_text(description)}")
         lines.append("")
     if not facts:
         lines.append("_No accepted facts yet._")
-    elif context_facts.restricted:
-        lines.extend(["### Default Accepted Facts", ""])
-        if context_facts.default:
-            _append_fact_lines(lines, context_facts.default, source_map)
+    elif fact_groups.restricted:
+        lines.extend(["### General Accepted Facts", ""])
+        if fact_groups.general:
+            _append_fact_lines(lines, fact_groups.general, source_map)
         else:
-            lines.extend(["_No default accepted facts._", ""])
+            lines.extend(["_No general accepted facts._", ""])
         lines.extend(
             [
                 "### Restricted Accepted Facts",
                 "",
-                "_Accepted facts to keep out of default conversation context._",
+                "_Accepted facts excluded from generated briefs unless explicitly requested._",
                 "",
             ]
         )
-        _append_fact_lines(lines, context_facts.restricted, source_map)
+        _append_fact_lines(lines, fact_groups.restricted, source_map)
     else:
-        _append_fact_lines(lines, context_facts.default, source_map)
+        _append_fact_lines(lines, fact_groups.general, source_map)
     if facts:
         lines.extend(_references_section(facts, source_map, fact_records, source_keys))
     if lines[-1] == "":
@@ -73,7 +72,7 @@ def render_reviewed_facts_section(
 
 def _append_fact_lines(
     lines: list[str],
-    facts: Iterable[ContextFact],
+    facts: Iterable[VisibleFact],
     sources: Mapping[str, SourceRecord],
 ) -> None:
     for item in facts:

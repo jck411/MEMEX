@@ -11,7 +11,7 @@ from .records import FactRecord, SourceRecord, WikiRecord, WikiRegistry, source_
 from .review import review_delta_for_wiki
 from .wiki_scope import wiki_scope_signature
 
-BUILD_FINGERPRINT_VERSION = 4
+BUILD_FINGERPRINT_VERSION = 6
 
 
 @dataclass(frozen=True)

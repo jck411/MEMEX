@@ -136,8 +136,8 @@ class WikiReviewBuildTests(unittest.TestCase):
 
         markdown = build_wiki_markdown(wiki, ledger, [source])
         self.assertIn("# Career", markdown)
-        self.assertIn("## LLM Context", markdown)
-        self.assertIn("### Default Conversation Context", markdown)
+        self.assertNotIn("## LLM Context", markdown)
+        self.assertNotIn("### Default Conversation Context", markdown)
         self.assertIn("Wiki description:** Track durable career history.", markdown)
         self.assertIn("## Accepted Facts", markdown)
         self.assertIn(FACTS_START, markdown)
@@ -165,7 +165,7 @@ class WikiReviewBuildTests(unittest.TestCase):
         self.assertNotIn("old generated text", updated)
         self.assertIn("Human-written footer.", updated)
 
-    def test_restricted_accepted_facts_render_below_default_accepted_facts(self):
+    def test_restricted_accepted_facts_render_below_general_accepted_facts(self):
         public_fact = fact_record("f1", "Alice is a licensed pharmacist.")
         restricted_fact = fact_record("f2", "Passport number: 123456789")
         resume = source_record("resume", public_fact, title="Resume")
@@ -189,13 +189,10 @@ class WikiReviewBuildTests(unittest.TestCase):
         )
 
         markdown = build_wiki_markdown(CAREER_WIKI, ledger, [resume, passport])
-        context = markdown.split("## Accepted Facts", 1)[0]
         accepted_facts = markdown.split("## Accepted Facts", 1)[1]
 
-        self.assertIn("Alice is a licensed pharmacist.", context)
-        self.assertNotIn("Passport number: 123456789", context)
-        self.assertIn("1 restricted accepted fact(s) are listed below", context)
-        self.assertIn("### Default Accepted Facts", accepted_facts)
+        self.assertNotIn("Default Conversation Context", markdown)
+        self.assertIn("### General Accepted Facts", accepted_facts)
         self.assertIn("### Restricted Accepted Facts", accepted_facts)
         self.assertIn("Passport number: 123456789", accepted_facts)
         self.assertLess(
