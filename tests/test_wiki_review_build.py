@@ -2,6 +2,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from app.wiki.citations import link_compact_fact_notes
 from app.wiki.ledger import WikiLedger
 from app.wiki.markdown import (
     FACTS_END,
@@ -139,14 +140,14 @@ class WikiReviewBuildTests(unittest.TestCase):
 
         synthesis = (
             "## Wiki Brief\n\n"
-            "Alice joined Example Co. and led platform work. (S1:ev1,fact-1)"
+            "Alice joined Example Co. and led platform work. (S1:1)"
         )
         markdown = build_wiki_markdown(wiki, ledger, [source], synthesis)
         self.assertIn("# Career", markdown)
         self.assertIn(SYNTHESIS_START, markdown)
         self.assertIn("## Wiki Brief", markdown)
         self.assertIn(
-            "led platform work. [(S1:ev1,fact-1)](#memex-fact-s1-ev1-fact-1)",
+            "led platform work. ([S1:1](#memex-fact-s1-1))",
             markdown,
         )
         self.assertIn(SYNTHESIS_END, markdown)
@@ -155,19 +156,18 @@ class WikiReviewBuildTests(unittest.TestCase):
         self.assertIn("Wiki description:** Track durable career history.", markdown)
         self.assertIn("## Accepted Facts", markdown)
         self.assertIn(FACTS_START, markdown)
+        self.assertIn("### [S1. Source One](/source/source-1) (`source-1`)", markdown)
         self.assertIn(
-            '- <a id="memex-fact-s1-ev1-fact-1"></a> '
-            "Alice joined Example Co. She led platform work. (S1:ev1,fact-1)",
-            markdown,
-        )
-        self.assertIn("Review: Core career history.", markdown)
-        self.assertIn("## References", markdown)
-        self.assertIn("### S1. Source One (`source-1`)", markdown)
-        self.assertIn(
-            "- (S1:ev1,fact-1) fact `fact-1` ; evidence `ev1`: "
+            '1. <a id="memex-fact-s1-1"></a> '
             "Alice joined Example Co. She led platform work.",
             markdown,
         )
+        accepted_facts = markdown.split("## Accepted Facts", 1)[1]
+        self.assertNotIn("(S1:1)", accepted_facts)
+        self.assertNotIn("Fact:", accepted_facts)
+        self.assertNotIn("Evidence:", accepted_facts)
+        self.assertNotIn("Review:", accepted_facts)
+        self.assertNotIn("## References", markdown)
 
         existing = (
             "# Career\n\n"
@@ -185,6 +185,66 @@ class WikiReviewBuildTests(unittest.TestCase):
         self.assertNotIn("old generated text", updated)
         self.assertNotIn("Default Conversation Context", updated)
         self.assertIn("Human-written footer.", updated)
+
+    def test_build_wiki_markdown_condenses_adjacent_fact_citation_runs(self):
+        first = fact_record("fact-1", "Alice joined Example Co.")
+        second = fact_record("fact-2", "Alice led platform work.")
+        third = fact_record("fact-1", "Alice uses Python.")
+        fourth = fact_record("fact-2", "Alice uses FastAPI.")
+        first_source = source_record("source-1", first, second, title="Source One")
+        second_source = source_record("source-2", third, fourth, title="Source Two")
+        ledger = WikiLedger.empty()
+        ledger.assign_source("career", "source-1")
+        ledger.assign_source("career", "source-2")
+        apply_review_results(
+            CAREER_WIKI,
+            "source-1",
+            ledger,
+            first_source,
+            [
+                ReviewResult("fact-1", True, "Career history."),
+                ReviewResult("fact-2", True, "Career history."),
+            ],
+        )
+        apply_review_results(
+            CAREER_WIKI,
+            "source-2",
+            ledger,
+            second_source,
+            [
+                ReviewResult("fact-1", True, "Technical profile."),
+                ReviewResult("fact-2", True, "Technical profile."),
+            ],
+        )
+
+        markdown = build_wiki_markdown(
+            CAREER_WIKI,
+            ledger,
+            [first_source, second_source],
+            "## Wiki Brief\n\nAlice has durable career facts. (S1:1) (S1:2)(S2:1) (S2:2)",
+        )
+
+        self.assertIn(
+            "Alice has durable career facts. "
+            "([S1:1](#memex-fact-s1-1)[,2](#memex-fact-s1-2))"
+            "([S2:1](#memex-fact-s2-1)[,2](#memex-fact-s2-2))",
+            markdown,
+        )
+
+    def test_link_compact_fact_notes_condenses_existing_markdown_links(self):
+        linked = (
+            "Supported "
+            "[(S1:1)](http://127.0.0.1:8765/wiki/career#memex-fact-s1-1)"
+            "[(S3:1)](http://127.0.0.1:8765/wiki/career#memex-fact-s3-1)"
+            "[(S3:2)](http://127.0.0.1:8765/wiki/career#memex-fact-s3-2)."
+        )
+
+        self.assertEqual(
+            "Supported "
+            "([S1:1](#memex-fact-s1-1))"
+            "([S3:1](#memex-fact-s3-1)[,2](#memex-fact-s3-2)).",
+            link_compact_fact_notes(linked, ["(S1:1)", "(S3:1)", "(S3:2)"]),
+        )
 
     def test_fact_audit_does_not_split_restricted_accepted_facts(self):
         public_fact = fact_record("f1", "Alice is a licensed pharmacist.")
@@ -213,7 +273,7 @@ class WikiReviewBuildTests(unittest.TestCase):
             CAREER_WIKI,
             ledger,
             [resume, passport],
-            "## Wiki Brief\n\nAccepted identity and career facts are available. (S1:f2) (S2:f1)",
+            "## Wiki Brief\n\nAccepted identity and career facts are available. (S1:1) (S2:1)",
         )
         accepted_facts = markdown.split("## Accepted Facts", 1)[1]
 
@@ -267,7 +327,7 @@ class WikiReviewBuildTests(unittest.TestCase):
                 wiki,
                 ledger,
                 [source],
-                "## Wiki Brief\n\nAlice joined Example Co. (S1:fact-1)",
+                "## Wiki Brief\n\nAlice joined Example Co. (S1:1)",
             )
             write_wiki_page(temp_dir, wiki, markdown)
             mark_build_current(wiki, ledger, [source])

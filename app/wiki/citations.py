@@ -3,31 +3,28 @@
 from __future__ import annotations
 
 import re
-from typing import Any, Iterable, Mapping
+from typing import Iterable
 
-from .records import FactRecord
 from .status import AcceptedFact
 
-COMPACT_FACT_NOTE_RE = re.compile(r"\(S\d+:[A-Za-z0-9_.:-]+(?:,[A-Za-z0-9_.:-]+)*\)")
+_COMPACT_FACT_NOTE_TEXT = r"\(S\d+:\d+\)"
+_COMPACT_FACT_LINK_TEXT = (
+    rf"\[{_COMPACT_FACT_NOTE_TEXT}\]"
+    r"\((?:#[A-Za-z0-9_.:-]+|[^)\s]*#memex-fact-[A-Za-z0-9_.:-]+)\)"
+)
+_COMPACT_FACT_TOKEN_TEXT = rf"(?:{_COMPACT_FACT_LINK_TEXT}|{_COMPACT_FACT_NOTE_TEXT})"
+
+COMPACT_FACT_NOTE_RE = re.compile(_COMPACT_FACT_NOTE_TEXT)
+COMPACT_FACT_NOTE_RUN_RE = re.compile(
+    rf"{_COMPACT_FACT_TOKEN_TEXT}(?:[ \t]*{_COMPACT_FACT_TOKEN_TEXT})*"
+)
+_COMPACT_FACT_ANCHOR_REF_RE = re.compile(r"#memex-fact-s(?P<source>\d+)-(?P<number>\d+)")
+_COMPACT_FACT_PARTS_RE = re.compile(r"\((?P<source>S\d+):(?P<number>\d+)\)")
 
 
 def inline_text(value: object) -> str:
     text = " ".join(str(value).split())
     return text.replace("[[", r"\[\[").replace("]]", r"\]\]")
-
-
-def fact_records_by_key(
-    sources: Mapping[str, object],
-) -> dict[tuple[str, str], FactRecord]:
-    records: dict[tuple[str, str], FactRecord] = {}
-    for source_id, source in sources.items():
-        fact_by_id = getattr(source, "fact_by_id", None)
-        if not callable(fact_by_id):
-            continue
-        for fact_id, fact in fact_by_id().items():
-            if isinstance(fact, FactRecord):
-                records[(source_id, fact_id)] = fact
-    return records
 
 
 def source_keys_by_id(facts: Iterable[AcceptedFact]) -> dict[str, str]:
@@ -38,16 +35,23 @@ def source_keys_by_id(facts: Iterable[AcceptedFact]) -> dict[str, str]:
     return {source_id: f"S{index}" for index, source_id in enumerate(source_ids, start=1)}
 
 
+def fact_numbers_by_key(facts: Iterable[AcceptedFact]) -> dict[tuple[str, str], int]:
+    counts: dict[str, int] = {}
+    numbers: dict[tuple[str, str], int] = {}
+    for fact in facts:
+        counts[fact.source_id] = counts.get(fact.source_id, 0) + 1
+        numbers[(fact.source_id, fact.fact_id)] = counts[fact.source_id]
+    return numbers
+
+
 def compact_fact_note(
     fact: AcceptedFact,
-    fact_record: FactRecord | None,
     source_key: str,
+    fact_number: int,
 ) -> str:
-    ids = unique([*evidence_ids(fact_record), fact.fact_id])
-    if not ids:
+    if not source_key or fact_number < 1:
         return ""
-    prefix = f"{source_key}:" if source_key else ""
-    return f"({prefix}{','.join(ids)})"
+    return f"({source_key}:{fact_number})"
 
 
 def compact_fact_anchor(citation: str) -> str:
@@ -63,38 +67,66 @@ def compact_fact_anchor_id(citation: str) -> str:
     return f"memex-fact-{slug}" if slug else ""
 
 
+def compact_fact_notes_in_text(text: str) -> tuple[str, ...]:
+    notes: list[str] = []
+    seen: set[str] = set()
+
+    def add(citation: str) -> None:
+        if citation not in seen:
+            seen.add(citation)
+            notes.append(citation)
+
+    for citation in COMPACT_FACT_NOTE_RE.findall(text):
+        add(citation)
+    for match in _COMPACT_FACT_ANCHOR_REF_RE.finditer(text):
+        add(f"(S{match.group('source')}:{match.group('number')})")
+    return tuple(notes)
+
+
 def link_compact_fact_notes(text: str, citations: Iterable[str]) -> str:
     allowed = {citation for citation in citations if citation}
     if not allowed:
         return text
 
     def replace(match: re.Match[str]) -> str:
-        citation = match.group(0)
-        if citation not in allowed or _already_linked(text, match):
-            return citation
-        anchor_id = compact_fact_anchor_id(citation)
-        return f"[{citation}](#{anchor_id})" if anchor_id else citation
+        run = match.group(0)
+        found = COMPACT_FACT_NOTE_RE.findall(run)
+        if not found or any(citation not in allowed for citation in found):
+            return run
+        return _linked_fact_note_run(found)
 
-    return COMPACT_FACT_NOTE_RE.sub(replace, text)
-
-
-def _already_linked(text: str, match: re.Match[str]) -> bool:
-    start, end = match.span()
-    return start > 0 and text[start - 1] == "[" and end < len(text) and text[end] == "]"
+    return COMPACT_FACT_NOTE_RUN_RE.sub(replace, text)
 
 
-def evidence_ids(fact_record: FactRecord | None) -> list[str]:
-    if fact_record is None:
-        return []
-    provenance = fact_record.provenance
-    explicit_ids = string_list(provenance.get("evidence_ids"))
-    if explicit_ids:
-        return explicit_ids
-    return unique(
-        text(item.get("id"))
-        for item in provenance.get("evidence", ())
-        if isinstance(item, Mapping)
-    )
+def _linked_fact_note_run(citations: list[str]) -> str:
+    groups: list[tuple[str, list[str]]] = []
+    for citation in citations:
+        parts = _COMPACT_FACT_PARTS_RE.fullmatch(citation)
+        if parts is None:
+            continue
+        source = parts.group("source")
+        number = parts.group("number")
+        if groups and groups[-1][0] == source:
+            groups[-1][1].append(number)
+        else:
+            groups.append((source, [number]))
+    return "".join(_linked_fact_note_group(source, numbers) for source, numbers in groups)
+
+
+def _linked_fact_note_group(source: str, numbers: list[str]) -> str:
+    links = [
+        f"[{label}](#{compact_fact_anchor_id(f'({source}:{number})')})"
+        for label, number in _fact_note_group_labels(source, numbers)
+    ]
+    return f"({''.join(links)})"
+
+
+def _fact_note_group_labels(source: str, numbers: list[str]) -> list[tuple[str, str]]:
+    labels: list[tuple[str, str]] = []
+    for index, number in enumerate(numbers):
+        label = f"{source}:{number}" if index == 0 else f",{number}"
+        labels.append((label, number))
+    return labels
 
 
 def fact_sort_key(fact: AcceptedFact) -> tuple[str, tuple[tuple[int, int | str], ...]]:
@@ -107,24 +139,3 @@ def natural_key(value: str) -> tuple[tuple[int, int | str], ...]:
         for part in re.split(r"(\d+)", value)
         if part
     )
-
-
-def string_list(value: Any) -> list[str]:
-    if not isinstance(value, list | tuple):
-        return []
-    return [text(item) for item in value if text(item)]
-
-
-def unique(values: Iterable[str]) -> list[str]:
-    seen: set[str] = set()
-    result: list[str] = []
-    for value in values:
-        item = text(value)
-        if item and item not in seen:
-            seen.add(item)
-            result.append(item)
-    return result
-
-
-def text(value: object) -> str:
-    return "" if value is None else str(value).strip()

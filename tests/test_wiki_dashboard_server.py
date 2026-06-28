@@ -40,15 +40,17 @@ class WikiDashboardServerTests(DashboardServerTestCase):
                         "<!-- MEMEX:SYNTHESIS:START -->",
                         "## Wiki Brief",
                         "",
-                        "Alice joined Example Co. [(S1:f1)](#memex-fact-s1-f1)",
+                        "Alice joined Example Co. ([S1:1](#memex-fact-s1-1))",
                         "<!-- MEMEX:SYNTHESIS:END -->",
                         "",
                         "<!-- MEMEX:FACTS:START -->",
                         "## Accepted Facts",
                         "",
-                        '- <a id="memex-fact-s1-f1"></a> '
+                        "### [S1. Source One](/source/source-1) (`source-1`)",
+                        "",
+                        '1. <a id="memex-fact-s1-1"></a> '
                         "Alice joined Example Co. **Safely** `fact-1`",
-                        "- <script>alert('x')</script>",
+                        "2. <script>alert('x')</script>",
                     )
                 ),
             )
@@ -72,10 +74,12 @@ class WikiDashboardServerTests(DashboardServerTestCase):
                 h1_text = [node.normalized_text() for node in page.find_all("h1")]
                 self.assertNotIn("Career", h1_text)
                 self.assertIn("Accepted Facts", page.normalized_text())
+                page.require("ol")
                 self.assertIn("Safely", page.normalized_text())
                 self.assertIn("fact-1", page.normalized_text())
-                page.require("a", {"href": "#memex-fact-s1-f1"})
-                page.require("a", {"id": "memex-fact-s1-f1"})
+                page.require("a", {"href": "#memex-fact-s1-1"})
+                page.require("a", {"id": "memex-fact-s1-1"})
+                page.require("a", {"href": "/source/source-1"})
                 self.assertIn("&lt;script&gt;alert(&#x27;x&#x27;)&lt;/script&gt;", body)
                 self.assertNotIn("MEMEX:FACTS:START", body)
 

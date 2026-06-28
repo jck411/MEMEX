@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import re
 from typing import Iterable, Mapping
+from urllib.parse import quote
 
 from .citations import (
     compact_fact_anchor,
     compact_fact_note,
-    evidence_ids,
-    fact_records_by_key,
+    fact_numbers_by_key,
     fact_sort_key,
     inline_text,
     link_compact_fact_notes,
@@ -42,9 +42,9 @@ def render_fact_audit_section(
 ) -> str:
     facts = sorted(accepted_facts, key=fact_sort_key)
     source_map = source_index(sources)
-    fact_records = fact_records_by_key(source_map)
     source_keys = source_keys_by_id(facts)
-    citation_by_fact = _citation_by_fact(facts, fact_records, source_keys)
+    fact_numbers = fact_numbers_by_key(facts)
+    citation_by_fact = _citation_by_fact(facts, source_keys, fact_numbers)
     lines = [FACTS_START, "## Accepted Facts", ""]
     description = wiki_description(wiki)
     if description:
@@ -53,9 +53,7 @@ def render_fact_audit_section(
     if not facts:
         lines.append("_No accepted facts yet._")
     else:
-        _append_fact_lines(lines, facts, source_map, citation_by_fact)
-    if facts:
-        lines.extend(_references_section(facts, source_map, fact_records, source_keys))
+        _append_fact_lines(lines, facts, source_map, source_keys, citation_by_fact)
     if lines[-1] == "":
         lines.pop()
     lines.append(FACTS_END)
@@ -64,19 +62,19 @@ def render_fact_audit_section(
 
 def _append_fact_lines(
     lines: list[str],
-    facts: Iterable[AcceptedFact],
+    facts: list[AcceptedFact],
     sources: Mapping[str, SourceRecord],
+    source_keys: Mapping[str, str],
     citation_by_fact: Mapping[tuple[str, str], str],
 ) -> None:
-    for fact in facts:
-        citation = citation_by_fact.get((fact.source_id, fact.fact_id), "")
-        suffix = f" {citation}" if citation else ""
-        anchor = compact_fact_anchor(citation)
-        prefix = f"{anchor} " if anchor else ""
-        lines.append(f"- {prefix}{inline_text(fact.text)}{suffix}")
-        lines.append(f"  - Source: {_source_reference_label(fact.source_id, sources)}")
-        if fact.decision.reason:
-            lines.append(f"  - Review: {inline_text(fact.decision.reason)}")
+    for source_id, source_key in source_keys.items():
+        lines.extend([f"### {_source_reference_label(source_key, source_id, sources)}", ""])
+        source_facts = [fact for fact in facts if fact.source_id == source_id]
+        for index, fact in enumerate(source_facts, start=1):
+            citation = citation_by_fact.get((fact.source_id, fact.fact_id), "")
+            anchor = compact_fact_anchor(citation)
+            prefix = f"{anchor} " if anchor else ""
+            lines.append(f"{index}. {prefix}{inline_text(fact.text)}")
         lines.append("")
 
 
@@ -111,9 +109,9 @@ def build_wiki_markdown(
 ) -> str:
     source_map = source_index(sources)
     accepted_facts = accepted_facts_for_wiki(wiki, ledger, source_map)
-    fact_records = fact_records_by_key(source_map)
     source_keys = source_keys_by_id(accepted_facts)
-    citations = _citation_by_fact(accepted_facts, fact_records, source_keys).values()
+    fact_numbers = fact_numbers_by_key(accepted_facts)
+    citations = _citation_by_fact(accepted_facts, source_keys, fact_numbers).values()
     linked_synthesis = link_compact_fact_notes(synthesis_markdown, citations)
     markdown = _prepare_existing_markdown(wiki, existing_markdown)
     markdown = replace_synthesis_section(markdown, render_synthesis_section(linked_synthesis))
@@ -125,53 +123,30 @@ def build_wiki_markdown(
 
 
 def _source_reference_label(
+    source_key: str,
     source_id: str,
     sources: Mapping[str, SourceRecord],
 ) -> str:
     title = inline_text(sources[source_id].title) if source_id in sources else ""
+    href = "/source/" + quote(source_id, safe="")
     if title and title != source_id:
-        return f"{title} (`{source_id}`)"
-    return f"`{source_id}`"
+        return f"[{source_key}. {title}]({href}) (`{source_id}`)"
+    return f"[{source_key}. {inline_text(source_id)}]({href})"
 
 
 def _citation_by_fact(
     facts: Iterable[AcceptedFact],
-    fact_records: Mapping[tuple[str, str], FactRecord],
     source_keys: Mapping[str, str],
+    fact_numbers: Mapping[tuple[str, str], int],
 ) -> dict[tuple[str, str], str]:
     return {
         (fact.source_id, fact.fact_id): compact_fact_note(
             fact,
-            fact_records.get((fact.source_id, fact.fact_id)),
             source_keys.get(fact.source_id, ""),
+            fact_numbers.get((fact.source_id, fact.fact_id), 0),
         )
         for fact in facts
     }
-
-
-def _references_section(
-    facts: list[AcceptedFact],
-    sources: Mapping[str, SourceRecord],
-    fact_records: Mapping[tuple[str, str], FactRecord],
-    source_keys: Mapping[str, str],
-) -> list[str]:
-    lines = ["## References", ""]
-    for source_id, source_key in source_keys.items():
-        lines.extend([f"### {source_key}. {_source_reference_label(source_id, sources)}", ""])
-        source_facts = [fact for fact in facts if fact.source_id == source_id]
-        for fact in source_facts:
-            fact_record = fact_records.get((fact.source_id, fact.fact_id))
-            citation = compact_fact_note(fact, fact_record, source_key)
-            prefix = f"{citation} " if citation else ""
-            pieces = [f"fact `{inline_text(fact.fact_id)}`"]
-            fact_evidence_ids = evidence_ids(fact_record)
-            if fact_evidence_ids:
-                pieces.append(
-                    "evidence " + ", ".join(f"`{inline_text(item)}`" for item in fact_evidence_ids)
-                )
-            lines.append(f"- {prefix}{' ; '.join(pieces)}: {inline_text(fact.text)}")
-        lines.append("")
-    return lines
 
 
 def _replace_or_insert_marked_section(

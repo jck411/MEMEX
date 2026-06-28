@@ -62,8 +62,9 @@ class WikiBuildSynthesisTests(unittest.TestCase):
             "# Career\n\n"
             f"{SYNTHESIS_START}\n"
             "## Wiki Brief\n\n"
-            "Previous supported prose. (S1:ev1,fact-1)\n\n"
-            "Stale generated prose. (S9:ev9,fact-9)\n"
+            "Previous supported prose. "
+            "([S1:1](#memex-fact-s1-1)[,2](#memex-fact-s1-2))\n\n"
+            "Stale generated prose. ([S9:9](#memex-fact-s9-9))\n"
             f"{SYNTHESIS_END}\n\n"
             f"{FACTS_START}\nold audit appendix\n{FACTS_END}\n\n"
             "## LLM Context\n\n"
@@ -76,7 +77,7 @@ class WikiBuildSynthesisTests(unittest.TestCase):
 
         self.assertEqual("Track durable career history.", payload["wiki"]["description"])
         self.assertEqual(
-            ["(S1:ev1,fact-1)", "(S1:ev2,fact-2)"],
+            ["(S1:1)", "(S1:2)"],
             payload["citation_contract"]["allowed_citations"],
         )
         context = payload["existing_markdown_context"]["markdown"]
@@ -94,16 +95,16 @@ class WikiBuildSynthesisTests(unittest.TestCase):
         markdown = (
             "## Wiki Brief\n\n"
             "Alice joined Example Co. and led the platform team. "
-            "(S1:ev1,fact-1) (S1:ev2,fact-2)\n\n"
+            "(S1:1) (S1:2)\n\n"
             "## Open Questions\n\n"
-            "The accepted facts do not supply dates for the role. (S1:ev1,fact-1)"
+            "The accepted facts do not supply dates for the role. (S1:1)"
         )
 
         self.assertEqual(markdown, validate_synthesis_markdown(packet, markdown))
 
     def test_guardrails_allow_synthesis_to_omit_claim_ledger_details(self):
         packet = reviewed_packet()
-        markdown = "## Wiki Brief\n\nAlice joined Example Co. (S1:ev1,fact-1)"
+        markdown = "## Wiki Brief\n\nAlice joined Example Co. (S1:1)"
 
         self.assertEqual(markdown, validate_synthesis_markdown(packet, markdown))
 
@@ -112,8 +113,8 @@ class WikiBuildSynthesisTests(unittest.TestCase):
         markdown = (
             "## Wiki Brief\n\n"
             "- **Roles:**\n"
-            "  - Alice joined Example Co. (S1:ev1,fact-1)\n"
-            "  - Alice led the platform team. (S1:ev2,fact-2)"
+            "  - Alice joined Example Co. (S1:1)\n"
+            "  - Alice led the platform team. (S1:2)"
         )
 
         self.assertEqual(markdown, validate_synthesis_markdown(packet, markdown))
@@ -124,7 +125,7 @@ class WikiBuildSynthesisTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "unknown facts"):
             validate_synthesis_markdown(
                 packet,
-                "## Wiki Brief\n\nAlice joined Example Co. (S1:ev9,fact-9)",
+                "## Wiki Brief\n\nAlice joined Example Co. (S1:9)",
             )
 
     def test_guardrails_reject_claims_that_do_not_cover_accepted_facts(self):
@@ -134,10 +135,10 @@ class WikiBuildSynthesisTests(unittest.TestCase):
             claims=(
                 ProviderWikiBuildClaim(
                     "Alice joined Example Co.",
-                    ("(S1:ev1,fact-1)",),
+                    ("(S1:1)",),
                 ),
             ),
-            synthesis_markdown="## Wiki Brief\n\nAlice joined Example Co. (S1:ev1,fact-1)",
+            synthesis_markdown="## Wiki Brief\n\nAlice joined Example Co. (S1:1)",
         )
 
         with self.assertRaisesRegex(ValueError, "claims omitted accepted fact citations"):
@@ -151,7 +152,7 @@ class WikiBuildSynthesisTests(unittest.TestCase):
                 packet,
                 (
                     "## Wiki Brief\n\n"
-                    "Alice joined Example Co. (S1:ev1,fact-1) (S1:ev2,fact-2)\n\n"
+                    "Alice joined Example Co. (S1:1) (S1:2)\n\n"
                     "She was an important leader."
                 ),
             )
@@ -181,15 +182,15 @@ class WikiBuildSynthesisTests(unittest.TestCase):
                                                     "the platform team."
                                                 ),
                                                 "citations": [
-                                                    "(S1:ev1,fact-1)",
-                                                    "(S1:ev2,fact-2)",
+                                                    "(S1:1)",
+                                                    "(S1:2)",
                                                 ],
                                             }
                                         ],
                                         "synthesis_markdown": (
                                             "## Wiki Brief\n\n"
                                             "Alice joined Example Co. and led the platform team. "
-                                            "(S1:ev1,fact-1) (S1:ev2,fact-2)"
+                                            "(S1:1) (S1:2)"
                                         ),
                                     }
                                 )
@@ -220,11 +221,11 @@ class WikiBuildSynthesisTests(unittest.TestCase):
         )
         prompt = seen["body"]["messages"][1]["content"]
         self.assertIn("Track durable career history", prompt)
-        self.assertIn("(S1:ev1,fact-1)", prompt)
+        self.assertIn("(S1:1)", prompt)
         self.assertEqual("openrouter", result.provider)
         self.assertEqual(OPENROUTER_WIKI_BUILD_MODEL, result.model)
         self.assertEqual(
-            ("(S1:ev1,fact-1)", "(S1:ev2,fact-2)"),
+            ("(S1:1)", "(S1:2)"),
             result.claims[0].citations,
         )
         self.assertEqual(0.001, result.usage["cost"])
@@ -304,7 +305,7 @@ class WikiBuildSynthesisTests(unittest.TestCase):
                 workspace.build_wiki(
                     "career",
                     FixtureWikiBuildProvider(
-                        "## Wiki Brief\n\nAlice joined Example Co. (S1:fact-1)\n\nUncited claim."
+                        "## Wiki Brief\n\nAlice joined Example Co. (S1:1)\n\nUncited claim."
                     ),
                 )
 

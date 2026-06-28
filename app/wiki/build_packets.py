@@ -8,8 +8,8 @@ from typing import Iterable, Mapping
 
 from .citations import (
     compact_fact_note,
-    evidence_ids,
-    fact_records_by_key,
+    compact_fact_notes_in_text,
+    fact_numbers_by_key,
     fact_sort_key,
     inline_text,
     source_keys_by_id,
@@ -28,8 +28,6 @@ from .wiki_scope import wiki_description, wiki_intention_text
 
 MAX_EXISTING_MARKDOWN_CONTEXT = 30_000
 MAX_FACT_TEXT = 1_500
-_COMPACT_CITATION_RE = re.compile(r"\(S\d+:[A-Za-z0-9_.:-]+(?:,[A-Za-z0-9_.:-]+)*\)")
-
 
 @dataclass(frozen=True)
 class WikiBuildFact:
@@ -40,7 +38,6 @@ class WikiBuildFact:
     fact_signature: str
     text: str
     citation: str
-    evidence_ids: tuple[str, ...]
     review_reason: str = ""
 
 
@@ -63,13 +60,13 @@ def build_fact_packet(
 ) -> WikiBuildPacket:
     source_map = source_index(sources)
     facts = tuple(sorted(accepted_facts_for_wiki(wiki, ledger, source_map), key=fact_sort_key))
-    fact_records = fact_records_by_key(source_map)
     source_keys = source_keys_by_id(facts)
+    fact_numbers = fact_numbers_by_key(facts)
     packet_facts: list[WikiBuildFact] = []
     for fact in facts:
         source = source_map.get(fact.source_id)
-        fact_record = fact_records.get((fact.source_id, fact.fact_id))
         source_key = source_keys.get(fact.source_id, "")
+        fact_number = fact_numbers.get((fact.source_id, fact.fact_id), 0)
         packet_facts.append(
             WikiBuildFact(
                 source_id=fact.source_id,
@@ -78,8 +75,7 @@ def build_fact_packet(
                 fact_id=fact.fact_id,
                 fact_signature=fact.fact_signature,
                 text=_clip(fact.text, MAX_FACT_TEXT),
-                citation=compact_fact_note(fact, fact_record, source_key),
-                evidence_ids=tuple(evidence_ids(fact_record)),
+                citation=compact_fact_note(fact, source_key, fact_number),
                 review_reason=fact.decision.reason,
             )
         )
@@ -137,7 +133,7 @@ def _filter_current_cited_blocks(markdown: str, allowed_citations: set[str]) -> 
     blocks = [block.strip() for block in re.split(r"\n\s*\n", markdown) if block.strip()]
     kept: list[str] = []
     for block in blocks:
-        citations = set(_COMPACT_CITATION_RE.findall(block))
+        citations = set(compact_fact_notes_in_text(block))
         if citations and not citations.issubset(allowed_citations):
             continue
         kept.append(block)

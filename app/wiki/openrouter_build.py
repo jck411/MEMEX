@@ -22,6 +22,7 @@ from .openrouter_client import (
 )
 
 OPENROUTER_WIKI_BUILD_MODEL = OPENROUTER_DEEPSEEK_V4_PRO_MODEL
+OPENROUTER_WIKI_BUILD_MAX_TOKENS = 16384
 
 
 @dataclass(frozen=True)
@@ -29,7 +30,7 @@ class OpenRouterWikiBuildProvider:
     api_key: str
     model: str = OPENROUTER_WIKI_BUILD_MODEL
     opener: Callable[..., Any] = urlopen
-    max_tokens: int = 8192
+    max_tokens: int = OPENROUTER_WIKI_BUILD_MAX_TOKENS
     timeout: int = 180
 
     def build(self, packet: WikiBuildPacket) -> ProviderWikiBuildResult:

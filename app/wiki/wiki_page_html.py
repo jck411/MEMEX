@@ -12,7 +12,9 @@ from .records import WikiRecord
 from .status import WikiStatus
 
 _GENERATED_ANCHOR_RE = re.compile(r'<a id="(memex-fact-[A-Za-z0-9_.:-]+)"></a>')
-_INTERNAL_MARKDOWN_LINK_RE = re.compile(r"\[([^\]]+)\]\((#[A-Za-z0-9_.:-]+)\)")
+_INTERNAL_MARKDOWN_LINK_RE = re.compile(
+    r"\[([^\]]+)\]\((#[A-Za-z0-9_.:-]+|/source/[A-Za-z0-9_.~%-]+)\)"
+)
 
 
 def render_wiki_page_html(
@@ -92,7 +94,7 @@ def _render_markdown(markdown: str) -> str:
     lines = markdown.splitlines()
     html: list[str] = []
     paragraph: list[str] = []
-    list_open = False
+    list_open: str | None = None
     quote: list[str] = []
     index = 0
 
@@ -105,8 +107,16 @@ def _render_markdown(markdown: str) -> str:
     def close_list() -> None:
         nonlocal list_open
         if list_open:
-            html.append("</ul>")
-            list_open = False
+            html.append(f"</{list_open}>")
+            list_open = None
+
+    def open_list(tag: str) -> None:
+        nonlocal list_open
+        if list_open == tag:
+            return
+        close_list()
+        html.append(f"<{tag}>")
+        list_open = tag
 
     def flush_quote() -> None:
         nonlocal quote
@@ -152,10 +162,17 @@ def _render_markdown(markdown: str) -> str:
         if bullet:
             flush_paragraph()
             flush_quote()
-            if not list_open:
-                html.append("<ul>")
-                list_open = True
+            open_list("ul")
             html.append(f"<li>{_inline(bullet.group(1))}</li>")
+            index += 1
+            continue
+
+        numbered = re.match(r"^\s*\d+\.\s+(.+)$", raw_line)
+        if numbered:
+            flush_paragraph()
+            flush_quote()
+            open_list("ol")
+            html.append(f"<li>{_inline(numbered.group(1))}</li>")
             index += 1
             continue
 

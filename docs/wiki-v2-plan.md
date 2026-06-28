@@ -54,10 +54,12 @@ The V2 foundation is in place:
 - Wiki builds use OpenRouter `deepseek/deepseek-v4-pro` to consolidate current
   accepted facts into cite-backed claims, synthesize a managed wiki body from
   those claims, then render a deterministic accepted fact audit appendix with
-  compact references. LLM-built wiki synthesis remains separate from downstream
+  compact citations. LLM-built wiki synthesis remains separate from downstream
   LLM use of the finished markdown.
-- Managed synthesis citations are deterministically linked to matching accepted
-  fact anchors in the generated markdown appendix.
+- Managed synthesis citations are deterministically grouped, compacted, and
+  linked to matching accepted fact anchors in the generated markdown appendix,
+  where accepted facts are grouped by source and numbered within each source
+  group. Source headings link back to the dashboard source detail page.
 - `python scripts/wiki_validate.py` validates source records, source assets,
   originals, evidence references, and ledger references.
 

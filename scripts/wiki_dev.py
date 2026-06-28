@@ -25,6 +25,7 @@ from app.wiki.model_profiles import (  # noqa: E402
     merged_env,
 )
 from app.wiki.openrouter_build import (  # noqa: E402
+    OPENROUTER_WIKI_BUILD_MAX_TOKENS,
     OPENROUTER_WIKI_BUILD_MODEL,
     OpenRouterWikiBuildProvider,
 )
@@ -160,7 +161,7 @@ def build_parser() -> argparse.ArgumentParser:
     build.add_argument("wiki_id")
     build.add_argument("--env-file", default=".env")
     build.add_argument("--model", default=OPENROUTER_WIKI_BUILD_MODEL)
-    build.add_argument("--max-tokens", type=int, default=8192)
+    build.add_argument("--max-tokens", type=int, default=OPENROUTER_WIKI_BUILD_MAX_TOKENS)
     build.add_argument(
         "--fixture",
         action="store_true",

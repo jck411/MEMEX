@@ -30,6 +30,10 @@ Rules:
 - Start synthesis_markdown with "## Wiki Brief".
 - Cite every substantive synthesis claim with exact compact citations from the
   claims you created.
+- Put citations in the synthesis prose as plain text, not only in the claim
+  array. Example: "Jack is a licensed pharmacist. (S1:1)"
+- Every factual sentence in synthesis_markdown must end with one or more exact
+  compact citations such as "(S1:1)".
 - Cite only accepted facts in the packet.
 - Prefer markdown headings for section labels. If you use list items, every list
   item that contains a claim must include citations; do not create citationless
@@ -78,7 +82,6 @@ def build_prompt_payload(packet: WikiBuildPacket) -> dict[str, Any]:
             "fact_id": fact.fact_id,
             "fact_signature": fact.fact_signature,
             "text": fact.text,
-            "evidence_ids": list(fact.evidence_ids),
             "review_reason": fact.review_reason,
         }
         for fact in packet.accepted_facts
