@@ -7,7 +7,7 @@ from app.wiki.provider_balances import OPENROUTER_LOGS_URL, ProviderBalance
 from app.wiki.review import ReviewResult
 from app.wiki.wiki_scope import wiki_intention_text
 from tests.dashboard_server_helpers import DashboardServerTestCase
-from tests.helpers import fact_record, source_record, wiki_workspace
+from tests.helpers import fact_record, fixture_wiki_build_provider, source_record, wiki_workspace
 from tests.html_helpers import parse_html
 
 
@@ -218,7 +218,7 @@ class WikiDashboardServerPostTests(DashboardServerTestCase):
                 "source-1",
                 [ReviewResult("fact-1", True, "Employment history.")],
             )
-            workspace.build_wiki("career")
+            workspace.build_wiki("career", fixture_wiki_build_provider())
 
             with self.serving(create_dashboard_server(workspace, port=0)) as (host, port):
                 status, location, _ = self.request(

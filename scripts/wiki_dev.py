@@ -24,12 +24,17 @@ from app.wiki.model_profiles import (  # noqa: E402
     extraction_routes_for_profile,
     merged_env,
 )
+from app.wiki.openrouter_build import (  # noqa: E402
+    OPENROUTER_WIKI_BUILD_MODEL,
+    OpenRouterWikiBuildProvider,
+)
 from app.wiki.openrouter_review import (  # noqa: E402
     OPENROUTER_REVIEW_MODEL,
     OpenRouterReviewProvider,
 )
 from app.wiki.records import SourceRecord  # noqa: E402
 from app.wiki.review import ReviewResult  # noqa: E402
+from app.wiki.builders import FixtureWikiBuildProvider  # noqa: E402
 from app.wiki.reviewers import FixtureReviewProvider  # noqa: E402
 from app.wiki.workflows import WikiWorkspace, workspace_for_repo  # noqa: E402
 
@@ -151,8 +156,16 @@ def build_parser() -> argparse.ArgumentParser:
     llm_review.add_argument("--max-tokens", type=int, default=2048)
     llm_review.add_argument("--reviewed-at", default="")
 
-    build = subparsers.add_parser("build", help="build a wiki markdown page")
+    build = subparsers.add_parser("build", help="build a wiki markdown page with the LLM")
     build.add_argument("wiki_id")
+    build.add_argument("--env-file", default=".env")
+    build.add_argument("--model", default=OPENROUTER_WIKI_BUILD_MODEL)
+    build.add_argument("--max-tokens", type=int, default=8192)
+    build.add_argument(
+        "--fixture",
+        action="store_true",
+        help="use deterministic fixture synthesis instead of OpenRouter",
+    )
 
     return parser
 
@@ -332,7 +345,21 @@ def _run_review_llm(args: argparse.Namespace, workspace: WikiWorkspace) -> int:
 
 
 def _run_build(args: argparse.Namespace, workspace: WikiWorkspace) -> int:
-    result = workspace.build_wiki(args.wiki_id)
+    if args.fixture:
+        result = workspace.build_wiki(args.wiki_id, FixtureWikiBuildProvider())
+        print(f"built {result.path}; {_status_text(result.status)}")
+        return 0
+    env_file = Path(args.env_file)
+    if not env_file.is_absolute():
+        env_file = Path(args.repo_root) / env_file
+    result = workspace.build_wiki(
+        args.wiki_id,
+        OpenRouterWikiBuildProvider(
+            api_key=merged_env(env_file).get("OPENROUTER_API_KEY", ""),
+            model=args.model,
+            max_tokens=args.max_tokens,
+        ),
+    )
     print(f"built {result.path}; {_status_text(result.status)}")
     return 0
 

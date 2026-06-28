@@ -6,6 +6,8 @@ from app.wiki.ledger import WikiLedger
 from app.wiki.markdown import (
     FACTS_END,
     FACTS_START,
+    SYNTHESIS_END,
+    SYNTHESIS_START,
     build_wiki_markdown,
     replace_fact_audit_section,
 )
@@ -21,6 +23,7 @@ from tests.helpers import (
     CAREER_WIKI,
     fact_record,
     review_decision_for_fact,
+    fixture_wiki_build_provider,
     source_record,
     wiki_record,
     wiki_workspace,
@@ -134,8 +137,16 @@ class WikiReviewBuildTests(unittest.TestCase):
             [ReviewResult("fact-1", True, "Core career history.")],
         )
 
-        markdown = build_wiki_markdown(wiki, ledger, [source])
+        synthesis = (
+            "## Wiki Brief\n\n"
+            "Alice joined Example Co. and led platform work. (S1:ev1,fact-1)"
+        )
+        markdown = build_wiki_markdown(wiki, ledger, [source], synthesis)
         self.assertIn("# Career", markdown)
+        self.assertIn(SYNTHESIS_START, markdown)
+        self.assertIn("## Wiki Brief", markdown)
+        self.assertIn("led platform work. (S1:ev1,fact-1)", markdown)
+        self.assertIn(SYNTHESIS_END, markdown)
         self.assertNotIn("## LLM Context", markdown)
         self.assertNotIn("### Default Conversation Context", markdown)
         self.assertIn("Wiki description:** Track durable career history.", markdown)
@@ -157,15 +168,21 @@ class WikiReviewBuildTests(unittest.TestCase):
         existing = (
             "# Career\n\n"
             "Human-written intro.\n\n"
+            f"{SYNTHESIS_START}\nold synthesis\n{SYNTHESIS_END}\n\n"
             f"{FACTS_START}\nold generated text\n{FACTS_END}\n\n"
+            "## LLM Context\n\n"
+            "### Default Conversation Context\n\n"
+            "legacy context\n\n"
             "Human-written footer.\n"
         )
-        updated = build_wiki_markdown(wiki, ledger, [source], existing)
+        updated = build_wiki_markdown(wiki, ledger, [source], synthesis, existing)
         self.assertIn("Human-written intro.", updated)
+        self.assertNotIn("old synthesis", updated)
         self.assertNotIn("old generated text", updated)
+        self.assertNotIn("Default Conversation Context", updated)
         self.assertIn("Human-written footer.", updated)
 
-    def test_restricted_accepted_facts_render_below_general_accepted_facts(self):
+    def test_fact_audit_does_not_split_restricted_accepted_facts(self):
         public_fact = fact_record("f1", "Alice is a licensed pharmacist.")
         restricted_fact = fact_record("f2", "Passport number: 123456789")
         resume = source_record("resume", public_fact, title="Resume")
@@ -188,17 +205,18 @@ class WikiReviewBuildTests(unittest.TestCase):
             [ReviewResult("f2", True, "Identity document detail.")],
         )
 
-        markdown = build_wiki_markdown(CAREER_WIKI, ledger, [resume, passport])
+        markdown = build_wiki_markdown(
+            CAREER_WIKI,
+            ledger,
+            [resume, passport],
+            "## Wiki Brief\n\nAccepted identity and career facts are available. (S1:f2) (S2:f1)",
+        )
         accepted_facts = markdown.split("## Accepted Facts", 1)[1]
 
         self.assertNotIn("Default Conversation Context", markdown)
-        self.assertIn("### General Accepted Facts", accepted_facts)
-        self.assertIn("### Restricted Accepted Facts", accepted_facts)
+        self.assertNotIn("### General Accepted Facts", accepted_facts)
+        self.assertNotIn("### Restricted Accepted Facts", accepted_facts)
         self.assertIn("Passport number: 123456789", accepted_facts)
-        self.assertLess(
-            accepted_facts.find("Alice is a licensed pharmacist."),
-            accepted_facts.find("Passport number: 123456789"),
-        )
 
     def test_incomplete_memex_fact_audit_markers_are_rejected(self):
         replacement = f"{FACTS_START}\nnew generated text\n{FACTS_END}"
@@ -241,7 +259,12 @@ class WikiReviewBuildTests(unittest.TestCase):
         self.assertTrue(status_for_wiki(wiki, ledger, [source]).needs_build)
 
         with tempfile.TemporaryDirectory() as temp_dir:
-            markdown = build_wiki_markdown(wiki, ledger, [source])
+            markdown = build_wiki_markdown(
+                wiki,
+                ledger,
+                [source],
+                "## Wiki Brief\n\nAlice joined Example Co. (S1:fact-1)",
+            )
             write_wiki_page(temp_dir, wiki, markdown)
             mark_build_current(wiki, ledger, [source])
 
@@ -271,7 +294,7 @@ class WikiReviewBuildTests(unittest.TestCase):
 
             self.assertTrue(before.needs_build)
             with self.assertRaisesRegex(ValueError, "incomplete MEMEX facts markers"):
-                workspace.build_wiki("career")
+                workspace.build_wiki("career", fixture_wiki_build_provider())
 
             after = workspace.status("career")
             self.assertEqual(before.build_baseline, after.build_baseline)

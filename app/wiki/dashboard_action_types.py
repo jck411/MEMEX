@@ -8,8 +8,9 @@ if TYPE_CHECKING:
     from .provider_balances import ProviderBalance
     from .source_extraction import SourceExtractionJob, SourceExtractionWorkflowResult
     from .source_fix import SourceFixResult
-    from .workflows import ReviewWorkflowResult
+    from .workflows import BuildWorkflowResult, ReviewWorkflowResult
 else:
+    BuildWorkflowResult = Any
     ProviderBalance = Any
     SourceExtractionJob = Any
     SourceExtractionWorkflowResult = Any
@@ -20,3 +21,4 @@ BalanceProvider = Callable[[], tuple[ProviderBalance, ...]]
 SourceExtractionRunner = Callable[[SourceExtractionJob], SourceExtractionWorkflowResult]
 SourceFixRunner = Callable[[str, str], SourceFixResult]
 SourceReviewRunner = Callable[[str, str, bool], ReviewWorkflowResult]
+WikiBuildRunner = Callable[[str], BuildWorkflowResult]

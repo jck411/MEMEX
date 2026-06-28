@@ -32,6 +32,15 @@ currently uses OpenRouter:
 python scripts/wiki_dev.py review-llm WIKI_ID SOURCE_ID
 ```
 
+Wiki builds are also provider-backed and use OpenRouter
+`deepseek/deepseek-v4-pro` by default:
+
+```bash
+python scripts/wiki_dev.py build WIKI_ID
+```
+
+Use `build --fixture` only for deterministic local smoke tests.
+
 The local dashboard uses one Add Source path: choose a runnable extraction
 model, upload a source file, extract it, then assign the saved source to wikis
 after the facts are visible. Use `scripts/wiki_extract.py` when you

@@ -1,23 +1,36 @@
-"""Markdown rendering for the generated wiki fact audit appendix."""
+"""Markdown rendering for generated wiki sections and fact audit appendix."""
 
 from __future__ import annotations
 
 import re
-from typing import Any, Iterable, Mapping
+from typing import Iterable, Mapping
 
-from .fact_visibility import VisibleFact, group_visible_facts
+from .citations import (
+    compact_fact_note,
+    evidence_ids,
+    fact_records_by_key,
+    fact_sort_key,
+    inline_text,
+    source_keys_by_id,
+)
 from .ledger import WikiLedger
-from .records import FactRecord, SourceRecord, WikiRecord, source_index
+from .records import SourceRecord, WikiRecord, source_index
 from .status import AcceptedFact, accepted_facts_for_wiki
 from .wiki_scope import wiki_description
 
+SYNTHESIS_START = "<!-- MEMEX:SYNTHESIS:START -->"
+SYNTHESIS_END = "<!-- MEMEX:SYNTHESIS:END -->"
 FACTS_START = "<!-- MEMEX:FACTS:START -->"
 FACTS_END = "<!-- MEMEX:FACTS:END -->"
 
+_HEADING_RE = re.compile(r"^(?P<level>#{1,6})\s+(?P<title>.+?)\s*$")
 
-def _inline_text(value: str) -> str:
-    text = " ".join(str(value).split())
-    return text.replace("[[", r"\[\[").replace("]]", r"\]\]")
+
+def render_synthesis_section(synthesis_markdown: str) -> str:
+    body = synthesis_markdown.strip()
+    if not body:
+        raise ValueError("synthesis markdown is required")
+    return "\n".join((SYNTHESIS_START, body, SYNTHESIS_END))
 
 
 def render_fact_audit_section(
@@ -25,43 +38,27 @@ def render_fact_audit_section(
     accepted_facts: Iterable[AcceptedFact],
     sources: Iterable[SourceRecord] | Mapping[str, SourceRecord] = (),
 ) -> str:
-    facts = sorted(accepted_facts, key=_fact_sort_key)
+    facts = sorted(accepted_facts, key=fact_sort_key)
     source_map = source_index(sources)
-    fact_records = _fact_records_by_key(source_map)
-    source_keys = _source_keys_by_id(facts)
+    fact_records = fact_records_by_key(source_map)
+    source_keys = source_keys_by_id(facts)
     citation_by_fact = {
-        (fact.source_id, fact.fact_id): _compact_fact_note(
+        (fact.source_id, fact.fact_id): compact_fact_note(
             fact,
             fact_records.get((fact.source_id, fact.fact_id)),
             source_keys.get(fact.source_id, ""),
         )
         for fact in facts
     }
-    fact_groups = group_visible_facts(facts, source_map, citation_by_fact)
     lines = [FACTS_START, "## Accepted Facts", ""]
     description = wiki_description(wiki)
     if description:
-        lines.append(f"**Wiki description:** {_inline_text(description)}")
+        lines.append(f"**Wiki description:** {inline_text(description)}")
         lines.append("")
     if not facts:
         lines.append("_No accepted facts yet._")
-    elif fact_groups.restricted:
-        lines.extend(["### General Accepted Facts", ""])
-        if fact_groups.general:
-            _append_fact_lines(lines, fact_groups.general, source_map)
-        else:
-            lines.extend(["_No general accepted facts._", ""])
-        lines.extend(
-            [
-                "### Restricted Accepted Facts",
-                "",
-                "_Accepted facts excluded from generated briefs unless explicitly requested._",
-                "",
-            ]
-        )
-        _append_fact_lines(lines, fact_groups.restricted, source_map)
     else:
-        _append_fact_lines(lines, fact_groups.general, source_map)
+        _append_fact_lines(lines, facts, source_map, citation_by_fact)
     if facts:
         lines.extend(_references_section(facts, source_map, fact_records, source_keys))
     if lines[-1] == "":
@@ -72,65 +69,65 @@ def render_fact_audit_section(
 
 def _append_fact_lines(
     lines: list[str],
-    facts: Iterable[VisibleFact],
+    facts: Iterable[AcceptedFact],
     sources: Mapping[str, SourceRecord],
+    citation_by_fact: Mapping[tuple[str, str], str],
 ) -> None:
-    for item in facts:
-        fact = item.fact
-        suffix = f" {item.citation}" if item.citation else ""
-        lines.append(f"- {_inline_text(fact.text)}{suffix}")
+    for fact in facts:
+        citation = citation_by_fact.get((fact.source_id, fact.fact_id), "")
+        suffix = f" {citation}" if citation else ""
+        lines.append(f"- {inline_text(fact.text)}{suffix}")
         lines.append(f"  - Source: {_source_reference_label(fact.source_id, sources)}")
         if fact.decision.reason:
-            lines.append(f"  - Review: {_inline_text(fact.decision.reason)}")
+            lines.append(f"  - Review: {inline_text(fact.decision.reason)}")
         lines.append("")
 
 
-def replace_fact_audit_section(existing_markdown: str, section: str) -> str:
-    start = existing_markdown.find(FACTS_START)
-    end = existing_markdown.find(FACTS_END)
-    if start == -1 and end == -1:
-        if not existing_markdown.strip():
-            return section + "\n"
-        return existing_markdown.rstrip() + "\n\n" + section + "\n"
-    if start == -1 or end == -1 or end < start:
-        raise ValueError("existing markdown has incomplete MEMEX facts markers")
+def replace_synthesis_section(existing_markdown: str, section: str) -> str:
+    return _replace_or_insert_marked_section(
+        existing_markdown,
+        section,
+        SYNTHESIS_START,
+        SYNTHESIS_END,
+        error="existing markdown has incomplete MEMEX synthesis markers",
+        insert_after_title=True,
+    )
 
-    end += len(FACTS_END)
-    prefix = existing_markdown[:start].rstrip()
-    suffix = existing_markdown[end:].lstrip()
-    pieces = [piece for piece in (prefix, section, suffix) if piece]
-    return "\n\n".join(pieces) + "\n"
+
+def replace_fact_audit_section(existing_markdown: str, section: str) -> str:
+    return _replace_or_insert_marked_section(
+        existing_markdown,
+        section,
+        FACTS_START,
+        FACTS_END,
+        error="existing markdown has incomplete MEMEX facts markers",
+        insert_after_title=False,
+    )
 
 
 def build_wiki_markdown(
     wiki: WikiRecord,
     ledger: WikiLedger,
     sources: Iterable[SourceRecord] | Mapping[str, SourceRecord],
+    synthesis_markdown: str,
     existing_markdown: str = "",
 ) -> str:
     source_map = source_index(sources)
     accepted_facts = accepted_facts_for_wiki(wiki, ledger, source_map)
-    section = render_fact_audit_section(wiki, accepted_facts, source_map)
-    if existing_markdown.strip():
-        return replace_fact_audit_section(existing_markdown, section)
-    return f"# {wiki.title}\n\n{section}\n"
-
-
-def _fact_records_by_key(
-    sources: Mapping[str, SourceRecord],
-) -> dict[tuple[str, str], FactRecord]:
-    records: dict[tuple[str, str], FactRecord] = {}
-    for source_id, source in sources.items():
-        for fact_id, fact in source.fact_by_id().items():
-            records[(source_id, fact_id)] = fact
-    return records
+    markdown = _prepare_existing_markdown(wiki, existing_markdown)
+    markdown = replace_synthesis_section(markdown, render_synthesis_section(synthesis_markdown))
+    markdown = replace_fact_audit_section(
+        markdown,
+        render_fact_audit_section(wiki, accepted_facts, source_map),
+    )
+    return markdown
 
 
 def _source_reference_label(
     source_id: str,
     sources: Mapping[str, SourceRecord],
 ) -> str:
-    title = _inline_text(sources[source_id].title) if source_id in sources else ""
+    title = inline_text(sources[source_id].title) if source_id in sources else ""
     if title and title != source_id:
         return f"{title} (`{source_id}`)"
     return f"`{source_id}`"
@@ -148,81 +145,111 @@ def _references_section(
         source_facts = [fact for fact in facts if fact.source_id == source_id]
         for fact in source_facts:
             fact_record = fact_records.get((fact.source_id, fact.fact_id))
-            citation = _compact_fact_note(fact, fact_record, source_key)
+            citation = compact_fact_note(fact, fact_record, source_key)
             prefix = f"{citation} " if citation else ""
-            pieces = [f"fact `{_inline_text(fact.fact_id)}`"]
-            evidence_ids = _evidence_ids(fact_record)
-            if evidence_ids:
+            pieces = [f"fact `{inline_text(fact.fact_id)}`"]
+            fact_evidence_ids = evidence_ids(fact_record)
+            if fact_evidence_ids:
                 pieces.append(
-                    "evidence " + ", ".join(f"`{_inline_text(item)}`" for item in evidence_ids)
+                    "evidence " + ", ".join(f"`{inline_text(item)}`" for item in fact_evidence_ids)
                 )
-            lines.append(f"- {prefix}{' ; '.join(pieces)}: {_inline_text(fact.text)}")
+            lines.append(f"- {prefix}{' ; '.join(pieces)}: {inline_text(fact.text)}")
         lines.append("")
     return lines
 
 
-def _source_keys_by_id(facts: list[AcceptedFact]) -> dict[str, str]:
-    source_ids: list[str] = []
-    for fact in facts:
-        if fact.source_id not in source_ids:
-            source_ids.append(fact.source_id)
-    return {source_id: f"S{index}" for index, source_id in enumerate(source_ids, start=1)}
-
-
-def _fact_sort_key(fact: AcceptedFact) -> tuple[str, tuple[tuple[int, int | str], ...]]:
-    return fact.source_id, _natural_key(fact.fact_id)
-
-
-def _natural_key(value: str) -> tuple[tuple[int, int | str], ...]:
-    return tuple(
-        (1, int(part)) if part.isdigit() else (0, part.lower())
-        for part in re.split(r"(\d+)", value)
-        if part
-    )
-
-
-def _compact_fact_note(
-    fact: AcceptedFact,
-    fact_record: FactRecord | None,
-    source_key: str,
+def _replace_or_insert_marked_section(
+    existing_markdown: str,
+    section: str,
+    start_marker: str,
+    end_marker: str,
+    *,
+    error: str,
+    insert_after_title: bool,
 ) -> str:
-    ids = _unique([*_evidence_ids(fact_record), fact.fact_id])
-    if not ids:
-        return ""
-    prefix = f"{source_key}:" if source_key else ""
-    return f"({prefix}{','.join(ids)})"
+    start = existing_markdown.find(start_marker)
+    end = existing_markdown.find(end_marker)
+    if start == -1 and end == -1:
+        if not existing_markdown.strip():
+            return section + "\n"
+        if insert_after_title:
+            return _insert_after_title(existing_markdown, section)
+        return existing_markdown.rstrip() + "\n\n" + section + "\n"
+    if start == -1 or end == -1 or end < start:
+        raise ValueError(error)
+
+    end += len(end_marker)
+    prefix = existing_markdown[:start].rstrip()
+    suffix = existing_markdown[end:].lstrip()
+    pieces = [piece for piece in (prefix, section, suffix) if piece]
+    return "\n\n".join(pieces) + "\n"
 
 
-def _evidence_ids(fact_record: FactRecord | None) -> list[str]:
-    if fact_record is None:
-        return []
-    provenance = fact_record.provenance
-    explicit_ids = _string_list(provenance.get("evidence_ids"))
-    if explicit_ids:
-        return explicit_ids
-    return _unique(
-        _text(item.get("id"))
-        for item in provenance.get("evidence", ())
-        if isinstance(item, Mapping)
-    )
+def _prepare_existing_markdown(wiki: WikiRecord, existing_markdown: str) -> str:
+    without_obsolete = remove_obsolete_markdown_sections(existing_markdown)
+    if not without_obsolete.strip():
+        return f"# {inline_text(wiki.title)}\n"
+    return _ensure_wiki_title(wiki, without_obsolete)
 
 
-def _string_list(value: Any) -> list[str]:
-    if not isinstance(value, list | tuple):
-        return []
-    return [_text(item) for item in value if _text(item)]
+def _ensure_wiki_title(wiki: WikiRecord, markdown: str) -> str:
+    title = f"# {inline_text(wiki.title)}"
+    lines = markdown.rstrip().splitlines()
+    for index, line in enumerate(lines):
+        if not line.strip():
+            continue
+        if line.lstrip().startswith("# "):
+            lines[index] = title
+            return "\n".join(lines) + "\n"
+        return title + "\n\n" + markdown.strip() + "\n"
+    return title + "\n"
 
 
-def _unique(values: Iterable[str]) -> list[str]:
-    seen: set[str] = set()
+def _insert_after_title(existing_markdown: str, section: str) -> str:
+    markdown = existing_markdown.rstrip()
+    lines = markdown.splitlines()
+    for index, line in enumerate(lines):
+        if line.lstrip().startswith("# "):
+            prefix = "\n".join(lines[: index + 1]).rstrip()
+            suffix = "\n".join(lines[index + 1 :]).strip()
+            pieces = [piece for piece in (prefix, section, suffix) if piece]
+            return "\n\n".join(pieces) + "\n"
+    return markdown + "\n\n" + section + "\n"
+
+
+def remove_obsolete_markdown_sections(markdown: str) -> str:
+    if not markdown.strip():
+        return markdown
+    lines = markdown.splitlines()
     result: list[str] = []
-    for value in values:
-        text = _text(value)
-        if text and text not in seen:
-            seen.add(text)
-            result.append(text)
-    return result
+    skip_default_level: int | None = None
+    skipped_default_content = False
+    for line in lines:
+        match = _HEADING_RE.match(line.strip())
+        if skip_default_level is not None:
+            if match and len(match.group("level")) <= skip_default_level:
+                skip_default_level = None
+                skipped_default_content = False
+            elif not line.strip():
+                if skipped_default_content:
+                    skip_default_level = None
+                    skipped_default_content = False
+                continue
+            else:
+                skipped_default_content = True
+                continue
+
+        if match:
+            title = _normalized_heading(match.group("title"))
+            if title == "default conversation context":
+                skip_default_level = len(match.group("level"))
+                skipped_default_content = False
+                continue
+            if title == "llm context":
+                continue
+        result.append(line)
+    return re.sub(r"\n{3,}", "\n\n", "\n".join(result)).strip() + ("\n" if result else "")
 
 
-def _text(value: object) -> str:
-    return "" if value is None else str(value).strip()
+def _normalized_heading(value: str) -> str:
+    return re.sub(r"\s+", " ", value.strip().strip("#")).lower()

@@ -111,7 +111,9 @@ def _post_delete_wiki(runtime: DashboardRuntime, form: DashboardForm) -> str:
 
 def _post_build(runtime: DashboardRuntime, form: DashboardForm) -> str:
     wiki_id = form.first("wiki_id")
-    runtime.workspace.build_wiki(wiki_id)
+    if runtime.wiki_builder is None:
+        raise ValueError("wiki build is not configured")
+    runtime.wiki_builder(wiki_id)
     return f"/?message=built+{wiki_id}"
 
 

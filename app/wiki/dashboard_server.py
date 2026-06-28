@@ -11,6 +11,7 @@ from .dashboard_action_types import (
     SourceExtractionRunner,
     SourceFixRunner,
     SourceReviewRunner,
+    WikiBuildRunner,
 )
 from .dashboard_routes import (
     DashboardResponse,
@@ -34,6 +35,7 @@ def create_dashboard_server(
     extraction_model_spec: str = DEFAULT_EXTRACTION_PROFILE_ID,
     source_fixer: SourceFixRunner | None = None,
     source_reviewer: SourceReviewRunner | None = None,
+    wiki_builder: WikiBuildRunner | None = None,
 ) -> ThreadingHTTPServer:
     handler = create_dashboard_handler(
         workspace,
@@ -42,6 +44,7 @@ def create_dashboard_server(
         extraction_model_spec,
         source_fixer,
         source_reviewer,
+        wiki_builder,
     )
     return ThreadingHTTPServer((host, port), handler)
 
@@ -55,6 +58,7 @@ def run_dashboard_server(
     source_extractor: SourceExtractionRunner | None = None,
     source_fixer: SourceFixRunner | None = None,
     source_reviewer: SourceReviewRunner | None = None,
+    wiki_builder: WikiBuildRunner | None = None,
 ) -> None:
     runtime = dashboard_runtime_from_env(
         workspace,
@@ -63,6 +67,7 @@ def run_dashboard_server(
         source_extractor=source_extractor,
         source_fixer=source_fixer,
         source_reviewer=source_reviewer,
+        wiki_builder=wiki_builder,
     )
     server = ThreadingHTTPServer(
         (host, port),
@@ -85,6 +90,7 @@ def create_dashboard_handler(
     extraction_model_spec: str = DEFAULT_EXTRACTION_PROFILE_ID,
     source_fixer: SourceFixRunner | None = None,
     source_reviewer: SourceReviewRunner | None = None,
+    wiki_builder: WikiBuildRunner | None = None,
 ) -> Callable[..., BaseHTTPRequestHandler]:
     runtime = DashboardRuntime(
         workspace=workspace,
@@ -93,6 +99,7 @@ def create_dashboard_handler(
         extraction_model_spec=extraction_model_spec,
         source_fixer=source_fixer,
         source_reviewer=source_reviewer,
+        wiki_builder=wiki_builder,
     )
     return _dashboard_handler_for_runtime(runtime)
 

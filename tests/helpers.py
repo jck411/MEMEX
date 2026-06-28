@@ -8,6 +8,7 @@ from app.wiki.ledger import ReviewDecision
 from app.wiki.records import FactRecord, SourceRecord, WikiRecord, WikiRegistry
 from app.wiki.review import ReviewResult
 from app.wiki.reviewers import FixtureReviewProvider
+from app.wiki.builders import FixtureWikiBuildProvider
 from app.wiki.storage import WikiDataStore
 from app.wiki.wiki_scope import wiki_scope_signature
 from app.wiki.workflows import WikiWorkspace
@@ -149,6 +150,10 @@ def fixture_review_provider(
         payload["default_ticked"] = default_ticked
         payload["default_reason"] = default_reason
     return FixtureReviewProvider.from_payload(payload)
+
+
+def fixture_wiki_build_provider(synthesis_markdown: str = "") -> FixtureWikiBuildProvider:
+    return FixtureWikiBuildProvider(synthesis_markdown=synthesis_markdown)
 
 
 def write_text_source(

@@ -8,6 +8,7 @@ from pathlib import Path
 from app.wiki.review import ReviewResult
 from tests.helpers import (
     fixture_review_provider,
+    fixture_wiki_build_provider,
     profile_source_record,
     wiki_record,
     wiki_registry,
@@ -50,7 +51,7 @@ class WikiWorkflowTests(unittest.TestCase):
             self.assertFalse(reviewed.status.needs_review)
             self.assertTrue(reviewed.status.needs_build)
 
-            built = workspace.build_wiki("career")
+            built = workspace.build_wiki("career", fixture_wiki_build_provider())
             self.assertTrue(built.status.current)
             self.assertEqual(root / "vault" / "career.md", built.path)
             self.assertIn(
@@ -106,7 +107,7 @@ class WikiWorkflowTests(unittest.TestCase):
                     ReviewResult("fact-2", False, "Location is out of scope."),
                 ],
             )
-            workspace.build_wiki("career")
+            workspace.build_wiki("career", fixture_wiki_build_provider())
 
             deleted = workspace.delete_wiki("career")
             registry = workspace.data_store.load_registry()
@@ -156,7 +157,7 @@ class WikiWorkflowTests(unittest.TestCase):
                     ReviewResult("fact-2", False, "Location is out of scope."),
                 ],
             )
-            workspace.build_wiki("career")
+            workspace.build_wiki("career", fixture_wiki_build_provider())
 
             workspace.delete_source("source-1")
             status = workspace.status("career")
@@ -184,7 +185,7 @@ class WikiWorkflowTests(unittest.TestCase):
                     ReviewResult("fact-2", False, "Location is out of scope."),
                 ],
             )
-            workspace.build_wiki("career")
+            workspace.build_wiki("career", fixture_wiki_build_provider())
 
             status = workspace.unassign_source("career", "source-1")
 
@@ -275,7 +276,7 @@ class WikiWorkflowTests(unittest.TestCase):
             self.assertIn("remaining_review=0", review.stdout)
             self.assertIn("needs_build", review.stdout)
 
-            build = self._run(base + ["build", "career"])
+            build = self._run(base + ["build", "career", "--fixture"])
             self.assertIn("current", build.stdout)
             self.assertIn(
                 "Alice joined Example Co.",

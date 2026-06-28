@@ -9,9 +9,11 @@ from .dashboard_action_types import (
     SourceExtractionRunner,
     SourceFixRunner,
     SourceReviewRunner,
+    WikiBuildRunner,
 )
 from .dashboard_runtime import DashboardRuntime
 from .model_profiles import merged_env
+from .openrouter_build import OpenRouterWikiBuildProvider
 from .openrouter_review import OpenRouterReviewProvider
 from .provider_balances import provider_balance_snapshot
 from .source_extraction import extract_source_to_workspace
@@ -28,6 +30,7 @@ def dashboard_runtime_from_env(
     source_extractor: SourceExtractionRunner | None = None,
     source_fixer: SourceFixRunner | None = None,
     source_reviewer: SourceReviewRunner | None = None,
+    wiki_builder: WikiBuildRunner | None = None,
 ) -> DashboardRuntime:
     env_path = Path(env_file)
     return DashboardRuntime(
@@ -59,6 +62,15 @@ def dashboard_runtime_from_env(
                     api_key=merged_env(env_path).get("OPENROUTER_API_KEY", ""),
                 ),
                 review_all=review_all,
+            )
+        ),
+        wiki_builder=wiki_builder
+        or (
+            lambda wiki_id: workspace.build_wiki(
+                wiki_id,
+                OpenRouterWikiBuildProvider(
+                    api_key=merged_env(env_path).get("OPENROUTER_API_KEY", ""),
+                ),
             )
         ),
     )

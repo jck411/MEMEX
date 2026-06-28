@@ -51,9 +51,10 @@ The V2 foundation is in place:
 - Per-wiki LLM review uses OpenRouter `deepseek/deepseek-v4-pro` for one
   assigned source/wiki pair and writes to the same ledger state as manual
   checkboxes.
-- Wiki builds render the accepted fact ledger as general and restricted
-  accepted facts with references. LLM-built wiki synthesis remains separate
-  from downstream LLM use of the finished markdown.
+- Wiki builds use OpenRouter `deepseek/deepseek-v4-pro` to synthesize a managed
+  wiki body from current accepted facts, then render a deterministic accepted
+  fact audit appendix with compact references. LLM-built wiki synthesis remains
+  separate from downstream LLM use of the finished markdown.
 - `python scripts/wiki_validate.py` validates source records, source assets,
   originals, evidence references, and ledger references.
 
@@ -96,8 +97,8 @@ Needed:
 
 - Build from accepted fact deltas plus existing markdown.
 - Preserve human-written markdown around generated sections.
-- Add provider-backed `Wiki Brief` synthesis above the accepted-fact ledger
-  when the guardrails are ready.
+- Keep provider-backed `Wiki Brief` synthesis above the accepted-fact ledger
+  guarded by citation validation.
 - Keep provenance visible enough to audit generated claims.
 - Update build baselines only after successful writes.
 - Make failed builds leave no partial baseline or misleading `current` state.
@@ -115,7 +116,7 @@ supports it.
 
 Needed:
 
-- Decide how accepted facts appear in generated markdown.
+- Refine how accepted facts appear in generated markdown.
 - Link or annotate generated claims with source/fact provenance.
 - Show source asset metadata and original artifact access from source detail.
 - Keep provenance data in ledgers/manifests, not duplicated into markdown as
