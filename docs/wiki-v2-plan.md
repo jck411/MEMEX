@@ -1,6 +1,6 @@
 # MEMEX Wiki V2 Plan
 
-Last updated: 2026-06-27
+Last updated: 2026-06-28
 
 ## Direction
 
@@ -51,6 +51,10 @@ The V2 foundation is in place:
 - Per-wiki LLM review uses OpenRouter `deepseek/deepseek-v4-pro` for one
   assigned source/wiki pair and writes to the same ledger state as manual
   checkboxes.
+- Wiki builds render an LLM-oriented context section before the full accepted
+  fact ledger and references, keeping direct identifiers out of the default
+  conversation context surface while listing restricted accepted facts below
+  default accepted facts in the ledger.
 - `python scripts/wiki_validate.py` validates source records, source assets,
   originals, evidence references, and ledger references.
 
@@ -93,6 +97,8 @@ Needed:
 
 - Build from accepted fact deltas plus existing markdown.
 - Preserve human-written markdown around generated sections.
+- Promote the deterministic LLM context section toward provider-backed
+  synthesis when the guardrails are ready.
 - Keep provenance visible enough to audit generated claims.
 - Update build baselines only after successful writes.
 - Make failed builds leave no partial baseline or misleading `current` state.

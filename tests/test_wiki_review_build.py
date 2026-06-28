@@ -136,6 +136,8 @@ class WikiReviewBuildTests(unittest.TestCase):
 
         markdown = build_wiki_markdown(wiki, ledger, [source])
         self.assertIn("# Career", markdown)
+        self.assertIn("## LLM Context", markdown)
+        self.assertIn("### Default Conversation Context", markdown)
         self.assertIn("Wiki description:** Track durable career history.", markdown)
         self.assertIn("## Accepted Facts", markdown)
         self.assertIn(FACTS_START, markdown)
@@ -162,6 +164,44 @@ class WikiReviewBuildTests(unittest.TestCase):
         self.assertIn("Human-written intro.", updated)
         self.assertNotIn("old generated text", updated)
         self.assertIn("Human-written footer.", updated)
+
+    def test_restricted_accepted_facts_render_below_default_accepted_facts(self):
+        public_fact = fact_record("f1", "Alice is a licensed pharmacist.")
+        restricted_fact = fact_record("f2", "Passport number: 123456789")
+        resume = source_record("resume", public_fact, title="Resume")
+        passport = source_record("passport", restricted_fact, title="United States Passport")
+        ledger = WikiLedger.empty()
+        ledger.assign_source("career", "resume")
+        ledger.assign_source("career", "passport")
+        apply_review_results(
+            CAREER_WIKI,
+            "resume",
+            ledger,
+            resume,
+            [ReviewResult("f1", True, "Professional identity.")],
+        )
+        apply_review_results(
+            CAREER_WIKI,
+            "passport",
+            ledger,
+            passport,
+            [ReviewResult("f2", True, "Identity document detail.")],
+        )
+
+        markdown = build_wiki_markdown(CAREER_WIKI, ledger, [resume, passport])
+        context = markdown.split("## Accepted Facts", 1)[0]
+        accepted_facts = markdown.split("## Accepted Facts", 1)[1]
+
+        self.assertIn("Alice is a licensed pharmacist.", context)
+        self.assertNotIn("Passport number: 123456789", context)
+        self.assertIn("1 restricted accepted fact(s) are listed below", context)
+        self.assertIn("### Default Accepted Facts", accepted_facts)
+        self.assertIn("### Restricted Accepted Facts", accepted_facts)
+        self.assertIn("Passport number: 123456789", accepted_facts)
+        self.assertLess(
+            accepted_facts.find("Alice is a licensed pharmacist."),
+            accepted_facts.find("Passport number: 123456789"),
+        )
 
     def test_incomplete_memex_markers_are_rejected(self):
         replacement = f"{FACTS_START}\nnew generated text\n{FACTS_END}"

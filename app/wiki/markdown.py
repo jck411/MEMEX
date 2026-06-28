@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import re
 from typing import Any, Iterable, Mapping
 
 from .ledger import WikiLedger
+from .markdown_context import ContextFact, classify_context_facts, render_llm_context_section
 from .records import FactRecord, SourceRecord, WikiRecord, source_index
 from .status import AcceptedFact, accepted_facts_for_wiki
 from .wiki_scope import wiki_description
@@ -23,32 +25,65 @@ def render_reviewed_facts_section(
     accepted_facts: Iterable[AcceptedFact],
     sources: Iterable[SourceRecord] | Mapping[str, SourceRecord] = (),
 ) -> str:
-    facts = sorted(accepted_facts, key=lambda fact: (fact.source_id, fact.fact_id))
+    facts = sorted(accepted_facts, key=_fact_sort_key)
     source_map = source_index(sources)
     fact_records = _fact_records_by_key(source_map)
     source_keys = _source_keys_by_id(facts)
-    lines = [FACTS_START, "## Accepted Facts", ""]
+    citation_by_fact = {
+        (fact.source_id, fact.fact_id): _compact_fact_note(
+            fact,
+            fact_records.get((fact.source_id, fact.fact_id)),
+            source_keys.get(fact.source_id, ""),
+        )
+        for fact in facts
+    }
+    context_facts = classify_context_facts(facts, source_map, citation_by_fact)
+    context = render_llm_context_section(wiki, context_facts)
+    lines = [FACTS_START, context, "", "## Accepted Facts", ""]
     description = wiki_description(wiki)
     if description:
         lines.append(f"**Wiki description:** {_inline_text(description)}")
         lines.append("")
     if not facts:
         lines.append("_No accepted facts yet._")
-    for fact in facts:
-        fact_record = fact_records.get((fact.source_id, fact.fact_id))
-        note = _compact_fact_note(fact, fact_record, source_keys.get(fact.source_id, ""))
-        suffix = f" {note}" if note else ""
-        lines.append(f"- {_inline_text(fact.text)}{suffix}")
-        lines.append(f"  - Source: {_source_reference_label(fact.source_id, source_map)}")
-        if fact.decision.reason:
-            lines.append(f"  - Review: {_inline_text(fact.decision.reason)}")
-        lines.append("")
+    elif context_facts.restricted:
+        lines.extend(["### Default Accepted Facts", ""])
+        if context_facts.default:
+            _append_fact_lines(lines, context_facts.default, source_map)
+        else:
+            lines.extend(["_No default accepted facts._", ""])
+        lines.extend(
+            [
+                "### Restricted Accepted Facts",
+                "",
+                "_Accepted facts to keep out of default conversation context._",
+                "",
+            ]
+        )
+        _append_fact_lines(lines, context_facts.restricted, source_map)
+    else:
+        _append_fact_lines(lines, context_facts.default, source_map)
     if facts:
         lines.extend(_references_section(facts, source_map, fact_records, source_keys))
     if lines[-1] == "":
         lines.pop()
     lines.append(FACTS_END)
     return "\n".join(lines)
+
+
+def _append_fact_lines(
+    lines: list[str],
+    facts: Iterable[ContextFact],
+    sources: Mapping[str, SourceRecord],
+) -> None:
+    for item in facts:
+        fact = item.fact
+        suffix = f" {item.citation}" if item.citation else ""
+        lines.append(f"- {_inline_text(fact.text)}{suffix}")
+        lines.append(f"  - Source: {_source_reference_label(fact.source_id, sources)}")
+        if fact.decision.reason:
+            lines.append(f"  - Review: {_inline_text(fact.decision.reason)}")
+        lines.append("")
 
 
 def replace_reviewed_facts_section(existing_markdown: str, section: str) -> str:
@@ -133,6 +168,18 @@ def _source_keys_by_id(facts: list[AcceptedFact]) -> dict[str, str]:
         if fact.source_id not in source_ids:
             source_ids.append(fact.source_id)
     return {source_id: f"S{index}" for index, source_id in enumerate(source_ids, start=1)}
+
+
+def _fact_sort_key(fact: AcceptedFact) -> tuple[str, tuple[tuple[int, int | str], ...]]:
+    return fact.source_id, _natural_key(fact.fact_id)
+
+
+def _natural_key(value: str) -> tuple[tuple[int, int | str], ...]:
+    return tuple(
+        (1, int(part)) if part.isdigit() else (0, part.lower())
+        for part in re.split(r"(\d+)", value)
+        if part
+    )
 
 
 def _compact_fact_note(
