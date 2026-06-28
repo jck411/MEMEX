@@ -1,4 +1,4 @@
-"""Markdown rendering for generated wiki facts and references."""
+"""Markdown rendering for the generated wiki fact audit appendix."""
 
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ def _inline_text(value: str) -> str:
     return text.replace("[[", r"\[\[").replace("]]", r"\]\]")
 
 
-def render_reviewed_facts_section(
+def render_fact_audit_section(
     wiki: WikiRecord,
     accepted_facts: Iterable[AcceptedFact],
     sources: Iterable[SourceRecord] | Mapping[str, SourceRecord] = (),
@@ -85,7 +85,7 @@ def _append_fact_lines(
         lines.append("")
 
 
-def replace_reviewed_facts_section(existing_markdown: str, section: str) -> str:
+def replace_fact_audit_section(existing_markdown: str, section: str) -> str:
     start = existing_markdown.find(FACTS_START)
     end = existing_markdown.find(FACTS_END)
     if start == -1 and end == -1:
@@ -110,9 +110,9 @@ def build_wiki_markdown(
 ) -> str:
     source_map = source_index(sources)
     accepted_facts = accepted_facts_for_wiki(wiki, ledger, source_map)
-    section = render_reviewed_facts_section(wiki, accepted_facts, source_map)
+    section = render_fact_audit_section(wiki, accepted_facts, source_map)
     if existing_markdown.strip():
-        return replace_reviewed_facts_section(existing_markdown, section)
+        return replace_fact_audit_section(existing_markdown, section)
     return f"# {wiki.title}\n\n{section}\n"
 
 

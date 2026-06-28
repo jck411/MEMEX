@@ -7,7 +7,7 @@ from app.wiki.markdown import (
     FACTS_END,
     FACTS_START,
     build_wiki_markdown,
-    replace_reviewed_facts_section,
+    replace_fact_audit_section,
 )
 from app.wiki.review import (
     ReviewResult,
@@ -111,7 +111,7 @@ class WikiReviewBuildTests(unittest.TestCase):
 
         self.assertEqual((), review_delta_for_wiki(CAREER_WIKI, ledger, [source]))
 
-    def test_build_wiki_markdown_creates_and_replaces_generated_section(self):
+    def test_build_wiki_markdown_creates_and_replaces_fact_audit_section(self):
         fact = fact_record(
             "fact-1",
             "Alice joined Example Co.\nShe led platform work.",
@@ -200,7 +200,7 @@ class WikiReviewBuildTests(unittest.TestCase):
             accepted_facts.find("Passport number: 123456789"),
         )
 
-    def test_incomplete_memex_markers_are_rejected(self):
+    def test_incomplete_memex_fact_audit_markers_are_rejected(self):
         replacement = f"{FACTS_START}\nnew generated text\n{FACTS_END}"
         cases = (
             f"# Career\n\n{FACTS_START}\nold generated text\n",
@@ -211,7 +211,7 @@ class WikiReviewBuildTests(unittest.TestCase):
         for existing in cases:
             with self.subTest(existing=existing):
                 with self.assertRaisesRegex(ValueError, "incomplete MEMEX facts markers"):
-                    replace_reviewed_facts_section(existing, replacement)
+                    replace_fact_audit_section(existing, replacement)
 
     def test_vault_helpers_write_inside_vault_root(self):
         wiki = wiki_record("career", "Career", "nested/career.md")
