@@ -51,10 +51,13 @@ The V2 foundation is in place:
 - Per-wiki LLM review uses OpenRouter `deepseek/deepseek-v4-pro` for one
   assigned source/wiki pair and writes to the same ledger state as manual
   checkboxes.
-- Wiki builds use OpenRouter `deepseek/deepseek-v4-pro` to synthesize a managed
-  wiki body from current accepted facts, then render a deterministic accepted
-  fact audit appendix with compact references. LLM-built wiki synthesis remains
-  separate from downstream LLM use of the finished markdown.
+- Wiki builds use OpenRouter `deepseek/deepseek-v4-pro` to consolidate current
+  accepted facts into cite-backed claims, synthesize a managed wiki body from
+  those claims, then render a deterministic accepted fact audit appendix with
+  compact references. LLM-built wiki synthesis remains separate from downstream
+  LLM use of the finished markdown.
+- Managed synthesis citations are deterministically linked to matching accepted
+  fact anchors in the generated markdown appendix.
 - `python scripts/wiki_validate.py` validates source records, source assets,
   originals, evidence references, and ledger references.
 
@@ -99,6 +102,8 @@ Needed:
 - Preserve human-written markdown around generated sections.
 - Keep provider-backed `Wiki Brief` synthesis above the accepted-fact ledger
   guarded by citation validation.
+- Consolidate accepted facts into cite-backed claims before asking for polished
+  wiki prose.
 - Keep provenance visible enough to audit generated claims.
 - Update build baselines only after successful writes.
 - Make failed builds leave no partial baseline or misleading `current` state.
@@ -117,7 +122,8 @@ supports it.
 Needed:
 
 - Refine how accepted facts appear in generated markdown.
-- Link or annotate generated claims with source/fact provenance.
+- Deepen source/fact provenance links with source-detail and evidence-level
+  navigation.
 - Show source asset metadata and original artifact access from source detail.
 - Keep provenance data in ledgers/manifests, not duplicated into markdown as
   hidden lifecycle state.

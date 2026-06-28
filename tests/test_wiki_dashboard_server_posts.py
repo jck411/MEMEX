@@ -285,6 +285,63 @@ class WikiDashboardServerPostTests(DashboardServerTestCase):
                 body = self.request(host, port, "GET", location)[2]
                 toast = parse_html(body).require("div", {"id": "toast"})
                 self.assertEqual("toast toast-error", toast.attrs["class"])
+                self.assertIn("build failed for 'career'", toast.normalized_text())
+                self.assertIn("did not write markdown", toast.normalized_text())
+
+    def test_dashboard_server_build_failure_toast_includes_provider_reason(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            workspace = wiki_workspace(root)
+            workspace.add_wiki("career", "Career", "career.md")
+            workspace.save_source(
+                source_record(
+                    "source-1",
+                    fact_record("fact-1", "Alice joined Example Co."),
+                )
+            )
+            workspace.assign_source("career", "source-1")
+            workspace.review_source(
+                "career",
+                "source-1",
+                [ReviewResult("fact-1", True, "Career history.")],
+            )
+
+            def fail_build(wiki_id):
+                raise RuntimeError(
+                    "OpenRouter returned HTTP 400: "
+                    "No endpoints support required parameters."
+                )
+
+            with self.serving(
+                create_dashboard_server(
+                    workspace,
+                    port=0,
+                    wiki_builder=fail_build,
+                )
+            ) as (host, port):
+                status, location, _ = self.request(
+                    host,
+                    port,
+                    "POST",
+                    "/build",
+                    {"wiki_id": "career"},
+                )
+
+                self.assertEqual(303, status)
+                self.assertIn("message_type=error", location)
+                self.assertIn("build+failed+for+%27career%27", location)
+                self.assertIn("No+endpoints+support+required+parameters", location)
+                body = self.request(host, port, "GET", location)[2]
+                toast = parse_html(body).require("div", {"id": "toast"})
+                self.assertEqual("toast toast-error", toast.attrs["class"])
+                self.assertIn(
+                    "build failed for 'career': OpenRouter returned HTTP 400",
+                    toast.normalized_text(),
+                )
+                self.assertIn(
+                    "No endpoints support required parameters",
+                    toast.normalized_text(),
+                )
 
     def test_dashboard_server_build_success_writes_readable_wiki_page(self):
         with tempfile.TemporaryDirectory() as temp_dir:

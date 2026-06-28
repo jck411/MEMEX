@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Mapping
 
-from .build_guardrails import validate_synthesis_markdown
+from .build_guardrails import validate_wiki_build
 from .build_packets import build_fact_packet
 from .builders import WikiBuildProvider
 from .markdown import build_wiki_markdown
@@ -39,10 +39,7 @@ class WorkspaceBuildMixin:
         existing_markdown = read_wiki_page(self.vault_root, wiki)
         packet = build_fact_packet(wiki, ledger, sources, existing_markdown)
         build_result = provider.build(packet)
-        synthesis_markdown = validate_synthesis_markdown(
-            packet,
-            build_result.synthesis_markdown,
-        )
+        synthesis_markdown = validate_wiki_build(packet, build_result)
         markdown = build_wiki_markdown(
             wiki,
             ledger,

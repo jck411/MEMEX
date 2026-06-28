@@ -11,6 +11,9 @@ from .provider_balances import ProviderBalance
 from .records import WikiRecord
 from .status import WikiStatus
 
+_GENERATED_ANCHOR_RE = re.compile(r'<a id="(memex-fact-[A-Za-z0-9_.:-]+)"></a>')
+_INTERNAL_MARKDOWN_LINK_RE = re.compile(r"\[([^\]]+)\]\((#[A-Za-z0-9_.:-]+)\)")
+
 
 def render_wiki_page_html(
     *,
@@ -176,18 +179,30 @@ def _render_markdown(markdown: str) -> str:
 
 
 def _inline(text: str) -> str:
-    pieces = re.split(r"(`[^`]*`)", text)
+    pieces = re.split(r'(`[^`]*`|<a id="memex-fact-[A-Za-z0-9_.:-]+"></a>)', text)
     rendered: list[str] = []
     for piece in pieces:
         if piece.startswith("`") and piece.endswith("`"):
             rendered.append(f"<code>{escape(piece[1:-1])}</code>")
+        elif _GENERATED_ANCHOR_RE.fullmatch(piece):
+            anchor_id = _GENERATED_ANCHOR_RE.fullmatch(piece).group(1)
+            rendered.append(f'<a id="{escape(anchor_id, quote=True)}"></a>')
         else:
-            rendered.append(_strong(escape(piece)))
+            rendered.append(_markdown_links(_strong(escape(piece))))
     return "".join(rendered)
 
 
 def _strong(text: str) -> str:
     return re.sub(r"\*\*([^*]+)\*\*", r"<strong>\1</strong>", text)
+
+
+def _markdown_links(text: str) -> str:
+    def replace(match: re.Match[str]) -> str:
+        label = match.group(1)
+        href = match.group(2)
+        return f'<a href="{escape(href, quote=True)}">{label}</a>'
+
+    return _INTERNAL_MARKDOWN_LINK_RE.sub(replace, text)
 
 
 def _normalized_heading_text(text: str) -> str:

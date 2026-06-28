@@ -37,10 +37,17 @@ class WikiDashboardServerTests(DashboardServerTestCase):
                     (
                         "# Career",
                         "",
+                        "<!-- MEMEX:SYNTHESIS:START -->",
+                        "## Wiki Brief",
+                        "",
+                        "Alice joined Example Co. [(S1:f1)](#memex-fact-s1-f1)",
+                        "<!-- MEMEX:SYNTHESIS:END -->",
+                        "",
                         "<!-- MEMEX:FACTS:START -->",
                         "## Accepted Facts",
                         "",
-                        "- Alice joined Example Co. **Safely** `fact-1`",
+                        '- <a id="memex-fact-s1-f1"></a> '
+                        "Alice joined Example Co. **Safely** `fact-1`",
                         "- <script>alert('x')</script>",
                     )
                 ),
@@ -67,6 +74,8 @@ class WikiDashboardServerTests(DashboardServerTestCase):
                 self.assertIn("Accepted Facts", page.normalized_text())
                 self.assertIn("Safely", page.normalized_text())
                 self.assertIn("fact-1", page.normalized_text())
+                page.require("a", {"href": "#memex-fact-s1-f1"})
+                page.require("a", {"id": "memex-fact-s1-f1"})
                 self.assertIn("&lt;script&gt;alert(&#x27;x&#x27;)&lt;/script&gt;", body)
                 self.assertNotIn("MEMEX:FACTS:START", body)
 

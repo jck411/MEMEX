@@ -8,6 +8,8 @@ from typing import Any, Iterable, Mapping
 from .records import FactRecord
 from .status import AcceptedFact
 
+COMPACT_FACT_NOTE_RE = re.compile(r"\(S\d+:[A-Za-z0-9_.:-]+(?:,[A-Za-z0-9_.:-]+)*\)")
+
 
 def inline_text(value: object) -> str:
     text = " ".join(str(value).split())
@@ -46,6 +48,39 @@ def compact_fact_note(
         return ""
     prefix = f"{source_key}:" if source_key else ""
     return f"({prefix}{','.join(ids)})"
+
+
+def compact_fact_anchor(citation: str) -> str:
+    anchor_id = compact_fact_anchor_id(citation)
+    return f'<a id="{anchor_id}"></a>' if anchor_id else ""
+
+
+def compact_fact_anchor_id(citation: str) -> str:
+    if not COMPACT_FACT_NOTE_RE.fullmatch(citation.strip()):
+        return ""
+    value = citation.strip()[1:-1]
+    slug = re.sub(r"[^A-Za-z0-9]+", "-", value).strip("-").lower()
+    return f"memex-fact-{slug}" if slug else ""
+
+
+def link_compact_fact_notes(text: str, citations: Iterable[str]) -> str:
+    allowed = {citation for citation in citations if citation}
+    if not allowed:
+        return text
+
+    def replace(match: re.Match[str]) -> str:
+        citation = match.group(0)
+        if citation not in allowed or _already_linked(text, match):
+            return citation
+        anchor_id = compact_fact_anchor_id(citation)
+        return f"[{citation}](#{anchor_id})" if anchor_id else citation
+
+    return COMPACT_FACT_NOTE_RE.sub(replace, text)
+
+
+def _already_linked(text: str, match: re.Match[str]) -> bool:
+    start, end = match.span()
+    return start > 0 and text[start - 1] == "[" and end < len(text) and text[end] == "]"
 
 
 def evidence_ids(fact_record: FactRecord | None) -> list[str]:

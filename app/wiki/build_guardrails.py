@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 
 from .build_packets import WikiBuildPacket
+from .builders import ProviderWikiBuildClaim, ProviderWikiBuildResult
 from .markdown import FACTS_END, FACTS_START, SYNTHESIS_END, SYNTHESIS_START
 
 _COMPACT_CITATION_RE = re.compile(r"\(S\d+:[A-Za-z0-9_.:-]+(?:,[A-Za-z0-9_.:-]+)*\)")
@@ -19,13 +20,30 @@ _FORBIDDEN_SECTION_TITLES = {
 }
 
 
-def validate_synthesis_markdown(packet: WikiBuildPacket, markdown: str) -> str:
+def validate_wiki_build(
+    packet: WikiBuildPacket,
+    build_result: ProviderWikiBuildResult,
+) -> str:
+    _validate_claims(packet, build_result.claims)
+    return validate_synthesis_markdown(
+        packet,
+        build_result.synthesis_markdown,
+        allowed_citations=_claim_citations(build_result.claims),
+    )
+
+
+def validate_synthesis_markdown(
+    packet: WikiBuildPacket,
+    markdown: str,
+    *,
+    allowed_citations: set[str] | None = None,
+) -> str:
     body = _strip_markdown_fence(markdown).replace("\r\n", "\n").strip()
     if not body:
         raise ValueError("wiki-build synthesis markdown is empty")
     _reject_managed_scaffold(body)
     _require_wiki_brief(body)
-    _validate_citations(packet, body)
+    _validate_citations(packet, body, allowed_citations)
     return re.sub(r"\n{3,}", "\n\n", body).rstrip()
 
 
@@ -62,14 +80,60 @@ def _require_wiki_brief(markdown: str) -> None:
         stripped = line.strip()
         if not stripped:
             continue
-        if _normalized_heading(stripped.removeprefix("##")) == "wiki brief" and stripped.startswith("## "):
+        if (
+            _normalized_heading(stripped.removeprefix("##")) == "wiki brief"
+            and stripped.startswith("## ")
+        ):
             return
         raise ValueError("wiki-build synthesis must start with ## Wiki Brief")
     raise ValueError("wiki-build synthesis must start with ## Wiki Brief")
 
 
-def _validate_citations(packet: WikiBuildPacket, markdown: str) -> None:
+def _validate_claims(
+    packet: WikiBuildPacket,
+    claims: tuple[ProviderWikiBuildClaim, ...],
+) -> None:
     allowed = {fact.citation for fact in packet.accepted_facts if fact.citation}
+    if not packet.accepted_facts:
+        if claims:
+            raise ValueError("wiki-build claims were supplied but no accepted facts were supplied")
+        return
+    if not claims:
+        raise ValueError("wiki-build claims are required when accepted facts are supplied")
+
+    found: set[str] = set()
+    for index, claim in enumerate(claims, start=1):
+        if not claim.text.strip():
+            raise ValueError(f"wiki-build claim {index} text is empty")
+        citations = tuple(citation.strip() for citation in claim.citations)
+        if not citations or any(not citation for citation in citations):
+            raise ValueError(f"wiki-build claim {index} has no citations")
+        unknown = sorted(set(citations) - allowed)
+        if unknown:
+            raise ValueError(
+                f"wiki-build claim {index} cited unknown facts: {', '.join(unknown)}"
+            )
+        found.update(citations)
+
+    missing = sorted(allowed - found)
+    if missing:
+        raise ValueError(
+            f"wiki-build claims omitted accepted fact citations: {', '.join(missing)}"
+        )
+
+
+def _claim_citations(claims: tuple[ProviderWikiBuildClaim, ...]) -> set[str]:
+    return {citation for claim in claims for citation in claim.citations if citation}
+
+
+def _validate_citations(
+    packet: WikiBuildPacket,
+    markdown: str,
+    allowed_citations: set[str] | None,
+) -> None:
+    allowed = allowed_citations or {
+        fact.citation for fact in packet.accepted_facts if fact.citation
+    }
     found = set(_COMPACT_CITATION_RE.findall(markdown))
     unknown = sorted(found - allowed)
     if unknown:
@@ -78,10 +142,8 @@ def _validate_citations(packet: WikiBuildPacket, markdown: str) -> None:
         if found:
             raise ValueError("wiki-build synthesis cited facts but no accepted facts were supplied")
         return
-
-    missing = sorted(allowed - found)
-    if missing:
-        raise ValueError(f"wiki-build synthesis omitted accepted fact citations: {', '.join(missing)}")
+    if not found:
+        raise ValueError("wiki-build synthesis cited no accepted facts")
     uncited = _uncited_substantive_blocks(markdown)
     if uncited:
         preview = "; ".join(_preview(block) for block in uncited[:3])

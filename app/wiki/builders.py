@@ -9,14 +9,25 @@ from .build_packets import WikiBuildPacket
 
 
 @dataclass(frozen=True)
+class ProviderWikiBuildClaim:
+    text: str
+    citations: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "citations", tuple(self.citations))
+
+
+@dataclass(frozen=True)
 class ProviderWikiBuildResult:
     synthesis_markdown: str
     summary: str = ""
+    claims: tuple[ProviderWikiBuildClaim, ...] = ()
     provider: str = ""
     model: str = ""
     usage: Mapping[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
+        object.__setattr__(self, "claims", tuple(self.claims))
         object.__setattr__(self, "usage", dict(self.usage))
 
 
@@ -28,12 +39,14 @@ class WikiBuildProvider(Protocol):
 @dataclass(frozen=True)
 class FixtureWikiBuildProvider:
     synthesis_markdown: str = ""
+    claims: tuple[ProviderWikiBuildClaim, ...] = ()
 
     def build(self, packet: WikiBuildPacket) -> ProviderWikiBuildResult:
         markdown = self.synthesis_markdown.strip() or _default_fixture_markdown(packet)
         return ProviderWikiBuildResult(
             synthesis_markdown=markdown,
             summary="Fixture wiki build.",
+            claims=self.claims or _default_fixture_claims(packet),
             provider="fixture",
             model="fixture",
         )
@@ -48,3 +61,10 @@ def _default_fixture_markdown(packet: WikiBuildPacket) -> str:
     for fact in packet.accepted_facts:
         lines.append(f"- {fact.text} {fact.citation}".rstrip())
     return "\n".join(lines)
+
+
+def _default_fixture_claims(packet: WikiBuildPacket) -> tuple[ProviderWikiBuildClaim, ...]:
+    return tuple(
+        ProviderWikiBuildClaim(fact.text, (fact.citation,) if fact.citation else ())
+        for fact in packet.accepted_facts
+    )

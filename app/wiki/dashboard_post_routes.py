@@ -114,8 +114,13 @@ def _post_build(runtime: DashboardRuntime, form: DashboardForm) -> str:
     wiki_id = form.first("wiki_id")
     if runtime.wiki_builder is None:
         raise ValueError("wiki build is not configured")
-    runtime.wiki_builder(wiki_id)
-    _require_built_wiki(runtime, wiki_id)
+    try:
+        runtime.wiki_builder(wiki_id)
+        _require_built_wiki(runtime, wiki_id)
+    except Exception as error:
+        raise ValueError(
+            f"build failed for {wiki_id!r}: {_error_message(error)}"
+        ) from error
     return dashboard_location(f"successfully built {wiki_id}", message_type="success")
 
 
@@ -136,6 +141,10 @@ def _status_description(status) -> str:
     if status.needs_build:
         pending.append("pending build")
     return " and ".join(pending) or "a non-current status"
+
+
+def _error_message(error: Exception) -> str:
+    return str(error).strip() or error.__class__.__name__
 
 
 def _post_wiki_description(runtime: DashboardRuntime, form: DashboardForm) -> str:

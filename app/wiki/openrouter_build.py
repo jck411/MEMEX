@@ -40,6 +40,7 @@ class OpenRouterWikiBuildProvider:
                     "No accepted facts are currently available for this wiki."
                 ),
                 summary="No accepted facts available.",
+                claims=(),
                 provider="openrouter",
                 model=self.model,
             )
@@ -67,12 +68,13 @@ class OpenRouterWikiBuildProvider:
             opener=self.opener,
             timeout=self.timeout,
         )
-        summary, synthesis = parse_build_response(
+        summary, claims, synthesis = parse_build_response(
             strip_json_fence(chat_completion_text(data, task="wiki-build"))
         )
         return ProviderWikiBuildResult(
             synthesis_markdown=synthesis,
             summary=summary,
+            claims=claims,
             provider="openrouter",
             model=self.model,
             usage=_usage(data),

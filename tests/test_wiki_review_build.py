@@ -145,7 +145,10 @@ class WikiReviewBuildTests(unittest.TestCase):
         self.assertIn("# Career", markdown)
         self.assertIn(SYNTHESIS_START, markdown)
         self.assertIn("## Wiki Brief", markdown)
-        self.assertIn("led platform work. (S1:ev1,fact-1)", markdown)
+        self.assertIn(
+            "led platform work. [(S1:ev1,fact-1)](#memex-fact-s1-ev1-fact-1)",
+            markdown,
+        )
         self.assertIn(SYNTHESIS_END, markdown)
         self.assertNotIn("## LLM Context", markdown)
         self.assertNotIn("### Default Conversation Context", markdown)
@@ -153,7 +156,8 @@ class WikiReviewBuildTests(unittest.TestCase):
         self.assertIn("## Accepted Facts", markdown)
         self.assertIn(FACTS_START, markdown)
         self.assertIn(
-            "- Alice joined Example Co. She led platform work. (S1:ev1,fact-1)",
+            '- <a id="memex-fact-s1-ev1-fact-1"></a> '
+            "Alice joined Example Co. She led platform work. (S1:ev1,fact-1)",
             markdown,
         )
         self.assertIn("Review: Core career history.", markdown)

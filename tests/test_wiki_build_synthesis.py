@@ -1,12 +1,18 @@
 import json
 import tempfile
 import unittest
+from io import BytesIO
 from pathlib import Path
+from urllib.error import HTTPError
 
-from app.wiki.build_guardrails import validate_synthesis_markdown
+from app.wiki.build_guardrails import validate_synthesis_markdown, validate_wiki_build
 from app.wiki.build_packets import build_fact_packet
 from app.wiki.build_prompts import WIKI_BUILD_RESPONSE_SCHEMA, build_prompt_payload
-from app.wiki.builders import FixtureWikiBuildProvider
+from app.wiki.builders import (
+    FixtureWikiBuildProvider,
+    ProviderWikiBuildClaim,
+    ProviderWikiBuildResult,
+)
 from app.wiki.markdown import FACTS_END, FACTS_START, SYNTHESIS_END, SYNTHESIS_START
 from app.wiki.openrouter_build import (
     OPENROUTER_WIKI_BUILD_MODEL,
@@ -14,7 +20,14 @@ from app.wiki.openrouter_build import (
 )
 from app.wiki.openrouter_client import OPENROUTER_CHAT_COMPLETIONS_URL
 from app.wiki.review import ReviewResult, apply_review_results
-from tests.helpers import JsonResponse, fact_record, source_record, wiki_record, wiki_workspace
+from tests.helpers import (
+    JsonResponse,
+    RawResponse,
+    fact_record,
+    source_record,
+    wiki_record,
+    wiki_workspace,
+)
 
 
 def synthesis_wiki():
@@ -71,7 +84,10 @@ class WikiBuildSynthesisTests(unittest.TestCase):
         self.assertNotIn("Stale generated prose.", context)
         self.assertNotIn("old audit appendix", context)
         self.assertNotIn("Default Conversation Context", context)
-        self.assertEqual(("fact-1", "fact-2"), tuple(fact.fact_id for fact in packet.accepted_facts))
+        self.assertEqual(
+            ("fact-1", "fact-2"),
+            tuple(fact.fact_id for fact in packet.accepted_facts),
+        )
 
     def test_guardrails_accept_synthesis_that_cites_each_fact(self):
         packet = reviewed_packet()
@@ -82,6 +98,12 @@ class WikiBuildSynthesisTests(unittest.TestCase):
             "## Open Questions\n\n"
             "The accepted facts do not supply dates for the role. (S1:ev1,fact-1)"
         )
+
+        self.assertEqual(markdown, validate_synthesis_markdown(packet, markdown))
+
+    def test_guardrails_allow_synthesis_to_omit_claim_ledger_details(self):
+        packet = reviewed_packet()
+        markdown = "## Wiki Brief\n\nAlice joined Example Co. (S1:ev1,fact-1)"
 
         self.assertEqual(markdown, validate_synthesis_markdown(packet, markdown))
 
@@ -96,7 +118,7 @@ class WikiBuildSynthesisTests(unittest.TestCase):
 
         self.assertEqual(markdown, validate_synthesis_markdown(packet, markdown))
 
-    def test_guardrails_reject_unknown_or_missing_citations(self):
+    def test_guardrails_reject_unknown_citations(self):
         packet = reviewed_packet()
 
         with self.assertRaisesRegex(ValueError, "unknown facts"):
@@ -105,11 +127,21 @@ class WikiBuildSynthesisTests(unittest.TestCase):
                 "## Wiki Brief\n\nAlice joined Example Co. (S1:ev9,fact-9)",
             )
 
-        with self.assertRaisesRegex(ValueError, "omitted accepted fact citations"):
-            validate_synthesis_markdown(
-                packet,
-                "## Wiki Brief\n\nAlice joined Example Co. (S1:ev1,fact-1)",
-            )
+    def test_guardrails_reject_claims_that_do_not_cover_accepted_facts(self):
+        packet = reviewed_packet()
+        result = ProviderWikiBuildResult(
+            summary="Built one claim.",
+            claims=(
+                ProviderWikiBuildClaim(
+                    "Alice joined Example Co.",
+                    ("(S1:ev1,fact-1)",),
+                ),
+            ),
+            synthesis_markdown="## Wiki Brief\n\nAlice joined Example Co. (S1:ev1,fact-1)",
+        )
+
+        with self.assertRaisesRegex(ValueError, "claims omitted accepted fact citations"):
+            validate_wiki_build(packet, result)
 
     def test_guardrails_reject_uncited_substantive_text(self):
         packet = reviewed_packet()
@@ -142,6 +174,18 @@ class WikiBuildSynthesisTests(unittest.TestCase):
                                 "content": json.dumps(
                                     {
                                         "summary": "Built concise synthesis.",
+                                        "claims": [
+                                            {
+                                                "text": (
+                                                    "Alice joined Example Co. and led "
+                                                    "the platform team."
+                                                ),
+                                                "citations": [
+                                                    "(S1:ev1,fact-1)",
+                                                    "(S1:ev2,fact-2)",
+                                                ],
+                                            }
+                                        ],
                                         "synthesis_markdown": (
                                             "## Wiki Brief\n\n"
                                             "Alice joined Example Co. and led the platform team. "
@@ -179,7 +223,66 @@ class WikiBuildSynthesisTests(unittest.TestCase):
         self.assertIn("(S1:ev1,fact-1)", prompt)
         self.assertEqual("openrouter", result.provider)
         self.assertEqual(OPENROUTER_WIKI_BUILD_MODEL, result.model)
+        self.assertEqual(
+            ("(S1:ev1,fact-1)", "(S1:ev2,fact-2)"),
+            result.claims[0].citations,
+        )
         self.assertEqual(0.001, result.usage["cost"])
+
+    def test_openrouter_build_surfaces_http_error_body(self):
+        packet = reviewed_packet()
+
+        def opener(request, timeout):
+            raise HTTPError(
+                request.full_url,
+                400,
+                "Bad Request",
+                {},
+                BytesIO(
+                    json.dumps(
+                        {
+                            "error": {
+                                "code": 400,
+                                "message": "No endpoints support required parameters.",
+                            }
+                        }
+                    ).encode("utf-8")
+                ),
+            )
+
+        with self.assertRaisesRegex(
+            RuntimeError,
+            "OpenRouter returned HTTP 400: 400; No endpoints support required parameters",
+        ):
+            OpenRouterWikiBuildProvider(api_key="key", opener=opener).build(packet)
+
+    def test_openrouter_build_surfaces_api_error_payload(self):
+        packet = reviewed_packet()
+
+        def opener(request, timeout):
+            return JsonResponse(
+                {
+                    "error": {
+                        "code": 402,
+                        "message": "Insufficient OpenRouter credits.",
+                    }
+                }
+            )
+
+        with self.assertRaisesRegex(
+            RuntimeError,
+            "OpenRouter returned an error: 402; Insufficient OpenRouter credits",
+        ):
+            OpenRouterWikiBuildProvider(api_key="key", opener=opener).build(packet)
+
+    def test_openrouter_build_surfaces_malformed_transport_json(self):
+        packet = reviewed_packet()
+
+        def opener(request, timeout):
+            return RawResponse(b"not-json")
+
+        with self.assertRaisesRegex(ValueError, "OpenRouter response was not JSON"):
+            OpenRouterWikiBuildProvider(api_key="key", opener=opener).build(packet)
 
     def test_failed_synthesis_guardrail_does_not_update_baseline(self):
         fact = fact_record("fact-1", "Alice joined Example Co.")

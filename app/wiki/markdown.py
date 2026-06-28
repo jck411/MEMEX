@@ -6,11 +6,13 @@ import re
 from typing import Iterable, Mapping
 
 from .citations import (
+    compact_fact_anchor,
     compact_fact_note,
     evidence_ids,
     fact_records_by_key,
     fact_sort_key,
     inline_text,
+    link_compact_fact_notes,
     source_keys_by_id,
 )
 from .ledger import WikiLedger
@@ -42,14 +44,7 @@ def render_fact_audit_section(
     source_map = source_index(sources)
     fact_records = fact_records_by_key(source_map)
     source_keys = source_keys_by_id(facts)
-    citation_by_fact = {
-        (fact.source_id, fact.fact_id): compact_fact_note(
-            fact,
-            fact_records.get((fact.source_id, fact.fact_id)),
-            source_keys.get(fact.source_id, ""),
-        )
-        for fact in facts
-    }
+    citation_by_fact = _citation_by_fact(facts, fact_records, source_keys)
     lines = [FACTS_START, "## Accepted Facts", ""]
     description = wiki_description(wiki)
     if description:
@@ -76,7 +71,9 @@ def _append_fact_lines(
     for fact in facts:
         citation = citation_by_fact.get((fact.source_id, fact.fact_id), "")
         suffix = f" {citation}" if citation else ""
-        lines.append(f"- {inline_text(fact.text)}{suffix}")
+        anchor = compact_fact_anchor(citation)
+        prefix = f"{anchor} " if anchor else ""
+        lines.append(f"- {prefix}{inline_text(fact.text)}{suffix}")
         lines.append(f"  - Source: {_source_reference_label(fact.source_id, sources)}")
         if fact.decision.reason:
             lines.append(f"  - Review: {inline_text(fact.decision.reason)}")
@@ -114,8 +111,12 @@ def build_wiki_markdown(
 ) -> str:
     source_map = source_index(sources)
     accepted_facts = accepted_facts_for_wiki(wiki, ledger, source_map)
+    fact_records = fact_records_by_key(source_map)
+    source_keys = source_keys_by_id(accepted_facts)
+    citations = _citation_by_fact(accepted_facts, fact_records, source_keys).values()
+    linked_synthesis = link_compact_fact_notes(synthesis_markdown, citations)
     markdown = _prepare_existing_markdown(wiki, existing_markdown)
-    markdown = replace_synthesis_section(markdown, render_synthesis_section(synthesis_markdown))
+    markdown = replace_synthesis_section(markdown, render_synthesis_section(linked_synthesis))
     markdown = replace_fact_audit_section(
         markdown,
         render_fact_audit_section(wiki, accepted_facts, source_map),
@@ -131,6 +132,21 @@ def _source_reference_label(
     if title and title != source_id:
         return f"{title} (`{source_id}`)"
     return f"`{source_id}`"
+
+
+def _citation_by_fact(
+    facts: Iterable[AcceptedFact],
+    fact_records: Mapping[tuple[str, str], FactRecord],
+    source_keys: Mapping[str, str],
+) -> dict[tuple[str, str], str]:
+    return {
+        (fact.source_id, fact.fact_id): compact_fact_note(
+            fact,
+            fact_records.get((fact.source_id, fact.fact_id)),
+            source_keys.get(fact.source_id, ""),
+        )
+        for fact in facts
+    }
 
 
 def _references_section(
