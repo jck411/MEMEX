@@ -7,18 +7,12 @@ from typing import Iterable, Mapping
 from urllib.parse import quote
 
 from .citations import (
-    compact_fact_anchor,
-    compact_fact_note,
-    fact_numbers_by_key,
-    fact_sort_key,
     inline_text,
-    link_compact_fact_notes,
-    source_keys_by_id,
+    natural_key,
 )
 from .ledger import WikiLedger
-from .records import SourceRecord, WikiRecord, source_index
-from .status import AcceptedFact, accepted_facts_for_wiki
-from .wiki_scope import wiki_description
+from .records import FactRecord, SourceRecord, WikiRecord, source_index
+from .wiki_scope import wiki_description, wiki_scope_signature
 
 SYNTHESIS_START = "<!-- MEMEX:SYNTHESIS:START -->"
 SYNTHESIS_END = "<!-- MEMEX:SYNTHESIS:END -->"
@@ -37,45 +31,98 @@ def render_synthesis_section(synthesis_markdown: str) -> str:
 
 def render_fact_audit_section(
     wiki: WikiRecord,
-    accepted_facts: Iterable[AcceptedFact],
+    ledger: WikiLedger,
     sources: Iterable[SourceRecord] | Mapping[str, SourceRecord] = (),
 ) -> str:
-    facts = sorted(accepted_facts, key=fact_sort_key)
     source_map = source_index(sources)
-    source_keys = source_keys_by_id(facts)
-    fact_numbers = fact_numbers_by_key(facts)
-    citation_by_fact = _citation_by_fact(facts, source_keys, fact_numbers)
-    lines = [FACTS_START, "## Accepted Facts", ""]
+    lines = [FACTS_START, "## Source Fact Decisions", ""]
     description = wiki_description(wiki)
     if description:
         lines.append(f"**Wiki description:** {inline_text(description)}")
         lines.append("")
-    if not facts:
-        lines.append("_No accepted facts yet._")
-    else:
-        _append_fact_lines(lines, facts, source_map, source_keys, citation_by_fact)
+    _append_source_decisions(lines, wiki, ledger, source_map)
     if lines[-1] == "":
         lines.pop()
     lines.append(FACTS_END)
     return "\n".join(lines)
 
 
-def _append_fact_lines(
+def _append_source_decisions(
     lines: list[str],
-    facts: list[AcceptedFact],
+    wiki: WikiRecord,
+    ledger: WikiLedger,
     sources: Mapping[str, SourceRecord],
-    source_keys: Mapping[str, str],
-    citation_by_fact: Mapping[tuple[str, str], str],
 ) -> None:
-    for source_id, source_key in source_keys.items():
-        lines.extend([f"### {_source_reference_label(source_key, source_id, sources)}", ""])
-        source_facts = [fact for fact in facts if fact.source_id == source_id]
-        for index, fact in enumerate(source_facts, start=1):
-            citation = citation_by_fact.get((fact.source_id, fact.fact_id), "")
-            anchor = compact_fact_anchor(citation)
-            prefix = f"{anchor} " if anchor else ""
-            lines.append(f"{index}. {prefix}{inline_text(fact.text)}")
+    appended = False
+    for source_id in ledger.assigned_sources(wiki.wiki_id):
+        source = sources.get(source_id)
+        if source is None:
+            continue
+        accepted, rejected = _current_source_decisions(wiki, ledger, source)
+        if not accepted and not rejected:
+            continue
+        appended = True
+        lines.extend([f"### {_source_reference_label(source)}", ""])
+        _append_decision_group(lines, "Accepted", source.source_id, accepted)
+        _append_decision_group(lines, "Rejected", source.source_id, rejected)
         lines.append("")
+    if not appended:
+        lines.append("_No reviewed facts yet._")
+
+
+def _current_source_decisions(
+    wiki: WikiRecord,
+    ledger: WikiLedger,
+    source: SourceRecord,
+) -> tuple[list[FactRecord], list[FactRecord]]:
+    accepted: list[FactRecord] = []
+    rejected: list[FactRecord] = []
+    current_scope = wiki_scope_signature(wiki)
+    for fact in sorted(source.facts, key=lambda item: natural_key(item.fact_id)):
+        decision = ledger.decision_for(wiki.wiki_id, source.source_id, fact.fact_id)
+        if decision is None:
+            continue
+        if decision.fact_signature != fact.signature():
+            continue
+        if decision.wiki_scope_signature != current_scope:
+            continue
+        if decision.ticked:
+            accepted.append(fact)
+        else:
+            rejected.append(fact)
+    return accepted, rejected
+
+
+def _append_decision_group(
+    lines: list[str],
+    title: str,
+    source_id: str,
+    facts: list[FactRecord],
+) -> None:
+    if not facts:
+        return
+    lines.extend([f"#### {title}", ""])
+    for fact in facts:
+        lines.append(_fact_decision_line(source_id, fact))
+    lines.append("")
+
+
+def _fact_decision_line(source_id: str, fact: FactRecord) -> str:
+    return (
+        f"- {_fact_anchor(source_id, fact.fact_id)}"
+        f"`{inline_text(fact.fact_id)}`: {inline_text(fact.text)}"
+    )
+
+
+def _fact_anchor(source_id: str, fact_id: str) -> str:
+    anchor = _fact_anchor_id(source_id, fact_id)
+    return f'<a id="{anchor}"></a> ' if anchor else ""
+
+
+def _fact_anchor_id(source_id: str, fact_id: str) -> str:
+    slug = re.sub(r"[^A-Za-z0-9_.:-]+", "-", f"{source_id}-{fact_id}")
+    slug = slug.strip("-").lower()
+    return f"memex-fact-{slug}" if slug else ""
 
 
 def replace_synthesis_section(existing_markdown: str, section: str) -> str:
@@ -108,45 +155,21 @@ def build_wiki_markdown(
     existing_markdown: str = "",
 ) -> str:
     source_map = source_index(sources)
-    accepted_facts = accepted_facts_for_wiki(wiki, ledger, source_map)
-    source_keys = source_keys_by_id(accepted_facts)
-    fact_numbers = fact_numbers_by_key(accepted_facts)
-    citations = _citation_by_fact(accepted_facts, source_keys, fact_numbers).values()
-    linked_synthesis = link_compact_fact_notes(synthesis_markdown, citations)
     markdown = _prepare_existing_markdown(wiki, existing_markdown)
-    markdown = replace_synthesis_section(markdown, render_synthesis_section(linked_synthesis))
+    markdown = replace_synthesis_section(markdown, render_synthesis_section(synthesis_markdown))
     markdown = replace_fact_audit_section(
         markdown,
-        render_fact_audit_section(wiki, accepted_facts, source_map),
+        render_fact_audit_section(wiki, ledger, source_map),
     )
     return markdown
 
 
-def _source_reference_label(
-    source_key: str,
-    source_id: str,
-    sources: Mapping[str, SourceRecord],
-) -> str:
-    title = inline_text(sources[source_id].title) if source_id in sources else ""
-    href = "/source/" + quote(source_id, safe="")
-    if title and title != source_id:
-        return f"[{source_key}. {title}]({href}) (`{source_id}`)"
-    return f"[{source_key}. {inline_text(source_id)}]({href})"
-
-
-def _citation_by_fact(
-    facts: Iterable[AcceptedFact],
-    source_keys: Mapping[str, str],
-    fact_numbers: Mapping[tuple[str, str], int],
-) -> dict[tuple[str, str], str]:
-    return {
-        (fact.source_id, fact.fact_id): compact_fact_note(
-            fact,
-            source_keys.get(fact.source_id, ""),
-            fact_numbers.get((fact.source_id, fact.fact_id), 0),
-        )
-        for fact in facts
-    }
+def _source_reference_label(source: SourceRecord) -> str:
+    title = inline_text(source.title) if source.title else inline_text(source.source_id)
+    href = "/source/" + quote(source.source_id, safe="")
+    if title and title != source.source_id:
+        return f"[{title}]({href}) (`{source.source_id}`)"
+    return f"[{inline_text(source.source_id)}]({href})"
 
 
 def _replace_or_insert_marked_section(

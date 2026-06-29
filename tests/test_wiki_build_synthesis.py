@@ -125,6 +125,7 @@ class WikiBuildSynthesisTests(unittest.TestCase):
             "source-1",
             fact_record("fact-1", "Alice joined Example Co."),
             fact_record("fact-2", "Alice led the platform team."),
+            fact_record("fact-3", "Alice lives in Boston."),
             title="Profile",
         )
         memo = source_record(
@@ -134,6 +135,13 @@ class WikiBuildSynthesisTests(unittest.TestCase):
         )
         wiki = synthesis_wiki()
         ledger = _reviewed_ledger(wiki, profile)
+        apply_review_results(
+            wiki,
+            profile.source_id,
+            ledger,
+            profile,
+            [ReviewResult("fact-3", False, "Out of scope.")],
+        )
         ledger.assign_source(wiki.wiki_id, memo.source_id)
         apply_review_results(
             wiki,
@@ -172,6 +180,7 @@ class WikiBuildSynthesisTests(unittest.TestCase):
             ],
             payload["accepted_fact_sources"],
         )
+        self.assertNotIn("Alice lives in Boston.", json.dumps(payload))
 
     def test_guardrails_accept_readable_uncited_synthesis(self):
         packet = reviewed_packet()

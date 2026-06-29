@@ -11,6 +11,7 @@ from .markdown import FACTS_END, FACTS_START, SYNTHESIS_END, SYNTHESIS_START
 
 _HEADING_RE = re.compile(r"^(?P<level>#{1,6})\s+(?P<title>.+?)\s*$")
 _FORBIDDEN_SECTION_TITLES = {
+    "source fact decisions",
     "accepted facts",
     "references",
     "default conversation context",
