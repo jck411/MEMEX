@@ -81,26 +81,32 @@ class WikiBuildSynthesisTests(unittest.TestCase):
         self.assertEqual(
             [
                 {
-                    "citation": "(S1:1)",
+                    "source_key": "S1",
                     "source_title": "Profile",
-                    "text": "Alice joined Example Co.",
-                    "review_reason": "Career history.",
-                },
-                {
-                    "citation": "(S1:2)",
-                    "source_title": "Profile",
-                    "text": "Alice led the platform team.",
-                    "review_reason": "Leadership history.",
+                    "facts": [
+                        {
+                            "citation": "(S1:1)",
+                            "text": "Alice joined Example Co.",
+                            "review_reason": "Career history.",
+                        },
+                        {
+                            "citation": "(S1:2)",
+                            "text": "Alice led the platform team.",
+                            "review_reason": "Leadership history.",
+                        },
+                    ],
                 },
             ],
-            payload["facts"],
+            payload["accepted_fact_sources"],
         )
         self.assertNotIn("citation_contract", payload)
         self.assertNotIn("language_contract", payload)
         self.assertNotIn("output_schema", payload)
-        self.assertNotIn("fact_id", payload["facts"][0])
-        self.assertNotIn("fact_signature", payload["facts"][0])
-        self.assertNotIn("source_key", payload["facts"][0])
+        self.assertNotIn("facts", payload)
+        fact_payload = payload["accepted_fact_sources"][0]["facts"][0]
+        self.assertNotIn("fact_id", fact_payload)
+        self.assertNotIn("fact_signature", fact_payload)
+        self.assertNotIn("source_key", fact_payload)
         context = payload["existing_markdown_context"]["markdown"]
         self.assertIn("Previous supported prose.", context)
         self.assertNotIn("国籍", context)
@@ -111,6 +117,64 @@ class WikiBuildSynthesisTests(unittest.TestCase):
         self.assertEqual(
             ("fact-1", "fact-2"),
             tuple(fact.fact_id for fact in packet.accepted_facts),
+        )
+
+    def test_build_prompt_groups_facts_by_source(self):
+        profile = source_record(
+            "source-1",
+            fact_record("fact-1", "Alice joined Example Co."),
+            fact_record("fact-2", "Alice led the platform team."),
+            title="Profile",
+        )
+        memo = source_record(
+            "source-2",
+            fact_record("fact-1", "Alice managed the hiring plan."),
+            title="Manager memo",
+        )
+        wiki = synthesis_wiki()
+        ledger = _reviewed_ledger(wiki, profile)
+        ledger.assign_source(wiki.wiki_id, memo.source_id)
+        apply_review_results(
+            wiki,
+            memo.source_id,
+            ledger,
+            memo,
+            [ReviewResult("fact-1", True, "Leadership history.")],
+        )
+
+        payload = build_prompt_payload(build_fact_packet(wiki, ledger, [profile, memo]))
+
+        self.assertEqual(
+            [
+                {
+                    "source_key": "S1",
+                    "source_title": "Profile",
+                    "facts": [
+                        {
+                            "citation": "(S1:1)",
+                            "text": "Alice joined Example Co.",
+                            "review_reason": "Career history.",
+                        },
+                        {
+                            "citation": "(S1:2)",
+                            "text": "Alice led the platform team.",
+                            "review_reason": "Leadership history.",
+                        },
+                    ],
+                },
+                {
+                    "source_key": "S2",
+                    "source_title": "Manager memo",
+                    "facts": [
+                        {
+                            "citation": "(S2:1)",
+                            "text": "Alice managed the hiring plan.",
+                            "review_reason": "Leadership history.",
+                        }
+                    ],
+                },
+            ],
+            payload["accepted_fact_sources"],
         )
 
     def test_guardrails_accept_synthesis_that_cites_each_fact(self):

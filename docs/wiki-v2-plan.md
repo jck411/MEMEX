@@ -1,6 +1,6 @@
 # MEMEX Wiki V2 Plan
 
-Last updated: 2026-06-28
+Last updated: 2026-06-29
 
 ## Direction
 
@@ -174,6 +174,9 @@ Design preference:
 
 ## Backlog
 
+- Audit OpenRouter prompt/schema workflows so prompt payloads contain task data
+  only, JSON shape lives in `response_format`, shared provider settings stay
+  consistent, and Python validators enforce domain-specific semantics.
 - Source original preview/download in the dashboard.
 - Better source/fact search across the local corpus.
 - Cost and usage reporting by provider/model/source.
