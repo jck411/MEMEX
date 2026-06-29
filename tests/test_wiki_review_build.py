@@ -162,8 +162,8 @@ class WikiReviewBuildTests(unittest.TestCase):
         self.assertNotIn("fact-2", markdown)
         self.assertNotIn("Alice lives in Boston.", markdown)
         self.assertIn(REFERENCES_START, markdown)
-        self.assertIn("## References", markdown)
-        self.assertIn("- [Facts used](career/facts)", markdown)
+        self.assertIn("## MEMEX Provenance", markdown)
+        self.assertIn("- [Facts used to build this page](career/facts)", markdown)
         self.assertIn(REFERENCES_END, markdown)
 
         existing = (
@@ -171,7 +171,8 @@ class WikiReviewBuildTests(unittest.TestCase):
             "Human-written intro.\n\n"
             f"{SYNTHESIS_START}\nold synthesis\n{SYNTHESIS_END}\n\n"
             f"{FACTS_START}\nold generated text\n{FACTS_END}\n\n"
-            f"{REFERENCES_START}\n## References\n\n- [Facts used](old/facts)\n{REFERENCES_END}\n\n"
+            f"{REFERENCES_START}\n## MEMEX Provenance\n\n"
+            f"- [Facts used to build this page](old/facts)\n{REFERENCES_END}\n\n"
             "## LLM Context\n\n"
             "### Default Conversation Context\n\n"
             "legacy context\n\n"
@@ -184,7 +185,7 @@ class WikiReviewBuildTests(unittest.TestCase):
         self.assertNotIn(FACTS_START, updated)
         self.assertNotIn(FACTS_END, updated)
         self.assertNotIn("old/facts", updated)
-        self.assertIn("- [Facts used](career/facts)", updated)
+        self.assertIn("- [Facts used to build this page](career/facts)", updated)
         self.assertNotIn("Default Conversation Context", updated)
         self.assertIn("Human-written footer.", updated)
 
@@ -224,7 +225,7 @@ class WikiReviewBuildTests(unittest.TestCase):
         self.assertNotIn("passport", markdown)
         self.assertNotIn("f1", markdown)
         self.assertNotIn("f2", markdown)
-        self.assertIn("- [Facts used](career/facts)", markdown)
+        self.assertIn("- [Facts used to build this page](career/facts)", markdown)
 
     def test_incomplete_memex_fact_audit_markers_are_rejected(self):
         cases = (

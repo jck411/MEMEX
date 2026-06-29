@@ -58,7 +58,8 @@ The V2 foundation is in place:
 - Build packets group accepted facts by source for reconciliation, but finished
   vault markdown intentionally omits source inventories, fact ids, citations,
   rejected facts, and review audit appendices. Each built wiki includes a
-  generated `References` section with a relative link to its facts-used page.
+  generated `MEMEX Provenance` section with a relative link to its facts-used
+  page.
 - Dashboard wiki pages link to a wiki facts inspection page that shows current
   accepted facts and not-used facts grouped by source, with links back to source
   detail pages.

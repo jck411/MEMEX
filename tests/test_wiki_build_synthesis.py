@@ -79,7 +79,8 @@ class WikiBuildSynthesisTests(unittest.TestCase):
             "Stale generated prose. ([S9:9](#memex-fact-s9-9))\n"
             f"{SYNTHESIS_END}\n\n"
             f"{FACTS_START}\nold audit appendix\n{FACTS_END}\n\n"
-            f"{REFERENCES_START}\n## References\n\n- [Facts used](career/facts)\n{REFERENCES_END}\n\n"
+            f"{REFERENCES_START}\n## MEMEX Provenance\n\n"
+            f"- [Facts used to build this page](career/facts)\n{REFERENCES_END}\n\n"
             "## LLM Context\n\n"
             "### Default Conversation Context\n\n"
             "legacy prompt text\n"
@@ -122,7 +123,7 @@ class WikiBuildSynthesisTests(unittest.TestCase):
         self.assertNotIn("平台团队", context)
         self.assertNotIn("Stale generated prose.", context)
         self.assertNotIn("old audit appendix", context)
-        self.assertNotIn("Facts used", context)
+        self.assertNotIn("Facts used to build this page", context)
         self.assertNotIn("Default Conversation Context", context)
         self.assertEqual(
             ("fact-1", "fact-2"),

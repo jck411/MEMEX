@@ -21,6 +21,7 @@ _FORBIDDEN_SECTION_TITLES = {
     "source fact decisions",
     "accepted facts",
     "references",
+    "memex provenance",
     "default conversation context",
     "restricted accepted facts",
     "general accepted facts",
