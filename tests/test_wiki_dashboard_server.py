@@ -4,6 +4,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from app.wiki.dashboard_server import create_dashboard_handler, create_dashboard_server
+from app.wiki.markdown import build_wiki_markdown
 from app.wiki.review import ReviewResult
 from app.wiki.vault import write_wiki_page
 from tests.dashboard_server_helpers import DashboardServerTestCase
@@ -34,18 +35,17 @@ class WikiDashboardServerTests(DashboardServerTestCase):
             write_wiki_page(
                 workspace.vault_root,
                 wiki,
-                "\n".join(
-                    (
-                        "# Career",
-                        "",
-                        "<!-- MEMEX:SYNTHESIS:START -->",
-                        "## Wiki Brief",
-                        "",
-                        "Alice joined Example Co. **Safely**",
-                        "",
-                        "- <script>alert('x')</script>",
-                        "<!-- MEMEX:SYNTHESIS:END -->",
-                    )
+                build_wiki_markdown(
+                    wiki,
+                    "\n".join(
+                        (
+                            "## Wiki Brief",
+                            "",
+                            "Alice joined Example Co. **Safely**",
+                            "",
+                            "- <script>alert('x')</script>",
+                        )
+                    ),
                 ),
             )
 
@@ -66,6 +66,7 @@ class WikiDashboardServerTests(DashboardServerTestCase):
                 self.assertEqual("Wiki Detail", page.require("h1").normalized_text())
                 self.assertIn("Career", [node.normalized_text() for node in page.find_all("h2")])
                 page.require("a", {"href": "/wiki/career/facts"})
+                page.require("a", {"href": "career/facts"})
                 h1_text = [node.normalized_text() for node in page.find_all("h1")]
                 self.assertNotIn("Career", h1_text)
                 self.assertNotIn("Source Fact Decisions", page.normalized_text())

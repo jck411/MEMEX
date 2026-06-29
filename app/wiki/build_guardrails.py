@@ -7,7 +7,14 @@ import re
 from .build_packets import WikiBuildPacket
 from .builders import ProviderWikiBuildResult
 from .language_guardrails import cjk_dominant_previews
-from .markdown import FACTS_END, FACTS_START, SYNTHESIS_END, SYNTHESIS_START
+from .markdown import (
+    FACTS_END,
+    FACTS_START,
+    REFERENCES_END,
+    REFERENCES_START,
+    SYNTHESIS_END,
+    SYNTHESIS_START,
+)
 
 _HEADING_RE = re.compile(r"^(?P<level>#{1,6})\s+(?P<title>.+?)\s*$")
 _FORBIDDEN_SECTION_TITLES = {
@@ -54,7 +61,14 @@ def _strip_markdown_fence(markdown: str) -> str:
 
 
 def _reject_managed_scaffold(markdown: str) -> None:
-    forbidden_markers = (SYNTHESIS_START, SYNTHESIS_END, FACTS_START, FACTS_END)
+    forbidden_markers = (
+        SYNTHESIS_START,
+        SYNTHESIS_END,
+        FACTS_START,
+        FACTS_END,
+        REFERENCES_START,
+        REFERENCES_END,
+    )
     if any(marker in markdown for marker in forbidden_markers):
         raise ValueError("wiki-build synthesis must not include MEMEX managed markers")
     for line in markdown.splitlines():

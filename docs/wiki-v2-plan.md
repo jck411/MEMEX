@@ -57,7 +57,8 @@ The V2 foundation is in place:
   use of the finished markdown.
 - Build packets group accepted facts by source for reconciliation, but finished
   vault markdown intentionally omits source inventories, fact ids, citations,
-  rejected facts, and review audit appendices.
+  rejected facts, and review audit appendices. Each built wiki includes a
+  generated `References` section with a relative link to its facts-used page.
 - Dashboard wiki pages link to a wiki facts inspection page that shows current
   accepted facts and not-used facts grouped by source, with links back to source
   detail pages.
@@ -104,11 +105,11 @@ Needed:
 
 - Build from accepted fact deltas plus existing markdown.
 - Preserve human-written markdown around generated sections.
-- Keep provider-backed `Wiki Brief` synthesis as the only generated vault
+- Keep provider-backed `Wiki Brief` synthesis as the only generated prose
   section.
 - Consolidate accepted facts into claims before asking for polished wiki prose.
-- Keep provenance visible enough to audit generated claims without embedding it
-  in the vault markdown.
+- Keep provenance visible enough to audit generated claims without embedding
+  detailed fact inventories in the vault markdown.
 - Update build baselines only after successful writes.
 - Make failed builds leave no partial baseline or misleading `current` state.
 

@@ -1,15 +1,19 @@
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from app.wiki.ledger import WikiLedger
 from app.wiki.markdown import (
     FACTS_END,
     FACTS_START,
+    REFERENCES_END,
+    REFERENCES_START,
     SYNTHESIS_END,
     SYNTHESIS_START,
     build_wiki_markdown,
     remove_fact_audit_section,
+    remove_references_section,
 )
 from app.wiki.review import (
     ReviewResult,
@@ -22,8 +26,8 @@ from app.wiki.vault import read_wiki_page, wiki_page_path, write_wiki_page
 from tests.helpers import (
     CAREER_WIKI,
     fact_record,
-    review_decision_for_fact,
     fixture_wiki_build_provider,
+    review_decision_for_fact,
     source_record,
     wiki_record,
     wiki_workspace,
@@ -157,13 +161,17 @@ class WikiReviewBuildTests(unittest.TestCase):
         self.assertNotIn("fact-1", markdown)
         self.assertNotIn("fact-2", markdown)
         self.assertNotIn("Alice lives in Boston.", markdown)
-        self.assertNotIn("## References", markdown)
+        self.assertIn(REFERENCES_START, markdown)
+        self.assertIn("## References", markdown)
+        self.assertIn("- [Facts used](career/facts)", markdown)
+        self.assertIn(REFERENCES_END, markdown)
 
         existing = (
             "# Career\n\n"
             "Human-written intro.\n\n"
             f"{SYNTHESIS_START}\nold synthesis\n{SYNTHESIS_END}\n\n"
             f"{FACTS_START}\nold generated text\n{FACTS_END}\n\n"
+            f"{REFERENCES_START}\n## References\n\n- [Facts used](old/facts)\n{REFERENCES_END}\n\n"
             "## LLM Context\n\n"
             "### Default Conversation Context\n\n"
             "legacy context\n\n"
@@ -175,6 +183,8 @@ class WikiReviewBuildTests(unittest.TestCase):
         self.assertNotIn("old generated text", updated)
         self.assertNotIn(FACTS_START, updated)
         self.assertNotIn(FACTS_END, updated)
+        self.assertNotIn("old/facts", updated)
+        self.assertIn("- [Facts used](career/facts)", updated)
         self.assertNotIn("Default Conversation Context", updated)
         self.assertIn("Human-written footer.", updated)
 
@@ -214,6 +224,7 @@ class WikiReviewBuildTests(unittest.TestCase):
         self.assertNotIn("passport", markdown)
         self.assertNotIn("f1", markdown)
         self.assertNotIn("f2", markdown)
+        self.assertIn("- [Facts used](career/facts)", markdown)
 
     def test_incomplete_memex_fact_audit_markers_are_rejected(self):
         cases = (
@@ -227,6 +238,18 @@ class WikiReviewBuildTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "incomplete MEMEX facts markers"):
                     remove_fact_audit_section(existing)
 
+    def test_incomplete_memex_references_markers_are_rejected(self):
+        cases = (
+            f"# Career\n\n{REFERENCES_START}\nold generated text\n",
+            f"# Career\n\nold generated text\n{REFERENCES_END}\n",
+            f"# Career\n\n{REFERENCES_END}\nold generated text\n{REFERENCES_START}\n",
+        )
+
+        for existing in cases:
+            with self.subTest(existing=existing):
+                with self.assertRaisesRegex(ValueError, "incomplete MEMEX references markers"):
+                    remove_references_section(existing)
+
     def test_vault_helpers_write_inside_vault_root(self):
         wiki = wiki_record("career", "Career", "nested/career.md")
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -238,6 +261,18 @@ class WikiReviewBuildTests(unittest.TestCase):
         unsafe = wiki_record("escape", "Escape", "../escape.md")
         with self.assertRaises(ValueError):
             wiki_page_path("/tmp/vault", unsafe)
+
+    def test_vault_write_failure_preserves_existing_page(self):
+        wiki = wiki_record("career", "Career", "nested/career.md")
+        with tempfile.TemporaryDirectory() as temp_dir:
+            path = write_wiki_page(temp_dir, wiki, "# Career\n\nOld page.\n")
+
+            with patch.object(Path, "replace", side_effect=OSError("replace failed")):
+                with self.assertRaisesRegex(OSError, "replace failed"):
+                    write_wiki_page(temp_dir, wiki, "# Career\n\nNew page.\n")
+
+            self.assertEqual("# Career\n\nOld page.\n", path.read_text(encoding="utf-8"))
+            self.assertEqual((), tuple(path.parent.glob(f".{path.name}.*.tmp")))
 
     def test_build_baseline_updates_after_successful_page_write(self):
         fact = fact_record("fact-1", "Alice joined Example Co.")

@@ -16,6 +16,8 @@ from .ledger import WikiLedger
 from .markdown import (
     FACTS_END,
     FACTS_START,
+    REFERENCES_END,
+    REFERENCES_START,
     SYNTHESIS_END,
     SYNTHESIS_START,
     remove_obsolete_markdown_sections,
@@ -85,7 +87,9 @@ def existing_markdown_context(markdown: str) -> str:
         return ""
     _validate_marker_pair(markdown, SYNTHESIS_START, SYNTHESIS_END, "synthesis")
     _validate_marker_pair(markdown, FACTS_START, FACTS_END, "facts")
+    _validate_marker_pair(markdown, REFERENCES_START, REFERENCES_END, "references")
     context = _remove_marked_section(markdown, FACTS_START, FACTS_END)
+    context = _remove_marked_section(context, REFERENCES_START, REFERENCES_END)
     context = context.replace(SYNTHESIS_START, "").replace(SYNTHESIS_END, "")
     context = remove_obsolete_markdown_sections(context)
     context = _remove_compact_cited_blocks(context)

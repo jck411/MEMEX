@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from tempfile import NamedTemporaryFile
 
 from .records import WikiRecord
 
@@ -24,5 +25,21 @@ def read_wiki_page(vault_root: str | Path, wiki: WikiRecord) -> str:
 def write_wiki_page(vault_root: str | Path, wiki: WikiRecord, markdown: str) -> Path:
     path = wiki_page_path(vault_root, wiki)
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(markdown, encoding="utf-8")
+    temp_path: Path | None = None
+    try:
+        with NamedTemporaryFile(
+            "w",
+            encoding="utf-8",
+            dir=path.parent,
+            prefix=f".{path.name}.",
+            suffix=".tmp",
+            delete=False,
+        ) as temp_file:
+            temp_file.write(markdown)
+            temp_path = Path(temp_file.name)
+        temp_path.replace(path)
+    except Exception:
+        if temp_path is not None:
+            temp_path.unlink(missing_ok=True)
+        raise
     return path

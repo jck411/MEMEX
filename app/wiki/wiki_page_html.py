@@ -17,7 +17,9 @@ from .status import WikiStatus
 
 _GENERATED_ANCHOR_RE = re.compile(r'<a id="(memex-fact-[A-Za-z0-9_.:-]+)"></a>')
 _INTERNAL_MARKDOWN_LINK_RE = re.compile(
-    r"\[([^\]]+)\]\((#[A-Za-z0-9_.:-]+|/source/[A-Za-z0-9_.~%-]+)\)"
+    r"\[([^\]]+)\]\("
+    r"(#[A-Za-z0-9_.:-]+|/source/[A-Za-z0-9_.~%-]+|[A-Za-z0-9_.~%-]+/facts)"
+    r"\)"
 )
 
 
