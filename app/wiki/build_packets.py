@@ -14,6 +14,7 @@ from .citations import (
     inline_text,
     source_keys_by_id,
 )
+from .language_guardrails import remove_cjk_dominant_blocks
 from .ledger import WikiLedger
 from .markdown import (
     FACTS_END,
@@ -106,6 +107,7 @@ def existing_markdown_context(
     context = context.replace(SYNTHESIS_START, "").replace(SYNTHESIS_END, "")
     context = remove_obsolete_markdown_sections(context)
     context = _filter_current_cited_blocks(context, allowed_citations or set())
+    context = remove_cjk_dominant_blocks(context)
     return _clip(context.strip(), MAX_EXISTING_MARKDOWN_CONTEXT)
 
 

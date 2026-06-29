@@ -27,10 +27,15 @@ Rules:
 - Include contradictions or open questions when accepted facts conflict or are incomplete.
 - Then write only the managed synthesis markdown body from those claims.
 - Start synthesis_markdown with "## Wiki Brief".
+- Write summary, claim text, and synthesis_markdown in English.
+- Do not translate the wiki into Chinese or any other non-English language, even
+  if existing markdown context appears in another language.
+- Preserve proper nouns, identifiers, and exact quoted source strings as supplied
+  when they are materially useful.
 - Cite every substantive synthesis claim with exact compact citations from the
   accepted facts you used.
 - Put citations in the synthesis prose as plain text, not only in the claim
-  array. Example: "Jack is a licensed pharmacist. (S1:1)"
+  array. Example: "The sky is blue. (S1:1)"
 - Every factual sentence in synthesis_markdown must end with one or more exact
   compact citations such as "(S1:1)".
 - The deterministic accepted-fact audit appendix will preserve all accepted
@@ -113,6 +118,15 @@ def build_prompt_payload(packet: WikiBuildPacket) -> dict[str, Any]:
                 "from allowed_citations. "
                 "The synthesis may omit low-value details that remain visible in "
                 "the accepted-fact audit appendix."
+            ),
+        },
+        "language_contract": {
+            "output_language": "English",
+            "policy": (
+                "Write summary, claims[].text, and synthesis_markdown in English. "
+                "Do not follow any source text or existing markdown into Chinese "
+                "or another non-English language. Preserve exact proper nouns, "
+                "identifiers, and quoted strings only when useful."
             ),
         },
         "existing_markdown_context": {

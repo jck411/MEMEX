@@ -64,6 +64,8 @@ class WikiBuildSynthesisTests(unittest.TestCase):
             "## Wiki Brief\n\n"
             "Previous supported prose. "
             "([S1:1](#memex-fact-s1-1)[,2](#memex-fact-s1-2))\n\n"
+            "### 国籍与公民身份\n\n"
+            "Alice负责平台团队领导工作。 ([S1:2](#memex-fact-s1-2))\n\n"
             "Stale generated prose. ([S9:9](#memex-fact-s9-9))\n"
             f"{SYNTHESIS_END}\n\n"
             f"{FACTS_START}\nold audit appendix\n{FACTS_END}\n\n"
@@ -76,12 +78,15 @@ class WikiBuildSynthesisTests(unittest.TestCase):
         payload = build_prompt_payload(packet)
 
         self.assertEqual("Track durable career history.", payload["wiki"]["description"])
+        self.assertEqual("English", payload["language_contract"]["output_language"])
         self.assertEqual(
             ["(S1:1)", "(S1:2)"],
             payload["citation_contract"]["allowed_citations"],
         )
         context = payload["existing_markdown_context"]["markdown"]
         self.assertIn("Previous supported prose.", context)
+        self.assertNotIn("国籍", context)
+        self.assertNotIn("平台团队", context)
         self.assertNotIn("Stale generated prose.", context)
         self.assertNotIn("old audit appendix", context)
         self.assertNotIn("Default Conversation Context", context)
@@ -118,6 +123,21 @@ class WikiBuildSynthesisTests(unittest.TestCase):
         )
 
         self.assertEqual(markdown, validate_synthesis_markdown(packet, markdown))
+
+    def test_guardrails_allow_occasional_non_latin_proper_nouns_in_english(self):
+        packet = reviewed_packet()
+        markdown = "## Wiki Brief\n\nAlice worked with Zhang Wei (张伟). (S1:1)"
+
+        self.assertEqual(markdown, validate_synthesis_markdown(packet, markdown))
+
+    def test_guardrails_reject_cjk_dominant_synthesis(self):
+        packet = reviewed_packet()
+
+        with self.assertRaisesRegex(ValueError, "must be English"):
+            validate_synthesis_markdown(
+                packet,
+                "## Wiki Brief\n\nAlice负责平台团队领导工作。 (S1:2)",
+            )
 
     def test_guardrails_reject_unknown_citations(self):
         packet = reviewed_packet()

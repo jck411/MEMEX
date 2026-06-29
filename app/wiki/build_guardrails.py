@@ -6,6 +6,7 @@ import re
 
 from .build_packets import WikiBuildPacket
 from .builders import ProviderWikiBuildClaim, ProviderWikiBuildResult
+from .language_guardrails import cjk_dominant_previews
 from .markdown import FACTS_END, FACTS_START, SYNTHESIS_END, SYNTHESIS_START
 
 _COMPACT_CITATION_RE = re.compile(r"\(S\d+:\d+\)")
@@ -39,6 +40,7 @@ def validate_synthesis_markdown(
         raise ValueError("wiki-build synthesis markdown is empty")
     _reject_managed_scaffold(body)
     _require_wiki_brief(body)
+    _require_english_synthesis(body)
     _validate_citations(packet, body, allowed_citations)
     return re.sub(r"\n{3,}", "\n\n", body).rstrip()
 
@@ -83,6 +85,16 @@ def _require_wiki_brief(markdown: str) -> None:
             return
         raise ValueError("wiki-build synthesis must start with ## Wiki Brief")
     raise ValueError("wiki-build synthesis must start with ## Wiki Brief")
+
+
+def _require_english_synthesis(markdown: str) -> None:
+    previews = cjk_dominant_previews(markdown)
+    if previews:
+        preview = "; ".join(previews)
+        raise ValueError(
+            "wiki-build synthesis must be English; detected CJK-dominant text: "
+            f"{preview}"
+        )
 
 
 def _validate_claims(
