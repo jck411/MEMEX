@@ -78,11 +78,29 @@ class WikiBuildSynthesisTests(unittest.TestCase):
         payload = build_prompt_payload(packet)
 
         self.assertEqual("Track durable career history.", payload["wiki"]["description"])
-        self.assertEqual("English", payload["language_contract"]["output_language"])
         self.assertEqual(
-            ["(S1:1)", "(S1:2)"],
-            payload["citation_contract"]["allowed_citations"],
+            [
+                {
+                    "citation": "(S1:1)",
+                    "source_title": "Profile",
+                    "text": "Alice joined Example Co.",
+                    "review_reason": "Career history.",
+                },
+                {
+                    "citation": "(S1:2)",
+                    "source_title": "Profile",
+                    "text": "Alice led the platform team.",
+                    "review_reason": "Leadership history.",
+                },
+            ],
+            payload["facts"],
         )
+        self.assertNotIn("citation_contract", payload)
+        self.assertNotIn("language_contract", payload)
+        self.assertNotIn("output_schema", payload)
+        self.assertNotIn("fact_id", payload["facts"][0])
+        self.assertNotIn("fact_signature", payload["facts"][0])
+        self.assertNotIn("source_key", payload["facts"][0])
         context = payload["existing_markdown_context"]["markdown"]
         self.assertIn("Previous supported prose.", context)
         self.assertNotIn("国籍", context)
@@ -177,6 +195,25 @@ class WikiBuildSynthesisTests(unittest.TestCase):
         )
 
         with self.assertRaisesRegex(ValueError, "claim 1 cited unknown facts"):
+            validate_wiki_build(packet, result)
+
+    def test_guardrails_reject_claims_without_citations(self):
+        packet = reviewed_packet()
+        result = ProviderWikiBuildResult(
+            summary="Built one claim.",
+            claims=(
+                ProviderWikiBuildClaim(
+                    "Alice joined Example Co.",
+                    (),
+                ),
+            ),
+            synthesis_markdown="## Wiki Brief\n\nAlice joined Example Co. (S1:1)",
+        )
+
+        with self.assertRaisesRegex(
+            ValueError,
+            "claim 1 must cite at least one accepted fact",
+        ):
             validate_wiki_build(packet, result)
 
     def test_guardrails_reject_uncited_substantive_text(self):

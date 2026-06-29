@@ -111,6 +111,10 @@ def _validate_claims(
         if not claim.text.strip():
             raise ValueError(f"wiki-build claim {index} text is empty")
         citations = tuple(citation.strip() for citation in claim.citations)
+        if not citations:
+            raise ValueError(
+                f"wiki-build claim {index} must cite at least one accepted fact"
+            )
         if any(not citation for citation in citations):
             raise ValueError(f"wiki-build claim {index} has blank citations")
         unknown = sorted(set(citations) - allowed)
