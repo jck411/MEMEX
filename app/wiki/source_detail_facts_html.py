@@ -111,13 +111,21 @@ def _render_decision_tool_group(
 
 def _render_llm_review_form(source_id: str, wiki_id: str, pending_count: int) -> str:
     detail_path = source_detail_path(source_id)
+    review_all = pending_count == 0
+    review_all_value = "1" if review_all else "0"
+    label = "LLM Review All" if review_all else "LLM Review"
+    title = (
+        f"OpenRouter {escape(OPENROUTER_REVIEW_MODEL)}; review all facts"
+        if review_all
+        else f"OpenRouter {escape(OPENROUTER_REVIEW_MODEL)}; {pluralize(pending_count, 'pending fact')}"
+    )
     return f"""
 <form method="post" action="/source-llm-review" class="llm-review-inline" data-pending-count="{pending_count}">
   {hidden_input("source_id", source_id)}
   {hidden_input("wiki_id", wiki_id)}
   {hidden_input("return_to", detail_path)}
-  {hidden_input("review_all", "0")}
-  <button type="submit" class="button decision-action" title="OpenRouter {escape(OPENROUTER_REVIEW_MODEL)}; {pluralize(pending_count, "pending fact")}">LLM Review</button>
+  {hidden_input("review_all", review_all_value)}
+  <button type="submit" class="button decision-action" title="{title}">{label}</button>
 </form>
 """
 
@@ -129,7 +137,7 @@ def _render_detail_fact(detail: SourceDetailView, fact, decision_form_id: str) -
     text_editor = _render_fact_text_editor(detail.source_id, fact)
     tools = _render_fact_row_tools(detail.source_id, fact)
     return f"""
-<article class="fact-row">
+<article class="fact-row" data-fact-id="{escape(fact.fact_id, quote=True)}">
   <div class="fact-heading">
     <div>
       <span class="fact-id">{escape(fact.fact_id)}</span>

@@ -162,7 +162,10 @@ class WikiDashboardServerSourceActionTests(DashboardServerTestCase):
             with self.serving(server) as (host, port):
                 body = self.request(host, port, "GET", "/source/source-1")[2]
                 page = parse_html(body)
-                page.require("form", {"action": "/source-llm-review"})
+                page.require("form", {"action": "/source-llm-review"}).require(
+                    "input",
+                    {"name": "review_all", "value": "0"},
+                )
                 self.assertEqual(0, page.count(attrs={"name": "acknowledge_cost"}))
                 self.assertIn("LLM Review", page.normalized_text())
 
@@ -188,7 +191,11 @@ class WikiDashboardServerSourceActionTests(DashboardServerTestCase):
                 reviewed = self.request(host, port, "GET", "/source/source-1")[2]
                 page = parse_html(reviewed)
                 page.require("form", {"action": "/source-llm-review"})
-                page.require("form", {"data-pending-count": "0"})
+                page.require("form", {"data-pending-count": "0"}).require(
+                    "input",
+                    {"name": "review_all", "value": "1"},
+                )
+                self.assertIn("LLM Review All", page.normalized_text())
                 self.assertIn("Accepted", page.normalized_text())
                 self.assertIn("Rejected", page.normalized_text())
                 self.assertIn(

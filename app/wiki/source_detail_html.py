@@ -117,7 +117,7 @@ def _render_detail_issues(detail: SourceDetailView) -> str:
 def _render_detail_issue(source_id: str, index: int, issue: str) -> str:
     rows = textarea_rows(issue, minimum=2, maximum=6)
     return f"""
-<article class="issue-row">
+<article class="issue-row" data-issue-index="{index}">
   <form method="post" action="/source-repair" class="editable-text-form issue-text-form">
     {repair_hidden_fields(source_id)}
     {hidden_input("issue_index", str(index))}

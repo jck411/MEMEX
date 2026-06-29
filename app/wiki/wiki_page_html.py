@@ -53,8 +53,6 @@ def render_wiki_page_html(
 
 
 def _status_state(status: WikiStatus) -> str:
-    if status.needs_review and status.needs_build:
-        return "needs_review+build"
     if status.needs_review:
         return "needs_review"
     if status.needs_build:

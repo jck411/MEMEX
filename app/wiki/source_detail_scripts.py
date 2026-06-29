@@ -20,6 +20,16 @@ function markDecisionDirty(form, key) {
   return true;
 }
 
+function markWikiDecisionsDirty(form, wikiId) {
+  if (!form || !wikiId) return false;
+  let changed = false;
+  document.querySelectorAll('input[type="checkbox"][name="accepted_decision"]').forEach(function (input) {
+    if (input.form !== form || input.getAttribute("data-wiki-id") !== wikiId) return;
+    changed = markDecisionDirty(form, input.getAttribute("data-decision-key")) || changed;
+  });
+  return changed;
+}
+
 function submitDecisionForm(form) {
   if (!form || form.dataset.submitting === "1") return;
   if (typeof memexSetFormBusy === "function") {
@@ -46,21 +56,19 @@ document.addEventListener("click", function (event) {
   const form = formId ? document.getElementById(formId) : button.closest("form");
   const wikiId = button.getAttribute("data-decision-wiki");
   const checked = button.getAttribute("data-decision-checked") === "true";
-  let changed = false;
   document.querySelectorAll('input[type="checkbox"][name="accepted_decision"]').forEach(function (input) {
     if (formId && input.getAttribute("form") !== formId && input.form !== form) return;
     if (input.getAttribute("data-wiki-id") === wikiId) {
       input.checked = checked;
-      changed = markDecisionDirty(input.form || form, input.getAttribute("data-decision-key")) || changed;
     }
   });
-  if (changed) submitDecisionForm(form);
+  if (markWikiDecisionsDirty(form, wikiId)) submitDecisionForm(form);
 });
 
 document.addEventListener("change", function (event) {
   const input = event.target.closest('input[type="checkbox"][name="accepted_decision"][data-decision-key]');
   if (!input) return;
-  if (markDecisionDirty(input.form, input.getAttribute("data-decision-key"))) {
+  if (markWikiDecisionsDirty(input.form, input.getAttribute("data-wiki-id"))) {
     submitDecisionForm(input.form);
   }
 });
@@ -71,15 +79,6 @@ document.addEventListener("submit", function (event) {
   if (form.dataset.submitting === "1") {
     event.preventDefault();
     return;
-  }
-  if (form.getAttribute("data-pending-count") === "0") {
-    const confirmed = confirm("No changes since the last review for this wiki. Review all facts again?");
-    if (!confirmed) {
-      event.preventDefault();
-      return;
-    }
-    const reviewAll = form.querySelector('input[name="review_all"]');
-    if (reviewAll) reviewAll.value = "1";
   }
   memexSetFormBusy(
     form,

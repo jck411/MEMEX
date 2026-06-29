@@ -63,7 +63,6 @@
 /* -- Source row state indicators -- */
 .source-row:has(.bubble.state-needs_review) { border-left: 3px solid var(--warn); }
 .source-row:has(.bubble.state-needs_build) { border-left: 3px solid var(--build); }
-.source-row:has(.bubble.state-needs_review\+build) { border-left: 3px solid var(--warn); }
 .wiki-row { align-items: start; }
 .wiki-stats { align-items: flex-start; }
 .wiki-stat {
@@ -104,7 +103,7 @@
 
 /* -- Pills / states -- */
 .pill { display: inline-flex; align-items: center; min-height: 26px; padding: 0 10px; font-size: 12px; font-weight: 700; }
-.state-needs_review, .state-needs_review\+build { border-color: #a08040; color: var(--warn); background: var(--warn-dim); }
+.state-needs_review { border-color: #a08040; color: var(--warn); background: var(--warn-dim); }
 .state-needs_build { border-color: #7a60b0; color: var(--build); background: var(--build-dim); }
 
 /* -- Bubbles -- */

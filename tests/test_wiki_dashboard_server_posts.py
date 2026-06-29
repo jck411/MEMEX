@@ -241,7 +241,8 @@ class WikiDashboardServerPostTests(DashboardServerTestCase):
                 self.assertTrue(wiki_status.needs_build)
                 body = self.request(host, port, "GET", "/")[2]
                 self.assertIn("Track public speaking history.", body)
-                self.assertIn("needs_review+build", body)
+                self.assertIn("needs_review", body)
+                self.assertNotIn("needs_review+build", body)
 
     def test_dashboard_server_build_verifies_markdown_before_success_message(self):
         with tempfile.TemporaryDirectory() as temp_dir:

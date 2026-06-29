@@ -91,6 +91,8 @@ class WikiSourceDetailHtmlTests(unittest.TestCase):
         self.assertIn("Alice joined Example Co. in 2024.", facts.normalized_text())
         self.assertIn("ev-joined", facts.normalized_text())
         self.assertIn("Review employment date.", issues.normalized_text())
+        facts.require("article", {"class": "fact-row", "data-fact-id": "fact-1"})
+        issues.require("article", {"class": "issue-row", "data-issue-index": "0"})
         facts.require("textarea", {"name": "fact_text", "aria-label": "Fact text"})
         facts.require("button", {"aria-label": "Save fact"})
         facts.require("button", {"aria-label": "Delete fact"})
@@ -182,8 +184,12 @@ class WikiSourceDetailHtmlTests(unittest.TestCase):
         self.assertNotIn("Save Decisions", facts.normalized_text())
         self.assertEqual(0, facts.count("button", {"form": "source-decisions-form"}))
         self.assertIn("submitDecisionForm", detail_html)
+        self.assertIn("markWikiDecisionsDirty", detail_html)
         self.assertIn("requestSubmit", detail_html)
         self.assertIn("Saving decisions", detail_html)
+        self.assertIn("memex:page-position", detail_html)
+        self.assertIn("rememberPagePosition(form", detail_html)
+        self.assertIn("restorePagePosition()", detail_html)
         delete_form = source_actions.require(
             "form",
             {"method": "post", "action": "/delete-source"},
@@ -193,20 +199,26 @@ class WikiSourceDetailHtmlTests(unittest.TestCase):
         self.assertIn("Source Actions", source_actions.normalized_text())
         self.assertIn("Delete Source", source_actions.normalized_text())
         self.assertNotIn("confirm('Delete this source?')", detail_html)
-        self.assertIn("Pending", facts.normalized_text())
+        self.assertIn("Needs review", facts.normalized_text())
         self.assertEqual(0, detail_page.count("dialog"))
         self.assertEqual(0, detail_page.count("form", {"action": "/review"}))
         self.assertEqual(0, detail_page.count("form", {"action": "/source-llm-review"}))
         self.assertEqual(0, detail_page.count("form", {"action": "/fact-decisions"}))
         ai_facts = ai_detail_page.by_testid("source-facts")
         ai_facts.require("form", {"method": "post", "action": "/source-llm-review"})
-        ai_facts.require("form", {"data-pending-count": "0"})
-        ai_facts.require("form", {"data-pending-count": "1"})
-        ai_facts.require("input", {"name": "review_all", "value": "0"})
-        self.assertIn("No changes since the last review", ai_detail_html)
+        ai_facts.require("form", {"data-pending-count": "0"}).require(
+            "input",
+            {"name": "review_all", "value": "1"},
+        )
+        ai_facts.require("form", {"data-pending-count": "1"}).require(
+            "input",
+            {"name": "review_all", "value": "0"},
+        )
+        self.assertNotIn("No changes since the last review", ai_detail_html)
         self.assertNotIn('name="acknowledge_cost"', ai_detail_html)
         self.assertNotIn("OpenRouter cost", ai_detail_html)
         self.assertIn("LLM Review", ai_facts.normalized_text())
+        self.assertIn("LLM Review All", ai_facts.normalized_text())
         ai_detail_page.require("div", {"id": "memex-busy-loader"})
         self.assertIn("Reviewing facts", ai_detail_html)
         fix_repair = fix_detail_page.by_testid("source-repair")

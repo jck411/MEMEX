@@ -7,6 +7,7 @@ from urllib.parse import quote
 
 from .dashboard import WikiAssignmentBubble, WikiDashboardSnapshot
 from .dashboard_busy_scripts import BUSY_OVERLAY_JS
+from .dashboard_position_scripts import POSITION_PERSISTENCE_JS
 from .dashboard_styles import DASHBOARD_CSS
 from .dashboard_toasts import render_toast
 from .provider_balances import (
@@ -28,6 +29,9 @@ document.addEventListener("submit", function (event) {
     event.stopPropagation();
   }
 });
+"""
+    + POSITION_PERSISTENCE_JS
+    + """
 (function () {
   var t = document.getElementById("toast");
   if (!t) return;
@@ -45,12 +49,11 @@ STATUS_LABELS = {
     "current": "Current",
     "needs_review": "Needs review",
     "needs_build": "Needs build",
-    "needs_review+build": "Needs review + build",
     "accepted": "Accepted",
     "rejected": "Rejected",
-    "pending": "Pending",
-    "staleaccepted": "Stale accepted",
-    "stalerejected": "Stale rejected",
+    "pending": "Needs review",
+    "staleaccepted": "Needs review",
+    "stalerejected": "Needs review",
 }
 
 

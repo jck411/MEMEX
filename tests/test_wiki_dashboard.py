@@ -14,6 +14,7 @@ from app.wiki.dashboard_review_actions import apply_source_decisions
 from app.wiki.ledger import WikiLedger
 from app.wiki.review import ReviewResult, apply_review_results
 from app.wiki.source_detail import source_detail_view
+from app.wiki.status import mark_build_current
 from app.wiki.workflows import WikiWorkspace
 from tests.helpers import fact_record, source_record, wiki_record, wiki_registry, wiki_workspace
 
@@ -155,6 +156,40 @@ class WikiDashboardTests(unittest.TestCase):
 
         self.assertEqual("needs_build", snapshot.wikis[0].state)
         self.assertEqual(("career",), snapshot.sources[0].needs_build_wiki_ids)
+
+    def test_dashboard_presents_review_before_build_for_stale_wikis(self):
+        fact = fact_record("fact-1", "Alice joined Example Co.")
+        source = source_record("source-1", fact)
+        old_wiki = wiki_record(
+            "career",
+            "Career",
+            "career.md",
+            description="Track employment history.",
+        )
+        registry = wiki_registry(
+            wiki_record(
+                "career",
+                "Career",
+                "career.md",
+                description="Track public speaking history.",
+            )
+        )
+        ledger = WikiLedger.empty()
+        ledger.assign_source("career", "source-1")
+        apply_review_results(
+            old_wiki,
+            "source-1",
+            ledger,
+            source,
+            [ReviewResult("fact-1", True, "Employment fact.")],
+        )
+        mark_build_current(old_wiki, ledger, [source])
+
+        snapshot = dashboard_snapshot(registry, ledger, [source])
+
+        self.assertEqual("needs_review", snapshot.wikis[0].state)
+        self.assertEqual(("career",), snapshot.sources[0].needs_review_wiki_ids)
+        self.assertEqual((), snapshot.sources[0].needs_build_wiki_ids)
 
     def test_source_detail_view_includes_evidence_issues_and_review_deltas(self):
         pending_fact = fact_record(
@@ -367,6 +402,41 @@ class WikiDashboardTests(unittest.TestCase):
                 ledger.decision_for("career", "source-1", "fact-2").reason,
             )
             self.assertIsNone(ledger.decision_for("tax", "source-1", "fact-2"))
+
+    def test_manual_source_decision_save_can_complete_wiki_review(self):
+        source = source_record(
+            "source-1",
+            fact_record("fact-1", "Alice joined Example Co."),
+            fact_record("fact-2", "Alice mentors new hires."),
+        )
+        with tempfile.TemporaryDirectory() as temp_dir:
+            workspace = wiki_workspace(Path(temp_dir))
+            workspace.add_wiki("career", "Career", "career.md")
+            workspace.save_source(source)
+            workspace.assign_source("career", "source-1")
+
+            self.assertTrue(workspace.status("career").needs_review)
+            apply_source_decisions(
+                workspace,
+                DashboardForm(
+                    fields={
+                        "source_id": ("source-1",),
+                        "accepted_decision": ('["fact-1","career"]',),
+                        "changed_decision": (
+                            '["fact-1","career"]',
+                            '["fact-2","career"]',
+                        ),
+                        "reason": ("Manual dashboard decision.",),
+                    },
+                    files={},
+                ),
+            )
+
+            ledger = workspace.data_store.load_ledger()
+            self.assertFalse(workspace.status("career").needs_review)
+            self.assertTrue(workspace.status("career").needs_build)
+            self.assertTrue(ledger.decision_for("career", "source-1", "fact-1").ticked)
+            self.assertFalse(ledger.decision_for("career", "source-1", "fact-2").ticked)
 
 
 if __name__ == "__main__":

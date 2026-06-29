@@ -76,8 +76,6 @@ class WikiDashboardSnapshot:
 def status_label(status: WikiStatus) -> str:
     if status.current:
         return "current"
-    if status.needs_review and status.needs_build:
-        return "needs_review+build"
     if status.needs_review:
         return "needs_review"
     return "needs_build"
@@ -182,7 +180,7 @@ def _source_row(
         assigned = source.source_id in ledger.assigned_sources(wiki_id)
         if assigned and review_delta_for_source(wiki, source.source_id, ledger, sources):
             needs_review_wikis.append(wiki_id)
-        if assigned and statuses[wiki_id].needs_build:
+        if assigned and not statuses[wiki_id].needs_review and statuses[wiki_id].needs_build:
             needs_build_wikis.append(wiki_id)
         bubbles.append(
             WikiAssignmentBubble(
