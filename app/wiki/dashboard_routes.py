@@ -13,8 +13,14 @@ from .dashboard_post_routes import dashboard_post_location
 from .dashboard_runtime import DashboardRuntime
 from .provider_balances import ProviderBalance
 from .source_detail_html import render_source_detail_html
+from .wiki_facts_html import render_wiki_facts_html
 from .wiki_page_html import render_wiki_page_html
-from .workspace_queries import dashboard_view, duplicate_source_hints, wiki_page_view
+from .workspace_queries import (
+    dashboard_view,
+    duplicate_source_hints,
+    wiki_facts_page_view,
+    wiki_page_view,
+)
 
 
 @dataclass(frozen=True)
@@ -38,6 +44,8 @@ def handle_dashboard_get(runtime: DashboardRuntime, target: str) -> DashboardRes
     if parsed.path.startswith("/source/"):
         return _render_source_detail(runtime, parsed.path, params)
     if parsed.path.startswith("/wiki/"):
+        if parsed.path.endswith("/facts"):
+            return _render_wiki_facts(runtime, parsed.path, params)
         return _render_wiki_page(runtime, parsed.path, params)
     return _text_response(HTTPStatus.NOT_FOUND, "not found")
 
@@ -73,6 +81,29 @@ def _render_wiki_page(
             wiki=page.wiki,
             status=page.status,
             markdown=page.markdown,
+            provider_balances=_safe_provider_balances(runtime.balance_provider),
+            message=_first(params, "message"),
+            message_type=_first(params, "message_type"),
+        )
+    )
+
+
+def _render_wiki_facts(
+    runtime: DashboardRuntime,
+    path: str,
+    params: dict[str, list[str]],
+) -> DashboardResponse:
+    wiki_id = unquote(path.removeprefix("/wiki/").removesuffix("/facts").rstrip("/"))
+    if not wiki_id:
+        return _text_response(HTTPStatus.NOT_FOUND, "not found")
+    try:
+        facts_view = wiki_facts_page_view(runtime.workspace, wiki_id)
+    except KeyError:
+        return _text_response(HTTPStatus.NOT_FOUND, "not found")
+    return _html_response(
+        render_wiki_facts_html(
+            snapshot=dashboard_view(runtime.workspace),
+            facts_view=facts_view,
             provider_balances=_safe_provider_balances(runtime.balance_provider),
             message=_first(params, "message"),
             message_type=_first(params, "message_type"),

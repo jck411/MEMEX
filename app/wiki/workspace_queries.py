@@ -11,6 +11,7 @@ from .dashboard_ingest_hints import DuplicateSourceHint
 from .records import SourceRecord, WikiRecord
 from .status import WikiStatus
 from .vault import read_wiki_page
+from .wiki_facts import WikiFactsView, wiki_facts_view
 
 if TYPE_CHECKING:
     from .workflows import WikiWorkspace
@@ -44,6 +45,15 @@ def wiki_page_view(workspace: WikiWorkspace, wiki_id: str) -> WikiPageView:
         wiki=wiki,
         status=workspace.status(wiki_id),
         markdown=read_wiki_page(workspace.vault_root, wiki),
+    )
+
+
+def wiki_facts_page_view(workspace: WikiWorkspace, wiki_id: str) -> WikiFactsView:
+    return wiki_facts_view(
+        workspace.data_store.load_registry(),
+        workspace.data_store.load_ledger(),
+        workspace.data_store.load_sources(),
+        wiki_id,
     )
 
 

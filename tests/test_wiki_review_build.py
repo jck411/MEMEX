@@ -9,7 +9,7 @@ from app.wiki.markdown import (
     SYNTHESIS_END,
     SYNTHESIS_START,
     build_wiki_markdown,
-    replace_fact_audit_section,
+    remove_fact_audit_section,
 )
 from app.wiki.review import (
     ReviewResult,
@@ -114,7 +114,7 @@ class WikiReviewBuildTests(unittest.TestCase):
 
         self.assertEqual((), review_delta_for_wiki(CAREER_WIKI, ledger, [source]))
 
-    def test_build_wiki_markdown_creates_and_replaces_fact_audit_section(self):
+    def test_build_wiki_markdown_creates_clean_page_and_removes_fact_audit_section(self):
         accepted_fact = fact_record(
             "fact-1",
             "Alice joined Example Co.\nShe led platform work.",
@@ -142,7 +142,7 @@ class WikiReviewBuildTests(unittest.TestCase):
         )
 
         synthesis = "## Wiki Brief\n\nAlice joined Example Co. and led platform work."
-        markdown = build_wiki_markdown(wiki, ledger, [source], synthesis)
+        markdown = build_wiki_markdown(wiki, synthesis)
         self.assertIn("# Career", markdown)
         self.assertIn(SYNTHESIS_START, markdown)
         self.assertIn("## Wiki Brief", markdown)
@@ -150,22 +150,13 @@ class WikiReviewBuildTests(unittest.TestCase):
         self.assertIn(SYNTHESIS_END, markdown)
         self.assertNotIn("## LLM Context", markdown)
         self.assertNotIn("### Default Conversation Context", markdown)
-        self.assertIn("Wiki description:** Track durable career history.", markdown)
-        self.assertIn("## Source Fact Decisions", markdown)
-        self.assertIn(FACTS_START, markdown)
-        self.assertIn("### [Source One](/source/source-1) (`source-1`)", markdown)
-        self.assertIn("#### Accepted", markdown)
-        self.assertIn("#### Rejected", markdown)
-        self.assertIn(
-            '- <a id="memex-fact-source-1-fact-1"></a> '
-            "`fact-1`: Alice joined Example Co. She led platform work.",
-            markdown,
-        )
-        self.assertIn(
-            '- <a id="memex-fact-source-1-fact-2"></a> '
-            "`fact-2`: Alice lives in Boston.",
-            markdown,
-        )
+        self.assertNotIn("Source Fact Decisions", markdown)
+        self.assertNotIn(FACTS_START, markdown)
+        self.assertNotIn(FACTS_END, markdown)
+        self.assertNotIn("source-1", markdown)
+        self.assertNotIn("fact-1", markdown)
+        self.assertNotIn("fact-2", markdown)
+        self.assertNotIn("Alice lives in Boston.", markdown)
         self.assertNotIn("## References", markdown)
 
         existing = (
@@ -178,14 +169,16 @@ class WikiReviewBuildTests(unittest.TestCase):
             "legacy context\n\n"
             "Human-written footer.\n"
         )
-        updated = build_wiki_markdown(wiki, ledger, [source], synthesis, existing)
+        updated = build_wiki_markdown(wiki, synthesis, existing)
         self.assertIn("Human-written intro.", updated)
         self.assertNotIn("old synthesis", updated)
         self.assertNotIn("old generated text", updated)
+        self.assertNotIn(FACTS_START, updated)
+        self.assertNotIn(FACTS_END, updated)
         self.assertNotIn("Default Conversation Context", updated)
         self.assertIn("Human-written footer.", updated)
 
-    def test_fact_audit_does_not_split_restricted_accepted_facts(self):
+    def test_build_wiki_markdown_omits_source_fact_inventory(self):
         public_fact = fact_record("f1", "Alice is a licensed pharmacist.")
         restricted_fact = fact_record("f2", "Passport number: 123456789")
         resume = source_record("resume", public_fact, title="Resume")
@@ -210,19 +203,19 @@ class WikiReviewBuildTests(unittest.TestCase):
 
         markdown = build_wiki_markdown(
             CAREER_WIKI,
-            ledger,
-            [resume, passport],
             "## Wiki Brief\n\nAccepted identity and career facts are available.",
         )
-        reviewed_facts = markdown.split("## Source Fact Decisions", 1)[1]
 
         self.assertNotIn("Default Conversation Context", markdown)
-        self.assertNotIn("### General Accepted Facts", reviewed_facts)
-        self.assertNotIn("### Restricted Accepted Facts", reviewed_facts)
-        self.assertIn("Passport number: 123456789", reviewed_facts)
+        self.assertNotIn("Source Fact Decisions", markdown)
+        self.assertNotIn("Alice is a licensed pharmacist.", markdown)
+        self.assertNotIn("Passport number: 123456789", markdown)
+        self.assertNotIn("resume", markdown)
+        self.assertNotIn("passport", markdown)
+        self.assertNotIn("f1", markdown)
+        self.assertNotIn("f2", markdown)
 
     def test_incomplete_memex_fact_audit_markers_are_rejected(self):
-        replacement = f"{FACTS_START}\nnew generated text\n{FACTS_END}"
         cases = (
             f"# Career\n\n{FACTS_START}\nold generated text\n",
             f"# Career\n\nold generated text\n{FACTS_END}\n",
@@ -232,7 +225,7 @@ class WikiReviewBuildTests(unittest.TestCase):
         for existing in cases:
             with self.subTest(existing=existing):
                 with self.assertRaisesRegex(ValueError, "incomplete MEMEX facts markers"):
-                    replace_fact_audit_section(existing, replacement)
+                    remove_fact_audit_section(existing)
 
     def test_vault_helpers_write_inside_vault_root(self):
         wiki = wiki_record("career", "Career", "nested/career.md")
@@ -264,8 +257,6 @@ class WikiReviewBuildTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             markdown = build_wiki_markdown(
                 wiki,
-                ledger,
-                [source],
                 "## Wiki Brief\n\nAlice joined Example Co.",
             )
             write_wiki_page(temp_dir, wiki, markdown)

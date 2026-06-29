@@ -52,14 +52,15 @@ The V2 foundation is in place:
   assigned source/wiki pair and writes to the same ledger state as manual
   checkboxes.
 - Wiki builds use OpenRouter `deepseek/deepseek-v4-pro` to consolidate current
-  accepted facts into cite-backed claims, synthesize a managed wiki body from
-  those claims, then render a deterministic accepted fact audit appendix with
-  compact citations. LLM-built wiki synthesis remains separate from downstream
-  LLM use of the finished markdown.
-- Managed synthesis citations are deterministically grouped, compacted, and
-  linked to matching accepted fact anchors in the generated markdown appendix,
-  where accepted facts are grouped by source and numbered within each source
-  group. Source headings link back to the dashboard source detail page.
+  accepted facts into plain claims, then synthesize a managed wiki body from
+  those claims. LLM-built wiki synthesis remains separate from downstream LLM
+  use of the finished markdown.
+- Build packets group accepted facts by source for reconciliation, but finished
+  vault markdown intentionally omits source inventories, fact ids, citations,
+  rejected facts, and review audit appendices.
+- Dashboard wiki pages link to a wiki facts inspection page that shows current
+  accepted facts and not-used facts grouped by source, with links back to source
+  detail pages.
 - `python scripts/wiki_validate.py` validates source records, source assets,
   originals, evidence references, and ledger references.
 
@@ -89,7 +90,8 @@ Wiki description changes are scope changes:
 - Accepted facts from the old scope are excluded from the current build
   fingerprint.
 - Wikis with stale review are not buildable until review is current.
-- Generated markdown includes the current wiki description when configured.
+- Build prompts include the current wiki description when configured; generated
+  markdown stays clean external-facing prose.
 
 ## Next Development Priorities
 
@@ -102,11 +104,11 @@ Needed:
 
 - Build from accepted fact deltas plus existing markdown.
 - Preserve human-written markdown around generated sections.
-- Keep provider-backed `Wiki Brief` synthesis above the accepted-fact ledger
-  guarded by citation validation.
-- Consolidate accepted facts into cite-backed claims before asking for polished
-  wiki prose.
-- Keep provenance visible enough to audit generated claims.
+- Keep provider-backed `Wiki Brief` synthesis as the only generated vault
+  section.
+- Consolidate accepted facts into claims before asking for polished wiki prose.
+- Keep provenance visible enough to audit generated claims without embedding it
+  in the vault markdown.
 - Update build baselines only after successful writes.
 - Make failed builds leave no partial baseline or misleading `current` state.
 
@@ -123,7 +125,6 @@ supports it.
 
 Needed:
 
-- Refine how accepted facts appear in generated markdown.
 - Deepen source/fact provenance links with source-detail and evidence-level
   navigation.
 - Show source asset metadata and original artifact access from source detail.
@@ -132,7 +133,8 @@ Needed:
 
 Design preference:
 
-- Markdown should be readable outside the app.
+- Markdown should be readable outside the app and clean for external
+  consumption.
 - Provenance should be auditable without making every paragraph noisy.
 
 ### 3. Review Queue And Bulk Work

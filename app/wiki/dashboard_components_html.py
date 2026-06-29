@@ -271,6 +271,14 @@ def source_detail_path(source_id: str) -> str:
     return "/source/" + quote(source_id, safe="")
 
 
+def wiki_detail_path(wiki_id: str) -> str:
+    return "/wiki/" + quote(wiki_id, safe="")
+
+
+def wiki_facts_path(wiki_id: str) -> str:
+    return wiki_detail_path(wiki_id) + "/facts"
+
+
 def textarea_rows(text: str, *, minimum: int, maximum: int) -> int:
     lines = text.splitlines() or [""]
     visual_rows = sum(max(1, (len(line) + 83) // 84) for line in lines)

@@ -4,9 +4,10 @@ from pathlib import Path
 from unittest.mock import patch
 
 from app.wiki.dashboard_server import create_dashboard_handler, create_dashboard_server
+from app.wiki.review import ReviewResult
 from app.wiki.vault import write_wiki_page
 from tests.dashboard_server_helpers import DashboardServerTestCase
-from tests.helpers import wiki_workspace
+from tests.helpers import fact_record, source_record, wiki_workspace
 from tests.html_helpers import parse_html
 
 
@@ -40,19 +41,10 @@ class WikiDashboardServerTests(DashboardServerTestCase):
                         "<!-- MEMEX:SYNTHESIS:START -->",
                         "## Wiki Brief",
                         "",
-                        "Alice joined Example Co.",
-                        "<!-- MEMEX:SYNTHESIS:END -->",
+                        "Alice joined Example Co. **Safely**",
                         "",
-                        "<!-- MEMEX:FACTS:START -->",
-                        "## Source Fact Decisions",
-                        "",
-                        "### [Source One](/source/source-1) (`source-1`)",
-                        "",
-                        "#### Accepted",
-                        "",
-                        '- <a id="memex-fact-source-1-fact-1"></a> '
-                        "`fact-1`: Alice joined Example Co. **Safely**",
                         "- <script>alert('x')</script>",
+                        "<!-- MEMEX:SYNTHESIS:END -->",
                     )
                 ),
             )
@@ -73,16 +65,58 @@ class WikiDashboardServerTests(DashboardServerTestCase):
                 page.require("a", {"href": "/", "aria-label": "MEMEX — dashboard"})
                 self.assertEqual("Wiki Detail", page.require("h1").normalized_text())
                 self.assertIn("Career", [node.normalized_text() for node in page.find_all("h2")])
+                page.require("a", {"href": "/wiki/career/facts"})
                 h1_text = [node.normalized_text() for node in page.find_all("h1")]
                 self.assertNotIn("Career", h1_text)
-                self.assertIn("Source Fact Decisions", page.normalized_text())
+                self.assertNotIn("Source Fact Decisions", page.normalized_text())
                 page.require("ul")
                 self.assertIn("Safely", page.normalized_text())
-                self.assertIn("fact-1", page.normalized_text())
-                page.require("a", {"id": "memex-fact-source-1-fact-1"})
-                page.require("a", {"href": "/source/source-1"})
+                self.assertNotIn("fact-1", page.normalized_text())
+                self.assertNotIn("/source/source-1", body)
                 self.assertIn("&lt;script&gt;alert(&#x27;x&#x27;)&lt;/script&gt;", body)
                 self.assertNotIn("MEMEX:FACTS:START", body)
+
+    def test_dashboard_server_renders_wiki_facts_page(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            workspace = wiki_workspace(Path(temp_dir))
+            workspace.add_wiki("career", "Career", "career.md")
+            source = source_record(
+                "source-1",
+                fact_record("fact-1", "Alice joined Example Co."),
+                fact_record("fact-2", "Alice lives in Boston."),
+                title="Source One",
+            )
+            workspace.save_source(source)
+            workspace.assign_source("career", "source-1")
+            workspace.review_source(
+                "career",
+                "source-1",
+                [
+                    ReviewResult("fact-1", True, "Career history."),
+                    ReviewResult("fact-2", False, "Out of scope."),
+                ],
+            )
+
+            with self.serving(create_dashboard_server(workspace, port=0)) as (host, port):
+                dashboard = self.request(host, port, "GET", "/")[2]
+                dashboard_page = parse_html(dashboard)
+                dashboard_page.require("a", {"href": "/wiki/career/facts"})
+
+                status, _, body = self.request(host, port, "GET", "/wiki/career/facts")
+                page = parse_html(body)
+
+                self.assertEqual(200, status)
+                self.assertEqual("Wiki Facts", page.require("h1").normalized_text())
+                page.require("a", {"href": "/wiki/career"})
+                page.require("a", {"href": "/source/source-1"})
+                accepted = page.by_testid("wiki-accepted-facts").normalized_text()
+                not_used = page.by_testid("wiki-not-used-facts").normalized_text()
+                self.assertIn("Alice joined Example Co.", accepted)
+                self.assertIn("Career history.", accepted)
+                self.assertIn("Alice lives in Boston.", not_used)
+                self.assertIn("Out of scope.", not_used)
+                self.assertNotIn("MEMEX:FACTS:START", body)
+                self.assertNotIn("Source Fact Decisions", body)
 
     def test_dashboard_server_returns_not_found_for_unknown_wiki_page(self):
         with tempfile.TemporaryDirectory() as temp_dir:

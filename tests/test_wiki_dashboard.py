@@ -15,6 +15,7 @@ from app.wiki.ledger import WikiLedger
 from app.wiki.review import ReviewResult, apply_review_results
 from app.wiki.source_detail import source_detail_view
 from app.wiki.status import mark_build_current
+from app.wiki.wiki_facts import wiki_facts_view
 from app.wiki.workflows import WikiWorkspace
 from tests.helpers import fact_record, source_record, wiki_record, wiki_registry, wiki_workspace
 
@@ -136,6 +137,35 @@ class WikiDashboardTests(unittest.TestCase):
                     SourceDashboardFilter(search="profile"),
                 )
             ),
+        )
+
+    def test_wiki_facts_view_separates_used_and_not_used_facts(self):
+        accepted = fact_record("fact-1", "Alice joined Example Co.")
+        rejected = fact_record("fact-2", "Alice lives in Boston.")
+        pending = fact_record("fact-3", "Alice likes skiing.")
+        source = source_record("source-1", accepted, rejected, pending, title="Profile")
+        registry = wiki_registry(wiki_record("career", "Career", "career.md"))
+        ledger = WikiLedger.empty()
+        ledger.assign_source("career", "source-1")
+        apply_review_results(
+            registry.wikis["career"],
+            "source-1",
+            ledger,
+            source,
+            [
+                ReviewResult("fact-1", True, "Career history."),
+                ReviewResult("fact-2", False, "Out of scope."),
+            ],
+        )
+
+        view = wiki_facts_view(registry, ledger, [source], "career")
+
+        self.assertEqual(1, view.accepted_count)
+        self.assertEqual(2, view.not_used_count)
+        self.assertEqual(("fact-1",), tuple(fact.fact_id for fact in view.groups[0].accepted))
+        self.assertEqual(
+            (("fact-2", "rejected"), ("fact-3", "pending")),
+            tuple((fact.fact_id, fact.state) for fact in view.groups[0].not_used),
         )
 
     def test_dashboard_marks_build_pending_wikis_on_assigned_sources(self):

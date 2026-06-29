@@ -109,7 +109,7 @@ class WikiBuildSynthesisTests(unittest.TestCase):
         self.assertNotIn("source_key", fact_payload)
         self.assertNotIn("citation", fact_payload)
         context = payload["existing_markdown_context"]["markdown"]
-        self.assertIn("Previous supported prose.", context)
+        self.assertNotIn("Previous supported prose.", context)
         self.assertNotIn("国籍", context)
         self.assertNotIn("平台团队", context)
         self.assertNotIn("Stale generated prose.", context)

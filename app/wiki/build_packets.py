@@ -7,12 +7,9 @@ from dataclasses import dataclass
 from typing import Iterable, Mapping
 
 from .citations import (
-    compact_fact_note,
     compact_fact_notes_in_text,
-    fact_numbers_by_key,
     fact_sort_key,
     inline_text,
-    source_keys_by_id,
 )
 from .language_guardrails import remove_cjk_dominant_blocks
 from .ledger import WikiLedger
@@ -34,11 +31,9 @@ MAX_FACT_TEXT = 1_500
 class WikiBuildFact:
     source_id: str
     source_title: str
-    source_key: str
     fact_id: str
     fact_signature: str
     text: str
-    citation: str
     review_reason: str = ""
 
 
@@ -61,22 +56,16 @@ def build_fact_packet(
 ) -> WikiBuildPacket:
     source_map = source_index(sources)
     facts = tuple(sorted(accepted_facts_for_wiki(wiki, ledger, source_map), key=fact_sort_key))
-    source_keys = source_keys_by_id(facts)
-    fact_numbers = fact_numbers_by_key(facts)
     packet_facts: list[WikiBuildFact] = []
     for fact in facts:
         source = source_map.get(fact.source_id)
-        source_key = source_keys.get(fact.source_id, "")
-        fact_number = fact_numbers.get((fact.source_id, fact.fact_id), 0)
         packet_facts.append(
             WikiBuildFact(
                 source_id=fact.source_id,
                 source_title=source.title if source else fact.source_id,
-                source_key=source_key,
                 fact_id=fact.fact_id,
                 fact_signature=fact.fact_signature,
                 text=_clip(fact.text, MAX_FACT_TEXT),
-                citation=compact_fact_note(fact, source_key, fact_number),
                 review_reason=fact.decision.reason,
             )
         )
@@ -86,19 +75,12 @@ def build_fact_packet(
         wiki_path=wiki.path,
         wiki_description=wiki_description(wiki),
         wiki_intention=wiki_intention_text(wiki),
-        existing_markdown_context=existing_markdown_context(
-            existing_markdown,
-            allowed_citations={fact.citation for fact in packet_facts if fact.citation},
-        ),
+        existing_markdown_context=existing_markdown_context(existing_markdown),
         accepted_facts=tuple(packet_facts),
     )
 
 
-def existing_markdown_context(
-    markdown: str,
-    *,
-    allowed_citations: set[str] | None = None,
-) -> str:
+def existing_markdown_context(markdown: str) -> str:
     if not markdown.strip():
         return ""
     _validate_marker_pair(markdown, SYNTHESIS_START, SYNTHESIS_END, "synthesis")
@@ -106,7 +88,7 @@ def existing_markdown_context(
     context = _remove_marked_section(markdown, FACTS_START, FACTS_END)
     context = context.replace(SYNTHESIS_START, "").replace(SYNTHESIS_END, "")
     context = remove_obsolete_markdown_sections(context)
-    context = _filter_current_cited_blocks(context, allowed_citations or set())
+    context = _remove_compact_cited_blocks(context)
     context = remove_cjk_dominant_blocks(context)
     return _clip(context.strip(), MAX_EXISTING_MARKDOWN_CONTEXT)
 
@@ -129,14 +111,11 @@ def _remove_marked_section(markdown: str, start_marker: str, end_marker: str) ->
     return (markdown[:start].rstrip() + "\n\n" + markdown[end:].lstrip()).strip() + "\n"
 
 
-def _filter_current_cited_blocks(markdown: str, allowed_citations: set[str]) -> str:
-    if not allowed_citations:
-        return markdown
+def _remove_compact_cited_blocks(markdown: str) -> str:
     blocks = [block.strip() for block in re.split(r"\n\s*\n", markdown) if block.strip()]
     kept: list[str] = []
     for block in blocks:
-        citations = set(compact_fact_notes_in_text(block))
-        if citations and not citations.issubset(allowed_citations):
+        if compact_fact_notes_in_text(block):
             continue
         kept.append(block)
     return "\n\n".join(kept).strip() + ("\n" if kept else "")

@@ -42,8 +42,6 @@ class WorkspaceBuildMixin:
         synthesis_markdown = validate_wiki_build(packet, build_result)
         markdown = build_wiki_markdown(
             wiki,
-            ledger,
-            sources,
             synthesis_markdown,
             existing_markdown,
         )

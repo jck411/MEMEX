@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 from html import escape
-from urllib.parse import quote
 
 from .dashboard import WikiDashboardRow, WikiDashboardSnapshot
 from .dashboard_components_html import (
     pluralize,
     render_delete_wiki_form,
     render_status_pill,
+    wiki_detail_path,
+    wiki_facts_path,
 )
 
 
@@ -69,9 +70,12 @@ def _render_wiki(row: WikiDashboardRow) -> str:
 <article class="wiki-row" data-testid="wiki-row" data-wiki-id="{escape(row.wiki_id, quote=True)}">
   <div>
     <div class="row-title">{escape(row.title)}</div>
-    <a class="wiki-link" href="{_wiki_page_path(row.wiki_id)}">
+    <a class="wiki-link" href="{wiki_detail_path(row.wiki_id)}">
       {escape(_wiki_file_location(row))}
     </a>
+    <div class="wiki-row-links">
+      <a href="{wiki_facts_path(row.wiki_id)}">Facts used</a>
+    </div>
     {_render_description_form(row)}
   </div>
   <div class="wiki-stats">
@@ -83,10 +87,6 @@ def _render_wiki(row: WikiDashboardRow) -> str:
   </div>
 </article>
 """
-
-
-def _wiki_page_path(wiki_id: str) -> str:
-    return "/wiki/" + quote(wiki_id, safe="")
 
 
 def _wiki_file_location(row: WikiDashboardRow) -> str:

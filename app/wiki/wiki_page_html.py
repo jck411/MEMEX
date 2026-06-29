@@ -6,7 +6,11 @@ import re
 from html import escape
 
 from .dashboard import WikiDashboardSnapshot
-from .dashboard_components_html import render_dashboard_page, render_status_pill
+from .dashboard_components_html import (
+    render_dashboard_page,
+    render_status_pill,
+    wiki_facts_path,
+)
 from .provider_balances import ProviderBalance
 from .records import WikiRecord
 from .status import WikiStatus
@@ -28,6 +32,7 @@ def render_wiki_page_html(
     message_type: str = "",
 ) -> str:
     state = render_status_pill(_status_state(status))
+    facts_link = f'<a class="button" href="{wiki_facts_path(wiki.wiki_id)}">Facts Used</a>'
     body = f"""
 <section class="section wiki-view">
   <div class="wiki-view-heading">
@@ -36,7 +41,7 @@ def render_wiki_page_html(
       <h2>{escape(wiki.title)}</h2>
       <p class="muted">{escape(wiki.wiki_id)} · {escape(wiki.path)}</p>
     </div>
-    <div>{state}</div>
+    <div class="wiki-view-actions">{state}{facts_link}</div>
   </div>
   {_render_wiki_body(markdown, wiki.title)}
 </section>
