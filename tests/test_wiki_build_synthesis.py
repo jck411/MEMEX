@@ -128,7 +128,7 @@ class WikiBuildSynthesisTests(unittest.TestCase):
                 "## Wiki Brief\n\nAlice joined Example Co. (S1:9)",
             )
 
-    def test_guardrails_reject_claims_that_do_not_cover_accepted_facts(self):
+    def test_guardrails_allow_claims_to_omit_audit_only_facts(self):
         packet = reviewed_packet()
         result = ProviderWikiBuildResult(
             summary="Built one claim.",
@@ -141,7 +141,22 @@ class WikiBuildSynthesisTests(unittest.TestCase):
             synthesis_markdown="## Wiki Brief\n\nAlice joined Example Co. (S1:1)",
         )
 
-        with self.assertRaisesRegex(ValueError, "claims omitted accepted fact citations"):
+        self.assertEqual(result.synthesis_markdown, validate_wiki_build(packet, result))
+
+    def test_guardrails_reject_claims_that_cite_unknown_facts(self):
+        packet = reviewed_packet()
+        result = ProviderWikiBuildResult(
+            summary="Built one claim.",
+            claims=(
+                ProviderWikiBuildClaim(
+                    "Alice joined Example Co.",
+                    ("(S1:9)",),
+                ),
+            ),
+            synthesis_markdown="## Wiki Brief\n\nAlice joined Example Co. (S1:1)",
+        )
+
+        with self.assertRaisesRegex(ValueError, "claim 1 cited unknown facts"):
             validate_wiki_build(packet, result)
 
     def test_guardrails_reject_uncited_substantive_text(self):
