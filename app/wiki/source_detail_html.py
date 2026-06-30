@@ -10,7 +10,6 @@ from .dashboard_components_html import (
     hidden_input,
     pluralize,
     render_dashboard_page,
-    render_delete_source_form,
     render_icon_button,
     render_source_assignment_bubble,
     repair_hidden_fields,
@@ -88,18 +87,6 @@ def _render_source_detail(
 {render_source_repair(detail, fix_enabled)}
 {_render_detail_issues(detail)}
 {render_detail_facts(detail, llm_review_enabled)}
-{_render_source_actions(detail.source_id)}
-"""
-
-
-def _render_source_actions(source_id: str) -> str:
-    return f"""
-<section class="section source-actions" data-testid="source-actions">
-  <h2>Source Actions</h2>
-  <div class="source-actions-row">
-    {render_delete_source_form(source_id)}
-  </div>
-</section>
 """
 
 

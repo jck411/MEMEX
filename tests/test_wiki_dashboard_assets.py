@@ -27,6 +27,17 @@ class WikiDashboardAssetTests(unittest.TestCase):
         ):
             self.assertIn(marker, DASHBOARD_CSS)
 
+    def test_header_back_link_style_is_owned_by_base_css(self):
+        self.assertEqual(1, DASHBOARD_CSS.count(".back-link {"))
+        self.assertEqual(1, DASHBOARD_CSS.count(".button-icon-svg {"))
+        self.assertIn(".back-link + .wordmark {", DASHBOARD_CSS)
+        self.assertIn("min-height: 32px;", DASHBOARD_CSS)
+        self.assertIn("line-height: 1;", DASHBOARD_CSS)
+        self.assertLess(
+            DASHBOARD_CSS.index(".button-icon-svg {"),
+            DASHBOARD_CSS.index(".back-icon-svg {"),
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

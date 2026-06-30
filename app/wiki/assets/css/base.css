@@ -130,7 +130,7 @@ summary.button::-webkit-details-marker { display: none; }
   justify-content: center;
   width: 32px;
   height: 32px;
-  margin-right: 8px;
+  margin-right: 4px;
   margin-left: -8px;
   border-radius: var(--radius);
   color: var(--muted);
@@ -140,9 +140,20 @@ summary.button::-webkit-details-marker { display: none; }
   color: var(--accent);
   background: var(--surface-alt);
 }
+.button-icon-svg {
+  width: 14px;
+  height: 14px;
+  display: block;
+}
 .back-icon-svg {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
+}
+.back-link + .wordmark {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  line-height: 1;
 }
 
 .extract-form textarea, .wiki-create-form textarea, .fix-form textarea,

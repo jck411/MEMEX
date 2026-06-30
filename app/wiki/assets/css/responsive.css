@@ -93,9 +93,6 @@
   .decision-tool-group .button { flex: 1 1 auto; min-width: 0; }
   .llm-review-inline { flex-wrap: wrap; }
   .issue-row { display: block; }
-  .source-actions-row { justify-content: stretch; }
-  .source-actions-row form { width: 100%; }
-  .source-actions-row .button { width: 100%; }
 
   /* -- Wiki page viewer -- */
   .wiki-view-heading { flex-direction: column; gap: 10px; }

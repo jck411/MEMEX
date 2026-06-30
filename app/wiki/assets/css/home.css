@@ -90,11 +90,10 @@
   border-left: 1px solid var(--line);
 }
 .wiki-actions:empty { display: none; }
-.button-icon-svg { width: 14px; height: 14px; display: block; }
 
 /* -- Source/wiki links -- */
 .source-link { display: block; min-width: 0; color: inherit; text-decoration: none; }
-.source-link:hover .row-title, .wiki-link:hover, .back-link:hover { text-decoration: underline; }
+.source-link:hover .row-title, .wiki-link:hover { text-decoration: underline; }
 .wiki-link { display: inline-block; max-width: 100%; color: var(--accent); font-size: 12px; font-weight: 700; overflow-wrap: anywhere; text-decoration: none; }
 .wiki-row-links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; font-size: 12px; font-weight: 700; }
 .row-title { font-size: 15px; font-weight: 700; }
@@ -135,11 +134,4 @@
   border-radius: var(--radius);
   text-align: center;
   font-size: 13px;
-}
-
-/* -- Back link -- */
-.back-link {
-  margin-bottom: 12px;
-  color: var(--accent);
-  font-weight: 700;
 }

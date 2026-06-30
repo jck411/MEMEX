@@ -78,10 +78,13 @@ class WikiSourceDetailHtmlTests(unittest.TestCase):
         repair = detail_page.by_testid("source-repair")
         issues = detail_page.by_testid("source-issues")
         facts = detail_page.by_testid("source-facts")
-        source_actions = detail_page.by_testid("source-actions")
 
         dashboard_page.require("a", {"href": "/source/source-1"})
+        dashboard_page.require("form", {"method": "post", "action": "/delete-source"})
         detail_page.require("a", {"href": "/", "aria-label": "MEMEX — dashboard"})
+        detail_page.require("a", {"href": "/", "aria-label": "Back"})
+        self.assertIn('d="M10 4L6 8l4 4"', detail_html)
+        self.assertNotIn("M12.5 8H3.5", detail_html)
         self.assertNotIn("Back to source list", detail_page.normalized_text())
         self.assertIn("source-1 · 1 fact · 1 issue", hero.normalized_text())
         self.assertIn("Profile", hero.normalized_text())
@@ -190,14 +193,10 @@ class WikiSourceDetailHtmlTests(unittest.TestCase):
         self.assertIn("memex:page-position", detail_html)
         self.assertIn("rememberPagePosition(form", detail_html)
         self.assertIn("restorePagePosition()", detail_html)
-        delete_form = source_actions.require(
-            "form",
-            {"method": "post", "action": "/delete-source"},
-        )
-        self.assertLess(facts.order, source_actions.order)
-        self.assertLess(source_actions.order, delete_form.order)
-        self.assertIn("Source Actions", source_actions.normalized_text())
-        self.assertIn("Delete Source", source_actions.normalized_text())
+        self.assertEqual(0, detail_page.count(attrs={"data-testid": "source-actions"}))
+        self.assertEqual(0, detail_page.count("form", {"action": "/delete-source"}))
+        self.assertNotIn("Source Actions", detail_page.normalized_text())
+        self.assertNotIn("Delete Source", detail_page.normalized_text())
         self.assertNotIn("confirm('Delete this source?')", detail_html)
         self.assertIn("Needs review", facts.normalized_text())
         self.assertEqual(0, detail_page.count("dialog"))

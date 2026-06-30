@@ -2,9 +2,6 @@
 .detail-heading { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 18px; align-items: start; }
 .detail-title { max-width: 72ch; margin: 2px 0 4px; font-size: 20px; font-weight: 800; }
 .detail-actions { display: grid; justify-items: end; gap: 14px; }
-.source-actions-row { display: flex; justify-content: flex-end; }
-.source-actions-row form { width: min(100%, 220px); }
-.source-actions-row .delete-button { width: 100%; }
 
 /* -- Fact / metadata rows -- */
 .fact-row, .metadata-row { display: grid; gap: 10px; padding: 14px 0; border-top: 1px solid var(--line); }
