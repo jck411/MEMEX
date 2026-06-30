@@ -32,7 +32,7 @@
 .field-help code { color: var(--ink); font-size: 11px; }
 .wiki-create-actions { display: flex; justify-content: flex-end; }
 .wiki-create-actions .button { min-width: 132px; }
-.wiki-description-edit { grid-column: 1 / -1; margin-top: 0; }
+.wiki-description-edit { grid-area: description; margin-top: 0; }
 .wiki-description-edit > summary { width: fit-content; color: var(--accent); cursor: pointer; font-size: 12px; font-weight: 700; }
 .wiki-description-form { width: 100%; margin-top: 8px; }
 .wiki-description-field { position: relative; display: grid; gap: 8px; }
@@ -83,11 +83,17 @@
 .wiki-row {
   align-items: start;
   grid-template-areas:
-    "main stats"
-    "description actions";
+    "main controls"
+    "description description";
 }
 .wiki-main { grid-area: main; min-width: 0; }
-.wiki-stats { grid-area: stats; align-items: flex-start; justify-content: flex-end; }
+.wiki-controls {
+  grid-area: controls;
+  display: grid;
+  justify-items: end;
+  gap: 8px;
+}
+.wiki-stats { align-items: flex-start; justify-content: flex-end; }
 .wiki-stat {
   min-height: 26px;
   padding: 0 9px;
@@ -98,11 +104,10 @@
   font-weight: 700;
 }
 .wiki-actions {
-  grid-area: actions;
   display: inline-flex;
   align-items: center;
   justify-self: end;
-  align-self: end;
+  align-self: start;
   gap: 6px;
 }
 .wiki-actions:empty { display: none; }

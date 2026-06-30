@@ -55,14 +55,26 @@
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
       "main"
-      "stats"
-      "description"
-      "actions";
+      "controls"
+      "description";
     gap: 10px;
     padding: 12px;
   }
-  .wiki-stats { margin-top: 0; }
+  .wiki-controls {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .wiki-stats {
+    flex: 1 1 230px;
+    margin-top: 0;
+    justify-content: flex-start;
+  }
   .wiki-actions {
+    order: 2;
+    margin-left: auto;
     margin-top: 0;
   }
 

@@ -84,6 +84,8 @@ class WikiDashboardHtmlTests(unittest.TestCase):
             "form",
             {"method": "post", "action": "/wiki-description"},
         )
+        wiki_controls = wiki_row.require("div", {"class": "wiki-controls"})
+        wiki_actions = wiki_controls.require("div", {"class": "wiki-actions"})
         description_field = description_form.require(
             "div",
             {"class": "wiki-description-field"},
@@ -96,6 +98,10 @@ class WikiDashboardHtmlTests(unittest.TestCase):
             "form",
             {"method": "post", "action": "/delete-wiki"},
         )
+        wiki_actions.require(
+            "form",
+            {"method": "post", "action": "/delete-wiki"},
+        )
         delete_wiki_form.require("input", {"name": "wiki_id", "value": "career"})
         delete_wiki_button = delete_wiki_form.require(
             "button",
@@ -103,7 +109,7 @@ class WikiDashboardHtmlTests(unittest.TestCase):
         )
         self.assertEqual("Delete wiki", delete_wiki_button.normalized_text())
         self.assertEqual(0, delete_wiki_form.count("button", {"aria-label": "Delete wiki"}))
-        self.assertLess(description_form.order, delete_wiki_form.order)
+        self.assertLess(wiki_controls.order, description_form.order)
         assign_form = source_row.require("form", {"method": "post", "action": "/assign"})
         assign_form.require("input", {"name": "operation", "value": "unassign"})
         source_delete_form = source_row.require(

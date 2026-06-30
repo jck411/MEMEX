@@ -61,11 +61,19 @@ def _render_wiki(row: WikiDashboardRow) -> str:
       </form>
 """
     delete = render_delete_wiki_form(row.wiki_id, row.title)
-    actions = f"""
+    controls = f"""
+  <div class="wiki-controls">
     <div class="wiki-actions">
       {build}
       {delete}
-    </div>"""
+    </div>
+    <div class="wiki-stats">
+      {render_status_pill(row.state)}
+      <span class="wiki-stat">{pluralize(row.assigned_source_count, "source")}</span>
+      <span class="wiki-stat">{pluralize(row.review_delta_count, "review")}</span>
+      <span class="wiki-stat">{row.accepted_fact_count} accepted</span>
+    </div>
+  </div>"""
     return f"""
 <article class="wiki-row" data-testid="wiki-row" data-wiki-id="{escape(row.wiki_id, quote=True)}">
   <div class="wiki-main">
@@ -77,14 +85,8 @@ def _render_wiki(row: WikiDashboardRow) -> str:
       <a href="{wiki_facts_path(row.wiki_id)}">Facts used</a>
     </div>
   </div>
-  <div class="wiki-stats">
-    {render_status_pill(row.state)}
-    <span class="wiki-stat">{pluralize(row.assigned_source_count, "source")}</span>
-    <span class="wiki-stat">{pluralize(row.review_delta_count, "review")}</span>
-    <span class="wiki-stat">{row.accepted_fact_count} accepted</span>
-  </div>
+  {controls}
   {_render_description_form(row)}
-  {actions}
 </article>
 """
 
