@@ -31,6 +31,11 @@ class WikiDashboardAssetTests(unittest.TestCase):
         self.assertEqual(1, DASHBOARD_CSS.count(".back-link {"))
         self.assertEqual(1, DASHBOARD_CSS.count(".button-icon-svg {"))
         self.assertIn(".back-link + .wordmark {", DASHBOARD_CSS)
+        back_link_block = DASHBOARD_CSS[
+            DASHBOARD_CSS.index(".back-link {") : DASHBOARD_CSS.index(".back-link:hover")
+        ]
+        self.assertIn("color: var(--accent);", back_link_block)
+        self.assertIn(".back-link:hover, .back-link:focus-visible {", DASHBOARD_CSS)
         self.assertIn("min-height: 32px;", DASHBOARD_CSS)
         self.assertIn("line-height: 1;", DASHBOARD_CSS)
         self.assertLess(

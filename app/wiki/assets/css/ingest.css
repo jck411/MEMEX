@@ -10,7 +10,7 @@
 
 /* -- File picker -- */
 .file-picker {
-  display: flex; align-items: center; height: 38px;
+  display: flex; align-items: center; height: var(--button-height);
   border: 1px solid var(--line); border-radius: var(--radius);
   background: var(--bg); cursor: pointer; overflow: hidden;
   transition: border-color var(--transition);

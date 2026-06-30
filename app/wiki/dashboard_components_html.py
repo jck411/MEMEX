@@ -188,7 +188,7 @@ CLOSE_ICON = (
 
 BACK_ICON = (
     '<svg class="button-icon-svg back-icon-svg" viewBox="0 0 16 16" aria-hidden="true" focusable="false">'
-    '<path d="M10 4L6 8l4 4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>'
+    '<path d="M5 8l6-5v10z" fill="currentColor"/>'
     '</svg>'
 )
 
