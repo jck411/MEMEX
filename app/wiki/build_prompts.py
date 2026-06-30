@@ -31,7 +31,7 @@ Process:
 Markdown rules:
 - synthesis_markdown must start with "## Wiki Brief".
 - Do not include page title, YAML frontmatter, MEMEX comments, Source Fact
-  Decisions, Accepted Facts, References, MEMEX Provenance, restricted facts, or
+  Decisions, Accepted Facts, References, Wiki Provenance, restricted facts, or
   Default Conversation Context.
 - Prefer headings and short paragraphs over dense bullet lists.
 

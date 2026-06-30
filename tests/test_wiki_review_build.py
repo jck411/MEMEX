@@ -162,7 +162,7 @@ class WikiReviewBuildTests(unittest.TestCase):
         self.assertNotIn("fact-2", markdown)
         self.assertNotIn("Alice lives in Boston.", markdown)
         self.assertIn(REFERENCES_START, markdown)
-        self.assertIn("## MEMEX Provenance", markdown)
+        self.assertIn("## Wiki Provenance", markdown)
         self.assertIn("- [Facts used to build this page](career/facts)", markdown)
         self.assertIn(REFERENCES_END, markdown)
 
@@ -171,7 +171,7 @@ class WikiReviewBuildTests(unittest.TestCase):
             "Human-written intro.\n\n"
             f"{SYNTHESIS_START}\nold synthesis\n{SYNTHESIS_END}\n\n"
             f"{FACTS_START}\nold generated text\n{FACTS_END}\n\n"
-            f"{REFERENCES_START}\n## MEMEX Provenance\n\n"
+            f"{REFERENCES_START}\n## Wiki Provenance\n\n"
             f"- [Facts used to build this page](old/facts)\n{REFERENCES_END}\n\n"
             "## LLM Context\n\n"
             "### Default Conversation Context\n\n"

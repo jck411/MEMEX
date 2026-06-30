@@ -80,7 +80,7 @@ class WikiBuildSynthesisTests(unittest.TestCase):
             "Stale generated prose. ([S9:9](#memex-fact-s9-9))\n"
             f"{SYNTHESIS_END}\n\n"
             f"{FACTS_START}\nold audit appendix\n{FACTS_END}\n\n"
-            f"{REFERENCES_START}\n## MEMEX Provenance\n\n"
+            f"{REFERENCES_START}\n## Wiki Provenance\n\n"
             f"- [Facts used to build this page](career/facts)\n{REFERENCES_END}\n\n"
             "## LLM Context\n\n"
             "### Default Conversation Context\n\n"

@@ -29,7 +29,7 @@ def render_synthesis_section(synthesis_markdown: str) -> str:
 
 def render_references_section(wiki: WikiRecord) -> str:
     link = f"{quote(wiki.wiki_id, safe='')}/facts"
-    body = f"## MEMEX Provenance\n\n- [Facts used to build this page]({link})"
+    body = f"## Wiki Provenance\n\n- [Facts used to build this page]({link})"
     return "\n".join((REFERENCES_START, body, REFERENCES_END))
 
 
