@@ -112,6 +112,39 @@ summary.button::-webkit-details-marker { display: none; }
   font-size: 14px;
   transition: border-color var(--transition), box-shadow var(--transition);
 }
+
+/* -- Empty states -- */
+.empty {
+  color: var(--muted);
+  padding: 16px;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+  text-align: center;
+  font-size: 13px;
+}
+
+/* -- Back link -- */
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin-right: 8px;
+  margin-left: -8px;
+  border-radius: var(--radius);
+  color: var(--muted);
+  transition: color var(--transition), background var(--transition);
+}
+.back-link:hover {
+  color: var(--accent);
+  background: var(--surface-alt);
+}
+.back-icon-svg {
+  width: 18px;
+  height: 18px;
+}
+
 .extract-form textarea, .wiki-create-form textarea, .fix-form textarea,
 .inline-repair-form textarea, .wiki-description-form textarea {
   min-height: 88px;
@@ -135,9 +168,9 @@ input:focus, textarea:focus, select:focus {
 .topbar { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 24px; }
 .topbar-side { display: grid; justify-items: end; gap: 10px; }
 .eyebrow { margin: 0 0 2px; color: var(--accent); font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+.topbar-brand { display: flex; align-items: center; margin-bottom: 2px; }
 .wordmark {
   display: inline-block;
-  margin: 0 0 2px;
   color: var(--accent);
   font-size: 11px;
   font-weight: 700;

@@ -77,3 +77,18 @@ blockquote { margin: 4px 0 0; color: var(--muted); font-style: italic; }
 /* -- Delta facts -- */
 .delta-facts { margin: 0; padding-left: 20px; }
 .delta-facts li + li { margin-top: 6px; }
+
+/* -- Editor grid for grouping textarea + buttons -- */
+.editor-grid {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  grid-template-areas: 
+    "text text text"
+    ". delete save";
+  gap: 8px;
+  align-items: start;
+}
+.editor-grid form { display: contents; }
+.editor-grid .editable-textarea { grid-area: text; width: 100%; }
+.editor-grid .button-save { grid-area: save; }
+.editor-grid .button-danger { grid-area: delete; }

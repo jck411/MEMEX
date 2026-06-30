@@ -119,13 +119,13 @@ def _render_detail_issue(source_id: str, index: int, issue: str) -> str:
     rows = textarea_rows(issue, minimum=2, maximum=6)
     return f"""
 <article class="issue-row" data-issue-index="{index}">
-  <form method="post" action="/source-repair" class="editable-text-form issue-text-form">
-    {repair_hidden_fields(source_id)}
-    {hidden_input("issue_index", str(index))}
-    <textarea class="editable-textarea" name="issue_text" rows="{rows}" aria-label="Issue text">{escape(issue)}</textarea>
-    {render_icon_button("Save issue", icon="✓", variant="save")}
-  </form>
-  <div class="row-tools">
+  <div class="editor-grid">
+    <form method="post" action="/source-repair" class="editable-text-form issue-text-form">
+      {repair_hidden_fields(source_id)}
+      {hidden_input("issue_index", str(index))}
+      <textarea class="editable-textarea" name="issue_text" rows="{rows}" aria-label="Issue text">{escape(issue)}</textarea>
+      {render_icon_button("Save issue", icon="✓", variant="save")}
+    </form>
     <form method="post" action="/source-repair" class="inline-action-form">
       {repair_hidden_fields(source_id)}
       {render_icon_button("Remove issue", icon=CLOSE_ICON, name="delete_issue", value=str(index), variant="danger", raw=True)}

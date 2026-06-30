@@ -97,13 +97,15 @@ def _render_metadata_text_field(
 <article class="metadata-row">
   <div class="fact-heading">
     <span class="field-label">{escape(label)}</span>
+  </div>
+  <div class="editor-grid">
+    <form method="post" action="/source-repair" class="editable-text-form metadata-text-form">
+      {repair_hidden_fields(source_id)}
+      {field}
+      {render_icon_button(f"Save {label.lower()}", icon="✓", variant="save")}
+    </form>
     {clear}
   </div>
-  <form method="post" action="/source-repair" class="editable-text-form metadata-text-form">
-    {repair_hidden_fields(source_id)}
-    {field}
-    {render_icon_button(f"Save {label.lower()}", icon="✓", variant="save")}
-  </form>
 </article>
 """
 

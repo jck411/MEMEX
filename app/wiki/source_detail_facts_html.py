@@ -143,9 +143,11 @@ def _render_detail_fact(detail: SourceDetailView, fact, decision_form_id: str) -
       <span class="fact-id">{escape(fact.fact_id)}</span>
       <span class="muted">{escape(fact.fact_signature[:12])}</span>
     </div>
+  </div>
+  <div class="editor-grid">
+    {text_editor}
     {tools}
   </div>
-  {text_editor}
   {acceptance}
   {evidence}
   {metadata}
@@ -167,12 +169,10 @@ def _render_fact_text_editor(source_id: str, fact) -> str:
 
 def _render_fact_row_tools(source_id: str, fact) -> str:
     return f"""
-<div class="row-tools">
-  <form method="post" action="/source-repair" class="inline-action-form">
-    {repair_hidden_fields(source_id)}
-    {render_icon_button("Delete fact", icon=CLOSE_ICON, name="delete_fact", value=fact.fact_id, variant="danger", raw=True)}
-  </form>
-</div>
+<form method="post" action="/source-repair" class="inline-action-form">
+  {repair_hidden_fields(source_id)}
+  {render_icon_button("Delete fact", icon=CLOSE_ICON, name="delete_fact", value=fact.fact_id, variant="danger", raw=True)}
+</form>
 """
 
 

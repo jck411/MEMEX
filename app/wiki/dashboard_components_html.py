@@ -109,15 +109,17 @@ def render_dashboard_header(
     review = sum(1 for row in snapshot.wikis if "needs_review" in row.state)
     build = sum(1 for row in snapshot.wikis if "needs_build" in row.state)
     back_link = (
-        f'<a class="back-link" href="{escape(back_href)}" aria-label="Back">← Back</a>'
+        f'<a class="back-link" href="{escape(back_href)}" aria-label="Back" title="Back">{BACK_ICON}</a>'
         if back_href
         else ""
     )
     return f"""
 <header class="topbar">
   <div>
-    {back_link}
-    <a class="wordmark" href="/" aria-label="MEMEX — dashboard">MEMEX</a>
+    <div class="topbar-brand">
+      {back_link}
+      <a class="wordmark" href="/" aria-label="MEMEX — dashboard">MEMEX</a>
+    </div>
     <h1>{escape(page_heading)}</h1>
   </div>
   <div class="topbar-side">
@@ -182,6 +184,12 @@ CLOSE_ICON = (
     '<svg class="button-icon-svg" viewBox="0 0 16 16" aria-hidden="true" focusable="false">'
     '<path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.6"'
     ' stroke-linecap="round"/></svg>'
+)
+
+BACK_ICON = (
+    '<svg class="button-icon-svg back-icon-svg" viewBox="0 0 16 16" aria-hidden="true" focusable="false">'
+    '<path d="M12.5 8H3.5M3.5 8l4-4M3.5 8l4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'
+    '</svg>'
 )
 
 
