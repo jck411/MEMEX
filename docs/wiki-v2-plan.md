@@ -28,6 +28,8 @@ source-grounded.
 - The central wiki ledger owns assignments, fact decisions, and build baselines.
 - Source review does not update a wiki build baseline.
 - Build baselines update only after successful markdown writes.
+- Vault wiki markdown is managed output. Humans do not hand-edit wiki files;
+  wiki changes are written by code or LLM build workflows.
 - Legacy code in `/home/jack/MEMEX-legacy-2026-06-22/` is borrow-only reference.
 
 ## Implemented Baseline
@@ -38,16 +40,16 @@ The V2 foundation is in place:
   manifests/originals, and markdown vault output.
 - `python scripts/wiki_server.py` runs the local dashboard.
 - The dashboard supports ingest, source detail, assignment bubbles, manual
-  review, LLM review, source repair, source re-extraction, wiki descriptions,
-  wiki creation/deletion, provider balances, source delete, and wiki build
-  actions.
+  review, LLM review, manual source repair, source-level LLM source fix, source
+  re-extraction, wiki descriptions, wiki creation/deletion, provider balances,
+  source delete, and wiki build actions.
 - Upload, typed text, CLI local-path extraction, and deterministic text import
   preserve originals before extraction and deduplicate byte-identical originals
   by SHA256.
 - Shared extraction supports text/Markdown-like files, PDFs, and images through
   direct Anthropic, OpenAI Responses, and Google Gemini adapters.
-- Source repair edits SourceRecords while preserved originals and source asset
-  manifests remain authoritative.
+- Manual source repair and source-level LLM source fix edit SourceRecords while
+  preserved originals and source asset manifests remain authoritative.
 - Per-wiki LLM review uses OpenRouter `deepseek/deepseek-v4-pro` for one
   assigned source/wiki pair and writes to the same ledger state as manual
   checkboxes.
@@ -85,6 +87,10 @@ Given the accepted fact state changed, how should this wiki markdown change?
 
 Build must not redo relevance. Relevance belongs to review.
 
+Humans change wiki inputs: source assignment, fact review, source repair, and
+wiki description scope. Code and LLM build workflows write the vault wiki
+markdown.
+
 Wiki description changes are scope changes:
 
 - `WikiRecord.description` is stored in the central registry.
@@ -105,7 +111,7 @@ working surface.
 Needed:
 
 - Build from accepted fact deltas plus existing markdown.
-- Preserve human-written markdown around generated sections.
+- Preserve existing managed markdown around generated sections.
 - Keep provider-backed `Wiki Brief` synthesis as the only generated prose
   section.
 - Consolidate accepted facts into claims before asking for polished wiki prose.

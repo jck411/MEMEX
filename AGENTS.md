@@ -56,6 +56,8 @@ Use:
 - derived `needs_build` from accepted facts and the latest successful build
   baseline
 - wiki description scope as part of review/build fingerprints
+- vault wiki markdown is managed output edited only by code or LLM build
+  workflows, not by human hand edits
 - LLM review to decide fact relevance for assigned or changed sources
 - incremental wiki builds from accepted fact deltas plus existing markdown
 
@@ -66,7 +68,9 @@ Avoid:
 - wiki assignment or review state duplicated into source manifests
 - stored lifecycle flags when they can be derived
 - build baselines that update before a successful markdown write
-- whole-page rewrites that discard human-written markdown
+- manual edits to vault wiki markdown
+- whole-page rewrites that discard existing managed markdown outside the
+  intended generated sections
 - compatibility branches for V1 behavior
 
 Wiki description changes are scope changes. They make old fact decisions stale
