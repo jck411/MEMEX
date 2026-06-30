@@ -121,9 +121,9 @@ starts mixing those concerns, split it before adding more behavior.
   scripted wiki creation.
 
 The dashboard currently supports source ingest, assignment, review, repair,
-re-extraction, wiki descriptions, builds, source deletion, and provider balance
-visibility. Wiki deletion/rename/split/merge remain development/configuration
-operations until those workflows need dashboard UI.
+re-extraction, wiki descriptions, builds, source deletion, wiki deletion, and
+provider balance visibility. Wiki rename/split/merge remain
+development/configuration operations until those workflows need dashboard UI.
 
 ## Tooling
 

@@ -1,6 +1,6 @@
 # MEMEX Wiki V2 Plan
 
-Last updated: 2026-06-29
+Last updated: 2026-06-30
 
 ## Direction
 
@@ -39,8 +39,8 @@ The V2 foundation is in place:
 - `python scripts/wiki_server.py` runs the local dashboard.
 - The dashboard supports ingest, source detail, assignment bubbles, manual
   review, LLM review, source repair, source re-extraction, wiki descriptions,
-  wiki creation by name/description, provider balances, source delete, and wiki
-  build actions.
+  wiki creation/deletion, provider balances, source delete, and wiki build
+  actions.
 - Upload, typed text, CLI local-path extraction, and deterministic text import
   preserve originals before extraction and deduplicate byte-identical originals
   by SHA256.
@@ -165,11 +165,11 @@ source ingest.
 
 Needed:
 
-- Delete, rename, split, and merge wiki records.
+- Rename, split, and merge wiki records.
 - Migrate assignments, decisions, and build baselines between wiki ids when
   explicitly requested.
-- Keep destructive or identity-changing wiki administration as development
-  tooling until the dashboard workflow is genuinely needed.
+- Keep identity-changing wiki administration as development tooling until the
+  dashboard workflow is genuinely needed.
 
 Design preference:
 
