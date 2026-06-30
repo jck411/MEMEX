@@ -3,7 +3,11 @@ from http.server import BaseHTTPRequestHandler
 from pathlib import Path
 from unittest.mock import patch
 
-from app.wiki.dashboard_server import create_dashboard_handler, create_dashboard_server
+from app.wiki.dashboard_server import (
+    create_dashboard_handler,
+    create_dashboard_server,
+    run_dashboard_server,
+)
 from app.wiki.markdown import build_wiki_markdown
 from app.wiki.review import ReviewResult
 from app.wiki.vault import write_wiki_page
@@ -26,6 +30,10 @@ class WikiDashboardServerTests(DashboardServerTestCase):
             handler.handle_one_request()
 
         self.assertTrue(handler.close_connection)
+
+    def test_run_dashboard_server_rejects_alternate_port(self):
+        with self.assertRaisesRegex(ValueError, "canonical port 8765"):
+            run_dashboard_server(object(), port=9999)
 
     def test_dashboard_server_renders_built_wiki_page(self):
         with tempfile.TemporaryDirectory() as temp_dir:

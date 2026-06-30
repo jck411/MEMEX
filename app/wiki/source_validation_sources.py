@@ -108,7 +108,25 @@ def _validate_source_record(
     issues: list[SourceValidationIssue],
 ) -> None:
     for fact in source.facts:
+        _validate_fact_provenance_boundary(source.source_id, fact, path, data_root, issues)
         _validate_fact_evidence(source.source_id, fact, path, data_root, issues)
+
+
+def _validate_fact_provenance_boundary(
+    source_id: str,
+    fact: FactRecord,
+    path: Path,
+    data_root: Path,
+    issues: list[SourceValidationIssue],
+) -> None:
+    if "run" in fact.provenance:
+        add_issue(
+            issues,
+            data_root,
+            path,
+            f"source {source_id!r} fact {fact.fact_id!r} stores extraction run metadata "
+            "in provenance; use the source asset manifest",
+        )
 
 
 def _validate_fact_evidence(

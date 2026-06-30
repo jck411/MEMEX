@@ -205,8 +205,6 @@ def _fact_provenance(
         ],
         "document": dict(packet["document"]),
     }
-    if packet.get("run"):
-        provenance["run"] = dict(packet["run"])
     return provenance
 
 

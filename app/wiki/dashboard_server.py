@@ -20,6 +20,11 @@ from .dashboard_routes import (
 )
 from .dashboard_runtime import DashboardRuntime
 from .model_profiles import DEFAULT_EXTRACTION_PROFILE_ID
+from .dashboard_processes import (
+    DASHBOARD_HOST,
+    DASHBOARD_PORT,
+    require_canonical_dashboard_port,
+)
 from .runtime_services import dashboard_runtime_from_env
 from .workflows import WikiWorkspace
 
@@ -28,8 +33,8 @@ _CLIENT_DISCONNECT_ERRORS = (BrokenPipeError, ConnectionAbortedError, Connection
 
 def create_dashboard_server(
     workspace: WikiWorkspace,
-    host: str = "127.0.0.1",
-    port: int = 8765,
+    host: str = DASHBOARD_HOST,
+    port: int = DASHBOARD_PORT,
     balance_provider: BalanceProvider | None = None,
     source_extractor: SourceExtractionRunner | None = None,
     extraction_model_spec: str = DEFAULT_EXTRACTION_PROFILE_ID,
@@ -51,8 +56,8 @@ def create_dashboard_server(
 
 def run_dashboard_server(
     workspace: WikiWorkspace,
-    host: str = "127.0.0.1",
-    port: int = 8765,
+    host: str = DASHBOARD_HOST,
+    port: int = DASHBOARD_PORT,
     env_file: str | Path = ".env",
     balance_provider: BalanceProvider | None = None,
     source_extractor: SourceExtractionRunner | None = None,
@@ -60,6 +65,7 @@ def run_dashboard_server(
     source_reviewer: SourceReviewRunner | None = None,
     wiki_builder: WikiBuildRunner | None = None,
 ) -> None:
+    port = require_canonical_dashboard_port(port)
     runtime = dashboard_runtime_from_env(
         workspace,
         env_file=env_file,

@@ -88,6 +88,26 @@ class WikiSourceValidationTests(unittest.TestCase):
             self.assertIn("references unknown evidence 'missing-ev'", messages)
             self.assertIn("sha256 does not match stored original", messages)
 
+    def test_validation_reports_extraction_run_metadata_in_fact_provenance(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            store = WikiDataStore(root / "data")
+            source = source_with_evidence()
+            fact = source.facts[0]
+            fact.provenance["run"] = {
+                "provider": "anthropic",
+                "model": "claude-sonnet-4-6",
+                "usage": {"input_tokens": 10},
+            }
+            store.save_source(source)
+            self._commit_asset(root, source.source_id)
+
+            report = validate_source_workspace(root / "data")
+            messages = "\n".join(issue.message for issue in report.issues)
+
+            self.assertFalse(report.ok)
+            self.assertIn("stores extraction run metadata in provenance", messages)
+
     def test_validation_reports_duplicate_source_ids_and_bad_ledger_refs(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)

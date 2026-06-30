@@ -18,6 +18,14 @@ from app.wiki.dashboard import (  # noqa: E402
     filter_sources,
     status_label,
 )
+from app.wiki.dashboard_processes import (  # noqa: E402
+    DASHBOARD_HOST,
+    DASHBOARD_PORT,
+    cleanup_targets,
+    require_canonical_dashboard_port,
+    target_summary,
+    terminate_processes,
+)
 from app.wiki.dashboard_server import run_dashboard_server  # noqa: E402
 from app.wiki.model_profiles import (  # noqa: E402
     extraction_model_readiness,
@@ -119,8 +127,16 @@ def build_parser() -> argparse.ArgumentParser:
         "serve-dashboard",
         help="serve the local wiki dashboard",
     )
-    serve_dashboard.add_argument("--host", default="127.0.0.1")
-    serve_dashboard.add_argument("--port", type=int, default=8765)
+    serve_dashboard.add_argument("--host", default=DASHBOARD_HOST)
+    serve_dashboard.add_argument(
+        "--port",
+        type=_canonical_port,
+        default=DASHBOARD_PORT,
+        help=(
+            "canonical dashboard port; alternate ports are not supported "
+            f"(default: {DASHBOARD_PORT})"
+        ),
+    )
     serve_dashboard.add_argument("--env-file", default=None)
 
     model_profiles = subparsers.add_parser(
@@ -172,6 +188,14 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 CommandHandler = Callable[[argparse.Namespace, WikiWorkspace], int]
+
+
+def _canonical_port(value: str) -> int:
+    port = int(value)
+    try:
+        return require_canonical_dashboard_port(port)
+    except ValueError as error:
+        raise argparse.ArgumentTypeError(str(error)) from error
 
 
 def _run_add_wiki(args: argparse.Namespace, workspace: WikiWorkspace) -> int:
@@ -262,6 +286,12 @@ def _run_dashboard(args: argparse.Namespace, workspace: WikiWorkspace) -> int:
 
 def _run_serve_dashboard(args: argparse.Namespace, workspace: WikiWorkspace) -> int:
     env_file = Path(args.env_file) if args.env_file else Path(args.repo_root) / ".env"
+    targets = cleanup_targets(Path(args.repo_root), args.port)
+    if targets:
+        print(target_summary("clearing", targets))
+        terminate_processes(tuple(targets))
+    else:
+        print("no existing MEMEX dashboard process found")
     run_dashboard_server(
         workspace,
         host=args.host,
