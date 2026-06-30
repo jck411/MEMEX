@@ -107,7 +107,7 @@ def add_run_metadata(
         "schema": EXTRACTION_SCHEMA_NAME,
         "extracted_at": extracted_at,
     }
-    if usage:
+    if usage is not None:
         payload["run"]["usage"] = dict(usage)
     return payload
 
@@ -260,8 +260,10 @@ def _reject_unknown(payload: Mapping[str, Any], keys: set[str], label: str) -> N
 
 
 def _known_or_empty(value: str) -> str:
-    return "" if value.strip().lower() == "unknown" else value
+    text = value.strip()
+    return "" if text.lower() == "unknown" else text
 
 
 def _known_or_none(value: str) -> str | None:
-    return None if value.strip().lower() in {"", "unknown"} else value
+    text = value.strip()
+    return None if text.lower() in {"", "unknown"} else text

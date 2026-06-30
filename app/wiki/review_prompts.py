@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from collections import Counter
 from typing import Any, Iterable, Mapping
 
 from .review import ReviewFact, ReviewResult, WikiReviewContext
@@ -109,7 +110,8 @@ def validate_review_results(
         raise ValueError("review batches must have unique fact ids")
     result_list = tuple(results)
     result_ids = [result.fact_id for result in result_list]
-    duplicate_ids = sorted({fact_id for fact_id in result_ids if result_ids.count(fact_id) > 1})
+    result_counts = Counter(result_ids)
+    duplicate_ids = sorted(fact_id for fact_id, count in result_counts.items() if count > 1)
     if duplicate_ids:
         raise ValueError(f"duplicate review decisions: {', '.join(duplicate_ids)}")
     missing_ids = sorted(set(expected_ids) - set(result_ids))

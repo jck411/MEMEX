@@ -5,10 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Iterable, Mapping
 
-from .citations import (
-    fact_sort_key,
-    inline_text,
-)
+from .citations import inline_text
 from .language_guardrails import remove_cjk_dominant_blocks
 from .ledger import WikiLedger
 from .markdown import (
@@ -18,8 +15,8 @@ from .markdown import (
     REFERENCES_START,
     SYNTHESIS_END,
     SYNTHESIS_START,
-    remove_obsolete_markdown_sections,
     remove_marked_sections,
+    remove_obsolete_markdown_sections,
 )
 from .records import SourceRecord, WikiRecord, source_index
 from .status import accepted_facts_for_wiki
@@ -57,14 +54,14 @@ def build_fact_packet(
     existing_markdown: str = "",
 ) -> WikiBuildPacket:
     source_map = source_index(sources)
-    facts = tuple(sorted(accepted_facts_for_wiki(wiki, ledger, source_map), key=fact_sort_key))
+    facts = accepted_facts_for_wiki(wiki, ledger, source_map)
     packet_facts: list[WikiBuildFact] = []
     for fact in facts:
-        source = source_map.get(fact.source_id)
+        source = source_map[fact.source_id]
         packet_facts.append(
             WikiBuildFact(
                 source_id=fact.source_id,
-                source_title=source.title if source else fact.source_id,
+                source_title=source.title or fact.source_id,
                 fact_id=fact.fact_id,
                 fact_signature=fact.fact_signature,
                 text=_clip(fact.text, MAX_FACT_TEXT),

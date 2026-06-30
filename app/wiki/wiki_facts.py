@@ -5,9 +5,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Iterable, Mapping
 
-from .citations import natural_key
 from .ledger import ReviewDecision, WikiLedger
 from .records import FactRecord, SourceRecord, WikiRecord, WikiRegistry, source_index
+from .sort_keys import natural_key
 from .status import WikiStatus, status_for_wiki
 from .wiki_scope import wiki_scope_signature
 

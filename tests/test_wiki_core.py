@@ -141,6 +141,29 @@ class WikiCoreTests(unittest.TestCase):
         self.assertTrue(stale_status.needs_build)
         self.assertEqual((), accepted_facts_for_wiki(CAREER_WIKI, ledger, changed_sources))
 
+    def test_accepted_facts_use_natural_fact_order(self):
+        fact_10 = fact_record("fact-10", "Alice mentored ten teams.")
+        fact_2 = fact_record("fact-2", "Alice led platform work.")
+        source = source_record("source-1", fact_10, fact_2, title="Source One")
+        ledger = WikiLedger.empty()
+        ledger.assign_source("career", "source-1")
+        ledger.set_decision(
+            "career",
+            "source-1",
+            "fact-10",
+            review_decision_for_fact(fact_10, ticked=True),
+        )
+        ledger.set_decision(
+            "career",
+            "source-1",
+            "fact-2",
+            review_decision_for_fact(fact_2, ticked=True),
+        )
+
+        accepted = accepted_facts_for_wiki(CAREER_WIKI, ledger, [source])
+
+        self.assertEqual(("fact-2", "fact-10"), tuple(fact.fact_id for fact in accepted))
+
     def test_registry_status_ignores_orphaned_ledger_keys(self):
         registry = wiki_registry(CAREER_WIKI)
         ledger = WikiLedger.empty()

@@ -9,6 +9,7 @@ from .fingerprints import stable_digest
 from .ledger import ReviewDecision, WikiLedger
 from .records import FactRecord, SourceRecord, WikiRecord, WikiRegistry, source_index
 from .review import review_delta_for_wiki
+from .sort_keys import natural_key
 from .wiki_scope import wiki_scope_signature
 
 BUILD_FINGERPRINT_VERSION = 7
@@ -74,7 +75,7 @@ def accepted_facts_for_wiki(
         if source is None:
             continue
         facts_by_id: dict[str, FactRecord] = source.fact_by_id()
-        for fact_id in sorted(facts_by_id):
+        for fact_id in sorted(facts_by_id, key=natural_key):
             fact = facts_by_id[fact_id]
             decision = ledger.decision_for(wiki_id, source_id, fact_id)
             if decision is None or not decision.ticked:

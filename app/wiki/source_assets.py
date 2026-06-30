@@ -11,6 +11,7 @@ from pathlib import Path, PurePosixPath
 from typing import Any, Mapping
 from uuid import uuid4
 
+from .atomic_io import write_json_atomic
 from .storage import escaped_source_id
 from .timestamps import utc_now
 
@@ -140,7 +141,7 @@ class StagedSourceAsset:
             extracted_at=extracted_at,
             usage=usage,
         )
-        _write_json(self.staging_dir / SOURCE_ASSET_MANIFEST, manifest.to_dict())
+        write_json_atomic(self.staging_dir / SOURCE_ASSET_MANIFEST, manifest.to_dict())
         final_dir = self.store.asset_dir(self.source_id)
         final_dir.parent.mkdir(parents=True, exist_ok=True)
         rollback_dir = None
@@ -310,14 +311,6 @@ def mime_type_for_path(path: str | Path) -> str:
         return "text/markdown"
     mime_type, _ = mimetypes.guess_type(source_path.name)
     return mime_type or "application/octet-stream"
-
-
-def _write_json(path: Path, payload: dict[str, Any]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    text = json.dumps(payload, ensure_ascii=True, indent=2, sort_keys=True) + "\n"
-    temp_path = path.with_name(f".{path.name}.tmp")
-    temp_path.write_text(text, encoding="utf-8")
-    temp_path.replace(path)
 
 
 def _require_text(value: Any, field_name: str) -> str:

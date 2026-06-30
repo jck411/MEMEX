@@ -43,8 +43,10 @@ def dashboard_post_location(
     try:
         form = route.parse(content_type, body)
         return route.handle(runtime, form)
+    except ValueError as error:
+        return dashboard_location(_error_message(error), message_type="error")
     except Exception as error:  # pragma: no cover - surfaced in UI
-        return dashboard_location(str(error), message_type="error")
+        return dashboard_location(_unexpected_error_message(error), message_type="error")
 
 
 @dataclass(frozen=True)
@@ -116,6 +118,11 @@ def _post_build(runtime: DashboardRuntime, form: DashboardForm) -> str:
         raise ValueError("wiki build is not configured")
     try:
         runtime.wiki_builder(wiki_id)
+    except Exception as error:
+        raise ValueError(
+            f"build failed for {wiki_id!r}: {error.__class__.__name__}"
+        ) from error
+    try:
         _require_built_wiki(runtime, wiki_id)
     except Exception as error:
         raise ValueError(
@@ -145,6 +152,10 @@ def _status_description(status) -> str:
 
 def _error_message(error: Exception) -> str:
     return str(error).strip() or error.__class__.__name__
+
+
+def _unexpected_error_message(error: Exception) -> str:
+    return f"request failed: {error.__class__.__name__}"
 
 
 def _post_wiki_description(runtime: DashboardRuntime, form: DashboardForm) -> str:

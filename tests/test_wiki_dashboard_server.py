@@ -4,13 +4,13 @@ from pathlib import Path
 from unittest.mock import patch
 
 import app.wiki.dashboard_routes as dashboard_routes
+from app.wiki.dashboard_routes import handle_dashboard_get
+from app.wiki.dashboard_runtime import DashboardRuntime
 from app.wiki.dashboard_server import (
     create_dashboard_handler,
     create_dashboard_server,
     run_dashboard_server,
 )
-from app.wiki.dashboard_runtime import DashboardRuntime
-from app.wiki.dashboard_routes import handle_dashboard_get
 from app.wiki.markdown import build_wiki_markdown
 from app.wiki.review import ReviewResult
 from app.wiki.vault import write_wiki_page

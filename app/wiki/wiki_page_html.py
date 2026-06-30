@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import re
-from html import escape
+from html import escape, unescape
 
 from .dashboard import WikiDashboardSnapshot
 from .dashboard_components_html import (
@@ -16,10 +16,11 @@ from .records import WikiRecord
 from .status import WikiStatus
 
 _GENERATED_ANCHOR_RE = re.compile(r'<a id="(memex-fact-[A-Za-z0-9_.:-]+)"></a>')
-_INTERNAL_MARKDOWN_LINK_RE = re.compile(
-    r"\[([^\]]+)\]\("
-    r"(#[A-Za-z0-9_.:-]+|/source/[A-Za-z0-9_.~%-]+|[A-Za-z0-9_.~%-]+/facts)"
-    r"\)"
+_MARKDOWN_LINK_RE = re.compile(r"\[([^\]]+)\]\(([^()\s]+)\)")
+_FRAGMENT_LINK_RE = re.compile(r"#[A-Za-z0-9_.:-]+")
+_SOURCE_LINK_RE = re.compile(r"/source/[A-Za-z0-9_.~%-]+")
+_RELATIVE_LINK_RE = re.compile(
+    r"(?:[A-Za-z0-9_.~%-]+/)*[A-Za-z0-9_.~%-]+(?:#[A-Za-z0-9_.:-]+)?"
 )
 
 
@@ -221,10 +222,21 @@ def _strong(text: str) -> str:
 def _markdown_links(text: str) -> str:
     def replace(match: re.Match[str]) -> str:
         label = match.group(1)
-        href = match.group(2)
+        href = unescape(match.group(2))
+        if not _is_internal_href(href):
+            return match.group(0)
         return f'<a href="{escape(href, quote=True)}">{label}</a>'
 
-    return _INTERNAL_MARKDOWN_LINK_RE.sub(replace, text)
+    return _MARKDOWN_LINK_RE.sub(replace, text)
+
+
+def _is_internal_href(href: str) -> bool:
+    if _FRAGMENT_LINK_RE.fullmatch(href) or _SOURCE_LINK_RE.fullmatch(href):
+        return True
+    if not _RELATIVE_LINK_RE.fullmatch(href):
+        return False
+    path = href.split("#", 1)[0]
+    return all(part not in {".", ".."} for part in path.split("/"))
 
 
 def _normalized_heading_text(text: str) -> str:

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import Counter
 from dataclasses import dataclass, field
 from typing import Any, Iterable, Mapping, Protocol
 
@@ -74,7 +75,8 @@ class FixtureReviewProvider:
         if not isinstance(items, list):
             raise ValueError("fixture decisions must be a list")
         item_ids = [item["fact_id"] for item in items]
-        duplicate_ids = sorted({fact_id for fact_id in item_ids if item_ids.count(fact_id) > 1})
+        item_counts = Counter(item_ids)
+        duplicate_ids = sorted(fact_id for fact_id, count in item_counts.items() if count > 1)
         if duplicate_ids:
             raise ValueError(f"duplicate fixture decisions: {', '.join(duplicate_ids)}")
         if default_ticked is not None and not isinstance(default_ticked, bool):

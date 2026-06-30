@@ -63,6 +63,7 @@ class WorkspaceWikiMixin:
             self.data_store.save_ledger(original_ledger)
             raise
 
+        # add_wiki prevents shared paths; this preserves hand-edited registries safely.
         still_referenced = any(
             wiki_page_path(self.vault_root, remaining) == path
             for remaining in updated_registry.wikis.values()

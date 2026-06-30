@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any, Iterable
 from urllib.parse import quote
 
+from .atomic_io import write_json_atomic
 from .ledger import WikiLedger
 from .records import SourceRecord, WikiRegistry
 
@@ -26,14 +27,6 @@ def _read_json(path: Path, default: dict[str, Any]) -> dict[str, Any]:
     if not path.exists():
         return default
     return json.loads(path.read_text(encoding="utf-8"))
-
-
-def _write_json(path: Path, payload: dict[str, Any]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    text = json.dumps(payload, ensure_ascii=True, indent=2, sort_keys=True) + "\n"
-    temp_path = path.with_name(f".{path.name}.tmp")
-    temp_path.write_text(text, encoding="utf-8")
-    temp_path.replace(path)
 
 
 def source_record_path(data_root: str | Path, source_id: str) -> Path:
@@ -64,13 +57,13 @@ class WikiDataStore:
         return WikiLedger.from_dict(_read_json(self.ledger_path, {}))
 
     def save_ledger(self, ledger: WikiLedger) -> None:
-        _write_json(self.ledger_path, ledger.to_dict())
+        write_json_atomic(self.ledger_path, ledger.to_dict())
 
     def load_registry(self) -> WikiRegistry:
         return WikiRegistry.from_dict(_read_json(self.registry_path, {}))
 
     def save_registry(self, registry: WikiRegistry) -> None:
-        _write_json(self.registry_path, registry.to_dict())
+        write_json_atomic(self.registry_path, registry.to_dict())
 
     def load_source(self, source_id: str) -> SourceRecord:
         path = source_record_path(self.data_root, source_id)
@@ -79,7 +72,7 @@ class WikiDataStore:
         return SourceRecord.from_dict(_read_json(path, {}))
 
     def save_source(self, source: SourceRecord) -> None:
-        _write_json(source_record_path(self.data_root, source.source_id), source.to_dict())
+        write_json_atomic(source_record_path(self.data_root, source.source_id), source.to_dict())
 
     def delete_source(self, source_id: str) -> bool:
         path = source_record_path(self.data_root, source_id)

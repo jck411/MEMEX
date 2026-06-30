@@ -2,6 +2,7 @@ import unittest
 
 from app.wiki.extraction_packets import (
     ExtractionPacketError,
+    add_run_metadata,
     source_record_from_extraction_packet,
     validate_extraction_packet,
 )
@@ -51,6 +52,32 @@ class WikiExtractionPacketTests(unittest.TestCase):
         self.assertNotIn("run", source.facts[0].provenance)
         self.assertNotIn("source_fact_id", source.facts[0].provenance)
         self.assertEqual("ev_joined", source.facts[0].provenance["evidence"][0]["id"])
+
+    def test_packet_normalizes_known_metadata_whitespace(self):
+        packet = _packet()
+        packet["document"]["title"] = "  Profile  "
+        packet["document"]["type"] = "  text  "
+        packet["document"]["date"] = "  2026-06-22  "
+        packet["summary"] = "  Alice joined Example Co.  "
+
+        source = source_record_from_extraction_packet(packet)
+
+        self.assertEqual("Profile", source.title)
+        self.assertEqual("text", source.source_type)
+        self.assertEqual("2026-06-22", source.document_date)
+        self.assertEqual("Alice joined Example Co.", source.summary)
+
+    def test_add_run_metadata_preserves_empty_usage_mapping(self):
+        packet = add_run_metadata(
+            extraction_packet("source-1"),
+            provider="test",
+            model="test",
+            prompt="test",
+            extracted_at="2026-06-22T00:00:00Z",
+            usage={},
+        )
+
+        self.assertEqual({}, packet["run"]["usage"])
 
     def test_packet_validation_fails_closed_on_shape_errors(self):
         packet = _packet()

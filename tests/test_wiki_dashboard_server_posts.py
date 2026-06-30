@@ -289,7 +289,7 @@ class WikiDashboardServerPostTests(DashboardServerTestCase):
                 self.assertIn("build failed for 'career'", toast.normalized_text())
                 self.assertIn("did not write markdown", toast.normalized_text())
 
-    def test_dashboard_server_build_failure_toast_includes_provider_reason(self):
+    def test_dashboard_server_build_failure_toast_hides_provider_reason(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
             workspace = wiki_workspace(root)
@@ -331,18 +331,16 @@ class WikiDashboardServerPostTests(DashboardServerTestCase):
                 self.assertEqual(303, status)
                 self.assertIn("message_type=error", location)
                 self.assertIn("build+failed+for+%27career%27", location)
-                self.assertIn("No+endpoints+support+required+parameters", location)
+                self.assertIn("RuntimeError", location)
+                self.assertNotIn("No+endpoints+support+required+parameters", location)
                 body = self.request(host, port, "GET", location)[2]
                 toast = parse_html(body).require("div", {"id": "toast"})
                 self.assertEqual("toast toast-error", toast.attrs["class"])
                 self.assertIn(
-                    "build failed for 'career': OpenRouter returned HTTP 400",
+                    "build failed for 'career': RuntimeError",
                     toast.normalized_text(),
                 )
-                self.assertIn(
-                    "No endpoints support required parameters",
-                    toast.normalized_text(),
-                )
+                self.assertNotIn("No endpoints support required parameters", toast.normalized_text())
 
     def test_dashboard_server_build_success_writes_readable_wiki_page(self):
         with tempfile.TemporaryDirectory() as temp_dir:

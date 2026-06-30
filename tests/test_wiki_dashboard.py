@@ -56,7 +56,10 @@ class WikiDashboardTests(unittest.TestCase):
         self.assertEqual("current", snapshot.wikis[1].state)
 
         first_source = snapshot.sources[0]
-        self.assertEqual(("career",), first_source.assigned_wiki_ids)
+        self.assertEqual(
+            ("career",),
+            tuple(bubble.wiki_id for bubble in first_source.wiki_bubbles if bubble.assigned),
+        )
         self.assertEqual(("career",), first_source.needs_review_wiki_ids)
         self.assertEqual(
             (("career", True, "needs_review"), ("life", False, "current")),

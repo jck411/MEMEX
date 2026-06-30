@@ -199,3 +199,5 @@ def _signal_process(pid: int, sig: signal.Signals) -> None:
         os.kill(pid, sig)
     except ProcessLookupError:
         return
+    except PermissionError:
+        return

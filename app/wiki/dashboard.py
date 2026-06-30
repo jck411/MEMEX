@@ -50,12 +50,8 @@ class SourceDashboardRow:
     needs_build_wiki_ids: tuple[str, ...]
 
     @property
-    def assigned_wiki_ids(self) -> tuple[str, ...]:
-        return tuple(bubble.wiki_id for bubble in self.wiki_bubbles if bubble.assigned)
-
-    @property
     def unassigned(self) -> bool:
-        return not self.assigned_wiki_ids
+        return not any(bubble.assigned for bubble in self.wiki_bubbles)
 
 
 @dataclass(frozen=True)
@@ -138,13 +134,12 @@ def _sources_newest_first(
     sources: Iterable[SourceRecord],
     source_created_at_by_id: Mapping[str, str],
 ) -> tuple[SourceRecord, ...]:
-    source_rows = tuple(sorted(sources, key=lambda item: item.source_id))
     if not source_created_at_by_id:
-        return source_rows
+        return tuple(sorted(sources, key=lambda item: item.source_id))
     return tuple(
         sorted(
-            source_rows,
-            key=lambda item: source_created_at_by_id.get(item.source_id, ""),
+            sources,
+            key=lambda item: (source_created_at_by_id.get(item.source_id, ""), item.source_id),
             reverse=True,
         )
     )

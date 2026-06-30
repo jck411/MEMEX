@@ -6,6 +6,7 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
+from .citations import plain_inline_text
 from .fingerprints import stable_digest
 from .records import FactRecord, SourceRecord
 
@@ -24,10 +25,6 @@ class ExtractedTextFact:
     line_end: int
 
 
-def _inline_text(value: str) -> str:
-    return " ".join(value.split())
-
-
 def _strip_quote_marker(line: str) -> str:
     stripped = line.strip()
     if stripped.startswith(">"):
@@ -39,7 +36,7 @@ def _title_from_text(text: str) -> str:
     for line in text.splitlines():
         match = _HEADING_RE.match(line)
         if match:
-            return _inline_text(match.group("title"))
+            return plain_inline_text(match.group("title"))
     return ""
 
 
@@ -72,7 +69,7 @@ def extract_text_facts(text: str) -> tuple[ExtractedTextFact, ...]:
     def flush_paragraph() -> None:
         if not paragraph:
             return
-        fact_text = _inline_text(" ".join(line for _, line in paragraph))
+        fact_text = plain_inline_text(" ".join(line for _, line in paragraph))
         if fact_text:
             facts.append(
                 ExtractedTextFact(
@@ -99,7 +96,7 @@ def extract_text_facts(text: str) -> tuple[ExtractedTextFact, ...]:
         bullet = _BULLET_RE.match(raw_line)
         if bullet:
             flush_paragraph()
-            fact_text = _inline_text(bullet.group("text"))
+            fact_text = plain_inline_text(bullet.group("text"))
             if fact_text:
                 facts.append(
                     ExtractedTextFact(
