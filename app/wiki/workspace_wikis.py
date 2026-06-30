@@ -52,18 +52,26 @@ class WorkspaceWikiMixin:
         del wikis[wiki_id]
         updated_registry = WikiRegistry(wikis)
 
-        ledger = self.data_store.load_ledger()
-        ledger.remove_wiki(wiki_id)
+        original_ledger = self.data_store.load_ledger()
+        updated_ledger = type(original_ledger).from_dict(original_ledger.to_dict())
+        updated_ledger.remove_wiki(wiki_id)
 
-        self.data_store.save_registry(updated_registry)
-        self.data_store.save_ledger(ledger)
+        self.data_store.save_ledger(updated_ledger)
+        try:
+            self.data_store.save_registry(updated_registry)
+        except Exception:
+            self.data_store.save_ledger(original_ledger)
+            raise
 
         still_referenced = any(
             wiki_page_path(self.vault_root, remaining) == path
             for remaining in updated_registry.wikis.values()
         )
         if not still_referenced:
-            path.unlink(missing_ok=True)
+            try:
+                path.unlink(missing_ok=True)
+            except OSError:
+                pass
         return wiki
 
     def update_wiki_description(self, wiki_id: str, description: str) -> WikiRecord:
