@@ -107,7 +107,6 @@ class WikiDashboardServerTests(DashboardServerTestCase):
                 self.assertEqual("Wiki Detail", page.require("h1").normalized_text())
                 self.assertIn("Career", [node.normalized_text() for node in page.find_all("h2")])
                 page.require("a", {"href": "/wiki/career/facts"})
-                page.require("a", {"href": "career/facts"})
                 h1_text = [node.normalized_text() for node in page.find_all("h1")]
                 self.assertNotIn("Career", h1_text)
                 self.assertNotIn("Source Fact Decisions", page.normalized_text())

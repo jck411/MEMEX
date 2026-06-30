@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import re
-from urllib.parse import quote
 
 from .citations import (
     inline_text,
@@ -14,8 +13,8 @@ SYNTHESIS_START = "<!-- MEMEX:SYNTHESIS:START -->"
 SYNTHESIS_END = "<!-- MEMEX:SYNTHESIS:END -->"
 FACTS_START = "<!-- MEMEX:FACTS:START -->"
 FACTS_END = "<!-- MEMEX:FACTS:END -->"
-REFERENCES_START = "<!-- MEMEX:REFERENCES:START -->"
-REFERENCES_END = "<!-- MEMEX:REFERENCES:END -->"
+OBSOLETE_REFERENCES_START = "<!-- MEMEX:REFERENCES:START -->"
+OBSOLETE_REFERENCES_END = "<!-- MEMEX:REFERENCES:END -->"
 
 _HEADING_RE = re.compile(r"^(?P<level>#{1,6})\s+(?P<title>.+?)\s*$")
 
@@ -27,31 +26,10 @@ def render_synthesis_section(synthesis_markdown: str) -> str:
     return "\n".join((SYNTHESIS_START, body, SYNTHESIS_END))
 
 
-def render_references_section(wiki: WikiRecord) -> str:
-    link = f"{quote(wiki.wiki_id, safe='')}/facts"
-    body = f"## Wiki Provenance\n\n- [Facts used to build this page]({link})"
-    return "\n".join((REFERENCES_START, body, REFERENCES_END))
-
-
 def replace_synthesis_section(existing_markdown: str, section: str) -> str:
-    return _replace_or_insert_marked_section(
+    return _replace_or_insert_synthesis_section(
         existing_markdown,
         section,
-        SYNTHESIS_START,
-        SYNTHESIS_END,
-        error="existing markdown has incomplete MEMEX synthesis markers",
-        insert_after_title=True,
-    )
-
-
-def replace_references_section(existing_markdown: str, section: str) -> str:
-    return _replace_or_insert_marked_section(
-        existing_markdown,
-        section,
-        REFERENCES_START,
-        REFERENCES_END,
-        error="existing markdown has incomplete MEMEX references markers",
-        insert_after_title=False,
     )
 
 
@@ -64,11 +42,11 @@ def remove_fact_audit_section(existing_markdown: str) -> str:
     )
 
 
-def remove_references_section(existing_markdown: str) -> str:
+def remove_obsolete_references_section(existing_markdown: str) -> str:
     return remove_marked_sections(
         existing_markdown,
-        REFERENCES_START,
-        REFERENCES_END,
+        OBSOLETE_REFERENCES_START,
+        OBSOLETE_REFERENCES_END,
         error="existing markdown has incomplete MEMEX references markers",
     )
 
@@ -80,31 +58,23 @@ def build_wiki_markdown(
 ) -> str:
     markdown = _prepare_existing_markdown(wiki, existing_markdown)
     markdown = replace_synthesis_section(markdown, render_synthesis_section(synthesis_markdown))
-    markdown = replace_references_section(markdown, render_references_section(wiki))
     return markdown
 
 
-def _replace_or_insert_marked_section(
+def _replace_or_insert_synthesis_section(
     existing_markdown: str,
     section: str,
-    start_marker: str,
-    end_marker: str,
-    *,
-    error: str,
-    insert_after_title: bool,
 ) -> str:
-    start = existing_markdown.find(start_marker)
-    end = existing_markdown.find(end_marker)
+    start = existing_markdown.find(SYNTHESIS_START)
+    end = existing_markdown.find(SYNTHESIS_END)
     if start == -1 and end == -1:
         if not existing_markdown.strip():
             return section + "\n"
-        if insert_after_title:
-            return _insert_after_title(existing_markdown, section)
-        return existing_markdown.rstrip() + "\n\n" + section + "\n"
+        return _insert_after_title(existing_markdown, section)
     if start == -1 or end == -1 or end < start:
-        raise ValueError(error)
+        raise ValueError("existing markdown has incomplete MEMEX synthesis markers")
 
-    end += len(end_marker)
+    end += len(SYNTHESIS_END)
     prefix = existing_markdown[:start].rstrip()
     suffix = existing_markdown[end:].lstrip()
     pieces = [piece for piece in (prefix, section, suffix) if piece]
@@ -136,7 +106,7 @@ def remove_marked_sections(
 
 def _prepare_existing_markdown(wiki: WikiRecord, existing_markdown: str) -> str:
     without_audit = remove_fact_audit_section(existing_markdown)
-    without_references = remove_references_section(without_audit)
+    without_references = remove_obsolete_references_section(without_audit)
     without_obsolete = remove_obsolete_markdown_sections(without_references)
     if not without_obsolete.strip():
         return f"# {inline_text(wiki.title)}\n"

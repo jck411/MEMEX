@@ -7,13 +7,13 @@ from app.wiki.ledger import WikiLedger
 from app.wiki.markdown import (
     FACTS_END,
     FACTS_START,
-    REFERENCES_END,
-    REFERENCES_START,
+    OBSOLETE_REFERENCES_END,
+    OBSOLETE_REFERENCES_START,
     SYNTHESIS_END,
     SYNTHESIS_START,
     build_wiki_markdown,
     remove_fact_audit_section,
-    remove_references_section,
+    remove_obsolete_references_section,
 )
 from app.wiki.review import (
     ReviewResult,
@@ -161,18 +161,18 @@ class WikiReviewBuildTests(unittest.TestCase):
         self.assertNotIn("fact-1", markdown)
         self.assertNotIn("fact-2", markdown)
         self.assertNotIn("Alice lives in Boston.", markdown)
-        self.assertIn(REFERENCES_START, markdown)
-        self.assertIn("## Wiki Provenance", markdown)
-        self.assertIn("- [Facts used to build this page](career/facts)", markdown)
-        self.assertIn(REFERENCES_END, markdown)
+        self.assertNotIn(OBSOLETE_REFERENCES_START, markdown)
+        self.assertNotIn("## Wiki Provenance", markdown)
+        self.assertNotIn("Facts used to build this page", markdown)
+        self.assertNotIn(OBSOLETE_REFERENCES_END, markdown)
 
         existing = (
             "# Career\n\n"
             "Human-written intro.\n\n"
             f"{SYNTHESIS_START}\nold synthesis\n{SYNTHESIS_END}\n\n"
             f"{FACTS_START}\nold generated text\n{FACTS_END}\n\n"
-            f"{REFERENCES_START}\n## Wiki Provenance\n\n"
-            f"- [Facts used to build this page](old/facts)\n{REFERENCES_END}\n\n"
+            f"{OBSOLETE_REFERENCES_START}\n## Wiki Provenance\n\n"
+            f"- [Facts used to build this page](old/facts)\n{OBSOLETE_REFERENCES_END}\n\n"
             "## LLM Context\n\n"
             "### Default Conversation Context\n\n"
             "legacy context\n\n"
@@ -185,7 +185,9 @@ class WikiReviewBuildTests(unittest.TestCase):
         self.assertNotIn(FACTS_START, updated)
         self.assertNotIn(FACTS_END, updated)
         self.assertNotIn("old/facts", updated)
-        self.assertIn("- [Facts used to build this page](career/facts)", updated)
+        self.assertNotIn(OBSOLETE_REFERENCES_START, updated)
+        self.assertNotIn("Facts used to build this page", updated)
+        self.assertNotIn(OBSOLETE_REFERENCES_END, updated)
         self.assertNotIn("Default Conversation Context", updated)
         self.assertIn("Human-written footer.", updated)
 
@@ -225,7 +227,7 @@ class WikiReviewBuildTests(unittest.TestCase):
         self.assertNotIn("passport", markdown)
         self.assertNotIn("f1", markdown)
         self.assertNotIn("f2", markdown)
-        self.assertIn("- [Facts used to build this page](career/facts)", markdown)
+        self.assertNotIn("Facts used to build this page", markdown)
 
     def test_incomplete_memex_fact_audit_markers_are_rejected(self):
         cases = (
@@ -259,17 +261,17 @@ class WikiReviewBuildTests(unittest.TestCase):
         self.assertNotIn(FACTS_START, updated)
         self.assertNotIn(FACTS_END, updated)
 
-    def test_incomplete_memex_references_markers_are_rejected(self):
+    def test_incomplete_obsolete_memex_references_markers_are_rejected(self):
         cases = (
-            f"# Career\n\n{REFERENCES_START}\nold generated text\n",
-            f"# Career\n\nold generated text\n{REFERENCES_END}\n",
-            f"# Career\n\n{REFERENCES_END}\nold generated text\n{REFERENCES_START}\n",
+            f"# Career\n\n{OBSOLETE_REFERENCES_START}\nold generated text\n",
+            f"# Career\n\nold generated text\n{OBSOLETE_REFERENCES_END}\n",
+            f"# Career\n\n{OBSOLETE_REFERENCES_END}\nold generated text\n{OBSOLETE_REFERENCES_START}\n",
         )
 
         for existing in cases:
             with self.subTest(existing=existing):
                 with self.assertRaisesRegex(ValueError, "incomplete MEMEX references markers"):
-                    remove_references_section(existing)
+                    remove_obsolete_references_section(existing)
 
     def test_vault_helpers_write_inside_vault_root(self):
         wiki = wiki_record("career", "Career", "nested/career.md")

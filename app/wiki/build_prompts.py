@@ -31,8 +31,8 @@ Process:
 Markdown rules:
 - synthesis_markdown must start with "## Wiki Brief".
 - Do not include page title, YAML frontmatter, MEMEX comments, Source Fact
-  Decisions, Accepted Facts, References, Wiki Provenance, restricted facts, or
-  Default Conversation Context.
+  Decisions, Accepted Facts, source/reference/provenance sections, restricted
+  facts, or Default Conversation Context.
 - Prefer headings and short paragraphs over dense bullet lists.
 
 Return only the requested JSON object.

@@ -10,8 +10,8 @@ from .language_guardrails import cjk_dominant_previews
 from .markdown import (
     FACTS_END,
     FACTS_START,
-    REFERENCES_END,
-    REFERENCES_START,
+    OBSOLETE_REFERENCES_END,
+    OBSOLETE_REFERENCES_START,
     SYNTHESIS_END,
     SYNTHESIS_START,
 )
@@ -22,6 +22,7 @@ _FORBIDDEN_SECTION_TITLES = {
     "accepted facts",
     "references",
     "memex provenance",
+    "wiki provenance",
     "default conversation context",
     "restricted accepted facts",
     "general accepted facts",
@@ -67,8 +68,8 @@ def _reject_managed_scaffold(markdown: str) -> None:
         SYNTHESIS_END,
         FACTS_START,
         FACTS_END,
-        REFERENCES_START,
-        REFERENCES_END,
+        OBSOLETE_REFERENCES_START,
+        OBSOLETE_REFERENCES_END,
     )
     if any(marker in markdown for marker in forbidden_markers):
         raise ValueError("wiki-build synthesis must not include MEMEX managed markers")

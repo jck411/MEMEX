@@ -11,12 +11,11 @@ from .ledger import WikiLedger
 from .markdown import (
     FACTS_END,
     FACTS_START,
-    REFERENCES_END,
-    REFERENCES_START,
     SYNTHESIS_END,
     SYNTHESIS_START,
     remove_marked_sections,
     remove_obsolete_markdown_sections,
+    remove_obsolete_references_section,
 )
 from .records import SourceRecord, WikiRecord, source_index
 from .status import accepted_facts_for_wiki
@@ -94,12 +93,7 @@ def existing_markdown_context(markdown: str) -> str:
         FACTS_END,
         error="existing markdown has incomplete MEMEX facts markers",
     )
-    context = remove_marked_sections(
-        context,
-        REFERENCES_START,
-        REFERENCES_END,
-        error="existing markdown has incomplete MEMEX references markers",
-    )
+    context = remove_obsolete_references_section(context)
     context = remove_obsolete_markdown_sections(context)
     context = remove_cjk_dominant_blocks(context)
     return _clip(context.strip(), MAX_EXISTING_MARKDOWN_CONTEXT)

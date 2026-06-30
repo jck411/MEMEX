@@ -20,8 +20,8 @@ from app.wiki.builders import (
 from app.wiki.markdown import (
     FACTS_END,
     FACTS_START,
-    REFERENCES_END,
-    REFERENCES_START,
+    OBSOLETE_REFERENCES_END,
+    OBSOLETE_REFERENCES_START,
     SYNTHESIS_END,
     SYNTHESIS_START,
 )
@@ -81,8 +81,8 @@ class WikiBuildSynthesisTests(unittest.TestCase):
             "Stale generated prose. ([S9:9](#memex-fact-s9-9))\n"
             f"{SYNTHESIS_END}\n\n"
             f"{FACTS_START}\nold audit appendix\n{FACTS_END}\n\n"
-            f"{REFERENCES_START}\n## Wiki Provenance\n\n"
-            f"- [Facts used to build this page](career/facts)\n{REFERENCES_END}\n\n"
+            f"{OBSOLETE_REFERENCES_START}\n## Wiki Provenance\n\n"
+            f"- [Facts used to build this page](career/facts)\n{OBSOLETE_REFERENCES_END}\n\n"
             "## LLM Context\n\n"
             "### Default Conversation Context\n\n"
             "legacy prompt text\n"
@@ -245,6 +245,15 @@ class WikiBuildSynthesisTests(unittest.TestCase):
             validate_synthesis_markdown(
                 packet,
                 "# Career\n\n## Wiki Brief\n\nAlice joined Example Co.",
+            )
+
+    def test_guardrails_reject_wiki_provenance_sections(self):
+        packet = reviewed_packet()
+
+        with self.assertRaisesRegex(ValueError, "must not include 'Wiki Provenance'"):
+            validate_synthesis_markdown(
+                packet,
+                "## Wiki Brief\n\nAlice joined Example Co.\n\n## Wiki Provenance\n\nNope.",
             )
 
     def test_guardrails_allow_claims_to_omit_audit_only_facts(self):
