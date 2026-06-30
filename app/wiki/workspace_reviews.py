@@ -19,9 +19,9 @@ from .review import (
 from .review_prompts import validate_review_results
 from .reviewers import ReviewProvider
 from .status import WikiStatus, status_for_wiki
-from .storage import WikiDataStore
 from .timestamps import utc_now
 from .wiki_scope import wiki_intention_text
+from .workspace_base import WorkspaceBaseMixin
 
 
 @dataclass(frozen=True)
@@ -37,9 +37,7 @@ class ReviewWorkflowResult:
         object.__setattr__(self, "usage", dict(self.usage or {}))
 
 
-class WorkspaceReviewMixin:
-    data_store: WikiDataStore
-
+class WorkspaceReviewMixin(WorkspaceBaseMixin):
     def review_delta(self, wiki_id: str) -> tuple[ReviewFact, ...]:
         wiki = self._load_wiki(wiki_id)
         return review_delta_for_wiki(

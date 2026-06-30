@@ -25,6 +25,7 @@ class ProviderWikiBuildResult:
 class WikiBuildProvider(Protocol):
     def build(self, packet: WikiBuildPacket) -> ProviderWikiBuildResult:
         """Return synthesis markdown for the supplied current accepted fact packet."""
+        ...
 
 
 @dataclass(frozen=True)

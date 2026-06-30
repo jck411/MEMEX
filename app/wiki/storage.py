@@ -36,10 +36,10 @@ def source_record_path(data_root: str | Path, source_id: str) -> Path:
 
 @dataclass(frozen=True)
 class WikiDataStore:
-    data_root: Path | str
+    data_root: Path
 
-    def __post_init__(self) -> None:
-        object.__setattr__(self, "data_root", Path(self.data_root))
+    def __init__(self, data_root: str | Path) -> None:
+        object.__setattr__(self, "data_root", Path(data_root))
 
     @property
     def ledger_path(self) -> Path:

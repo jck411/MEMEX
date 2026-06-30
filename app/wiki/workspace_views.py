@@ -5,12 +5,10 @@ from __future__ import annotations
 from .dashboard import WikiDashboardSnapshot, dashboard_snapshot
 from .source_detail import SourceDetailView, source_detail_view
 from .status import WikiStatus, status_for_wiki
-from .storage import WikiDataStore
+from .workspace_base import WorkspaceBaseMixin
 
 
-class WorkspaceViewMixin:
-    data_store: WikiDataStore
-
+class WorkspaceViewMixin(WorkspaceBaseMixin):
     def status(self, wiki_id: str) -> WikiStatus:
         wiki = self._load_wiki(wiki_id)
         return status_for_wiki(

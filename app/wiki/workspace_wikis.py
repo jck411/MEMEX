@@ -5,12 +5,11 @@ from __future__ import annotations
 from pathlib import Path
 
 from .records import WikiRecord, WikiRegistry
-from .storage import WikiDataStore
 from .vault import wiki_page_path
+from .workspace_base import WorkspaceBaseMixin
 
 
-class WorkspaceWikiMixin:
-    data_store: WikiDataStore
+class WorkspaceWikiMixin(WorkspaceBaseMixin):
     vault_root: Path
 
     def add_wiki(
@@ -90,10 +89,3 @@ class WorkspaceWikiMixin:
         wikis[wiki_id] = updated
         self.data_store.save_registry(WikiRegistry(wikis))
         return updated
-
-    def _load_wiki(self, wiki_id: str) -> WikiRecord:
-        registry = self.data_store.load_registry()
-        wiki = registry.wikis.get(wiki_id)
-        if wiki is None:
-            raise KeyError(f"unknown wiki_id {wiki_id!r}")
-        return wiki

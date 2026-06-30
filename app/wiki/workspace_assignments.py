@@ -3,12 +3,10 @@
 from __future__ import annotations
 
 from .status import WikiStatus, status_for_wiki
-from .storage import WikiDataStore
+from .workspace_base import WorkspaceBaseMixin
 
 
-class WorkspaceAssignmentMixin:
-    data_store: WikiDataStore
-
+class WorkspaceAssignmentMixin(WorkspaceBaseMixin):
     def assign_source(self, wiki_id: str, source_id: str) -> WikiStatus:
         wiki = self._load_wiki(wiki_id)
         source = self.data_store.load_source(source_id)

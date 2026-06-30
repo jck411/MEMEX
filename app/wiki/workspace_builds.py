@@ -11,8 +11,8 @@ from .build_packets import build_fact_packet
 from .builders import WikiBuildProvider
 from .markdown import build_wiki_markdown
 from .status import WikiStatus, mark_build_current, status_for_wiki
-from .storage import WikiDataStore
 from .vault import read_wiki_page, write_wiki_page
+from .workspace_base import WorkspaceBaseMixin
 
 
 @dataclass(frozen=True)
@@ -25,8 +25,7 @@ class BuildWorkflowResult:
     usage: Mapping[str, Any] = field(default_factory=dict)
 
 
-class WorkspaceBuildMixin:
-    data_store: WikiDataStore
+class WorkspaceBuildMixin(WorkspaceBaseMixin):
     vault_root: Path
 
     def build_wiki(self, wiki_id: str, provider: WikiBuildProvider) -> BuildWorkflowResult:

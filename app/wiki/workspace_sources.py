@@ -7,9 +7,8 @@ from pathlib import Path
 
 from .extraction import EXTRACTOR_VERSION, extract_source_from_path
 from .records import SourceRecord
-from .source_assets import SourceAssetStore
-from .storage import WikiDataStore
 from .timestamps import utc_now
+from .workspace_base import WorkspaceBaseMixin
 
 
 @dataclass(frozen=True)
@@ -27,9 +26,7 @@ class SourceImportResult:
         return not self.duplicate
 
 
-class WorkspaceSourceMixin:
-    data_store: WikiDataStore
-
+class WorkspaceSourceMixin(WorkspaceBaseMixin):
     def save_source(self, source: SourceRecord) -> SourceRecord:
         self.data_store.save_source(source)
         return source
@@ -46,9 +43,6 @@ class WorkspaceSourceMixin:
         )
         self.data_store.save_ledger(ledger)
         return source
-
-    def source_assets(self) -> SourceAssetStore:
-        return SourceAssetStore(self.data_store.data_root)
 
     def delete_source(self, source_id: str) -> SourceRecord:
         source = self.data_store.load_source(source_id)
