@@ -103,9 +103,7 @@ def _render_source(row, query: str) -> str:
     bubbles = "\n".join(
         render_source_assignment_bubble(row.source_id, bubble, query) for bubble in row.wiki_bubbles
     )
-    actions = "\n".join(
-        (bubbles, render_delete_source_form(row.source_id, "Delete source", icon=True))
-    )
+    actions = "\n".join((bubbles, render_delete_source_form(row.source_id)))
     summary = f'<p class="summary">{escape(row.summary)}</p>' if row.summary else ""
     meta = " · ".join(
         item

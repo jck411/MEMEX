@@ -38,6 +38,14 @@ class WikiDashboardAssetTests(unittest.TestCase):
             DASHBOARD_CSS.index(".back-icon-svg {"),
         )
 
+    def test_editor_action_buttons_have_extra_horizontal_spacing(self):
+        self.assertIn("row-gap: 8px;", DASHBOARD_CSS)
+        self.assertIn("column-gap: 14px;", DASHBOARD_CSS)
+        self.assertLess(
+            DASHBOARD_CSS.index("row-gap: 8px;"),
+            DASHBOARD_CSS.index("column-gap: 14px;"),
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

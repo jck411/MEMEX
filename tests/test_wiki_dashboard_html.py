@@ -103,7 +103,12 @@ class WikiDashboardHtmlTests(unittest.TestCase):
             },
         )
         source_delete_form.require("input", {"name": "source_id", "value": "source-1"})
-        source_delete_form.require("button", {"aria-label": "Delete source"})
+        source_delete_button = source_delete_form.require(
+            "button",
+            {"type": "submit", "class": "button button-danger delete-button"},
+        )
+        self.assertEqual("Delete source", source_delete_button.normalized_text())
+        self.assertEqual(0, source_delete_form.count("button", {"aria-label": "Delete source"}))
         self.assertIn("memex:page-position", html)
         self.assertIn("rememberPagePosition(form", html)
         self.assertIn("restorePagePosition()", html)

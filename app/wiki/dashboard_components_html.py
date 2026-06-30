@@ -206,9 +206,7 @@ def render_delete_wiki_form(wiki_id: str, title: str) -> str:
 
 def render_delete_source_form(
     source_id: str,
-    label: str = "Delete Source",
-    *,
-    icon: bool = False,
+    label: str = "Delete source",
 ) -> str:
     return _render_delete_form(
         action="/delete-source",
@@ -216,7 +214,7 @@ def render_delete_source_form(
         label=label,
         form_class="source-delete-form",
         source_delete_tracking=True,
-        icon=icon,
+        icon=False,
     )
 
 
