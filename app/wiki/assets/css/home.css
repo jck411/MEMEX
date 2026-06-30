@@ -32,10 +32,20 @@
 .field-help code { color: var(--ink); font-size: 11px; }
 .wiki-create-actions { display: flex; justify-content: flex-end; }
 .wiki-create-actions .button { min-width: 132px; }
-.wiki-description-edit { margin-top: 8px; }
+.wiki-description-edit { grid-column: 1 / -1; margin-top: 0; }
 .wiki-description-edit > summary { width: fit-content; color: var(--accent); cursor: pointer; font-size: 12px; font-weight: 700; }
-.wiki-description-form { display: grid; grid-template-columns: minmax(0, 520px) min-content; gap: 8px; align-items: end; margin-top: 8px; }
-.wiki-description-form .button { align-self: end; }
+.wiki-description-form { width: 100%; margin-top: 8px; }
+.wiki-description-field { position: relative; display: grid; gap: 8px; }
+.wiki-description-form textarea { width: 100%; }
+.wiki-description-save { display: flex; justify-content: flex-end; }
+@media (min-width: 761px) {
+  .wiki-description-save {
+    position: absolute;
+    right: 6px;
+    bottom: 6px;
+  }
+  .wiki-description-form textarea { padding-right: 92px; }
+}
 
 /* -- Grid lists -- */
 .wiki-grid, .source-list, .fact-list, .issue-list, .evidence-list, .metadata-edit-list,
@@ -70,8 +80,14 @@
 /* -- Source row state indicators -- */
 .source-row:has(.bubble.state-needs_review) { border-left: 3px solid var(--warn); }
 .source-row:has(.bubble.state-needs_build) { border-left: 3px solid var(--build); }
-.wiki-row { align-items: start; }
-.wiki-stats { align-items: flex-start; }
+.wiki-row {
+  align-items: start;
+  grid-template-areas:
+    "main stats"
+    "description actions";
+}
+.wiki-main { grid-area: main; min-width: 0; }
+.wiki-stats { grid-area: stats; align-items: flex-start; justify-content: flex-end; }
 .wiki-stat {
   min-height: 26px;
   padding: 0 9px;
@@ -82,12 +98,12 @@
   font-weight: 700;
 }
 .wiki-actions {
+  grid-area: actions;
   display: inline-flex;
   align-items: center;
+  justify-self: end;
+  align-self: end;
   gap: 6px;
-  align-self: center;
-  padding-left: 10px;
-  border-left: 1px solid var(--line);
 }
 .wiki-actions:empty { display: none; }
 

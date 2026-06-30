@@ -22,7 +22,7 @@
   }
 
   /* -- Header layout -- */
-  .topbar, .wiki-row, .source-row, .detail-heading, .detail-actions { display: block; }
+  .topbar, .source-row, .detail-heading, .detail-actions { display: block; }
   .topbar-side { justify-items: start; margin-top: 10px; }
 
   /* -- Metrics: compact horizontal scroll -- */
@@ -51,13 +51,19 @@
   .balance-chip { min-width: 100px; flex-shrink: 0; }
 
   /* -- Wiki rows -- */
-  .wiki-row { position: relative; padding: 12px; }
+  .wiki-row {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "main"
+      "stats"
+      "description"
+      "actions";
+    gap: 10px;
+    padding: 12px;
+  }
+  .wiki-stats { margin-top: 0; }
   .wiki-actions {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    border-left: none;
-    padding-left: 0;
+    margin-top: 0;
   }
 
   /* -- Source rows -- */
@@ -81,8 +87,8 @@
   /* -- Wiki create -- */
   .wiki-create-actions { justify-content: stretch; }
   .wiki-create-actions .button { width: 100%; }
-  .wiki-description-form { display: block; }
-  .wiki-description-form button { margin-top: 8px; width: 100%; }
+  .wiki-description-form textarea { display: block; }
+  .wiki-description-form button { width: 100%; }
 
   /* -- Source detail -- */
   .fact-heading { flex-direction: column; gap: 6px; }

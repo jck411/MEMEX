@@ -200,7 +200,7 @@ def render_delete_wiki_form(wiki_id: str, title: str) -> str:
         label="Delete wiki",
         form_class="wiki-delete-form",
         confirm=f"Delete the wiki \u201c{title}\u201d? This cannot be undone.",
-        icon=True,
+        icon=False,
     )
 
 

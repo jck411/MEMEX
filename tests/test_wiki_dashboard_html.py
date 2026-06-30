@@ -84,14 +84,26 @@ class WikiDashboardHtmlTests(unittest.TestCase):
             "form",
             {"method": "post", "action": "/wiki-description"},
         )
-        description_form.require("textarea", {"name": "description"})
+        description_field = description_form.require(
+            "div",
+            {"class": "wiki-description-field"},
+        )
+        description_field.require("textarea", {"name": "description"})
+        save_bar = description_field.require("div", {"class": "wiki-description-save"})
+        save_bar.require("button", {"type": "submit", "class": "button button-save"})
         self.assertIn("Track durable employment history.", description_form.text())
         delete_wiki_form = wiki_row.require(
             "form",
             {"method": "post", "action": "/delete-wiki"},
         )
         delete_wiki_form.require("input", {"name": "wiki_id", "value": "career"})
-        delete_wiki_form.require("button", {"aria-label": "Delete wiki"})
+        delete_wiki_button = delete_wiki_form.require(
+            "button",
+            {"type": "submit", "class": "button button-danger delete-button"},
+        )
+        self.assertEqual("Delete wiki", delete_wiki_button.normalized_text())
+        self.assertEqual(0, delete_wiki_form.count("button", {"aria-label": "Delete wiki"}))
+        self.assertLess(description_form.order, delete_wiki_form.order)
         assign_form = source_row.require("form", {"method": "post", "action": "/assign"})
         assign_form.require("input", {"name": "operation", "value": "unassign"})
         source_delete_form = source_row.require(

@@ -68,7 +68,7 @@ def _render_wiki(row: WikiDashboardRow) -> str:
     </div>"""
     return f"""
 <article class="wiki-row" data-testid="wiki-row" data-wiki-id="{escape(row.wiki_id, quote=True)}">
-  <div>
+  <div class="wiki-main">
     <div class="row-title">{escape(row.title)}</div>
     <a class="wiki-link" href="{wiki_detail_path(row.wiki_id)}">
       {escape(_wiki_file_location(row))}
@@ -76,15 +76,15 @@ def _render_wiki(row: WikiDashboardRow) -> str:
     <div class="wiki-row-links">
       <a href="{wiki_facts_path(row.wiki_id)}">Facts used</a>
     </div>
-    {_render_description_form(row)}
   </div>
   <div class="wiki-stats">
     {render_status_pill(row.state)}
     <span class="wiki-stat">{pluralize(row.assigned_source_count, "source")}</span>
     <span class="wiki-stat">{pluralize(row.review_delta_count, "review")}</span>
     <span class="wiki-stat">{row.accepted_fact_count} accepted</span>
-    {actions}
   </div>
+  {_render_description_form(row)}
+  {actions}
 </article>
 """
 
@@ -101,8 +101,12 @@ def _render_description_form(row: WikiDashboardRow) -> str:
   <summary>Description</summary>
   <form method="post" action="/wiki-description" class="wiki-description-form">
     <input type="hidden" name="wiki_id" value="{escape(row.wiki_id)}">
-    <textarea name="description" rows="{rows}" aria-label="{label}">{escape(row.description)}</textarea>
-    <button type="submit" class="button button-save">Save</button>
+    <div class="wiki-description-field">
+      <textarea name="description" rows="{rows}" aria-label="{label}">{escape(row.description)}</textarea>
+      <div class="wiki-description-save">
+        <button type="submit" class="button button-save">Save</button>
+      </div>
+    </div>
   </form>
 </details>
 """
