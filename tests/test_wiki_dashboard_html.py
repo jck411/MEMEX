@@ -333,5 +333,28 @@ class WikiDashboardHtmlTests(unittest.TestCase):
         self.assertEqual("status", success_toast.attrs["role"])
         self.assertIn("successfully built career", success_toast.normalized_text())
 
+    def test_render_dashboard_html_keeps_toasts_until_outside_click_or_touch(self):
+        snapshot = dashboard_snapshot(wiki_registry(), WikiLedger.empty(), [])
+
+        html = render_dashboard_html(
+            snapshot,
+            DashboardRenderOptions(message="saved", message_type="success"),
+        )
+        page = parse_html(html)
+        toast = page.require("div", {"id": "toast"})
+        close_button = toast.require("button", {"type": "button", "class": "toast-close"})
+
+        self.assertEqual("Dismiss", close_button.attrs["aria-label"])
+        self.assertNotIn("onclick", close_button.attrs)
+        self.assertIn('closeButton.addEventListener("click", removeToast);', html)
+        self.assertIn('document.addEventListener("click", dismissToastFromPage, true);', html)
+        self.assertIn(
+            'document.addEventListener("touchstart", dismissToastFromPage, true);',
+            html,
+        )
+        self.assertIn("toast.contains(event.target)", html)
+        self.assertNotIn('classList.add("toast-out")', html)
+        self.assertNotIn("@keyframes toast-out", html)
+
 if __name__ == "__main__":
     unittest.main()

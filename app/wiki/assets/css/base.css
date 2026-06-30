@@ -285,7 +285,6 @@ a.balance-chip:hover { border-color: var(--accent); background: var(--accent-dim
   background: #2a1519;
   color: #ffd8dd;
 }
-.toast.toast-out { animation: toast-out 280ms ease-in forwards; }
 .toast-close {
   margin-left: auto; border: none; background: transparent;
   color: var(--muted); font-size: 18px; line-height: 1; cursor: pointer;
@@ -296,9 +295,6 @@ a.balance-chip:hover { border-color: var(--accent); background: var(--accent-dim
 @keyframes toast-in {
   from { opacity: 0; transform: translateY(16px); }
   to   { opacity: 1; transform: translateY(0); }
-}
-@keyframes toast-out {
-  to { opacity: 0; transform: translateY(16px); }
 }
 
 /* -- Busy overlay -- */

@@ -9,7 +9,7 @@ from .dashboard import WikiAssignmentBubble, WikiDashboardSnapshot
 from .dashboard_busy_scripts import BUSY_OVERLAY_JS
 from .dashboard_position_scripts import POSITION_PERSISTENCE_JS
 from .dashboard_styles import DASHBOARD_CSS
-from .dashboard_toasts import render_toast
+from .dashboard_toasts import TOAST_DISMISSAL_JS, render_toast
 from .provider_balances import (
     ProviderBalance,
     provider_balance_value,
@@ -31,17 +31,8 @@ document.addEventListener("submit", function (event) {
 });
 """
     + POSITION_PERSISTENCE_JS
-    + """
-(function () {
-  var t = document.getElementById("toast");
-  if (!t) return;
-  setTimeout(function () {
-    t.classList.add("toast-out");
-    setTimeout(function () { t.remove(); }, 300);
-  }, 4000);
-})();
-</script>
-"""
+    + TOAST_DISMISSAL_JS
+    + "</script>\n"
 )
 
 
