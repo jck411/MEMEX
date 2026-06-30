@@ -37,7 +37,7 @@ class SourceAssetManifest:
     usage: Mapping[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
-        _require_text(self.source_id, "source_id")
+        _asset_dirname_for_source_id(self.source_id)
         if self.source_kind not in SOURCE_ASSET_KINDS:
             raise ValueError(f"unknown source_kind {self.source_kind!r}")
         _require_text(self.original_name, "original_name")
@@ -143,9 +143,24 @@ class StagedSourceAsset:
         _write_json(self.staging_dir / SOURCE_ASSET_MANIFEST, manifest.to_dict())
         final_dir = self.store.asset_dir(self.source_id)
         final_dir.parent.mkdir(parents=True, exist_ok=True)
+        rollback_dir = None
         if final_dir.exists():
-            shutil.rmtree(final_dir)
-        self.staging_dir.replace(final_dir)
+            rollback_dir = (
+                self.store.staging_root
+                / f"{_asset_dirname_for_source_id(self.source_id)}-rollback-{uuid4().hex}"
+            )
+            rollback_dir.parent.mkdir(parents=True, exist_ok=True)
+            final_dir.replace(rollback_dir)
+        try:
+            self.staging_dir.replace(final_dir)
+        except Exception:
+            if rollback_dir is not None and rollback_dir.exists():
+                if final_dir.exists():
+                    shutil.rmtree(final_dir)
+                rollback_dir.replace(final_dir)
+            raise
+        if rollback_dir is not None:
+            shutil.rmtree(rollback_dir, ignore_errors=True)
         return manifest
 
     def discard(self) -> None:
@@ -186,7 +201,7 @@ class SourceAssetStore:
         return self.assets_dir / SOURCE_ASSET_STAGING_DIRNAME
 
     def asset_dir(self, source_id: str) -> Path:
-        return self.assets_dir / escaped_source_id(source_id)
+        return self.assets_dir / _asset_dirname_for_source_id(source_id)
 
     def manifest_path(self, source_id: str) -> Path:
         return self.asset_dir(source_id) / SOURCE_ASSET_MANIFEST
@@ -202,8 +217,6 @@ class SourceAssetStore:
             return {}
         manifests: dict[str, SourceAssetManifest] = {}
         for path in sorted(self.assets_dir.glob(f"*/{SOURCE_ASSET_MANIFEST}")):
-            if SOURCE_ASSET_STAGING_DIRNAME in path.parts:
-                continue
             manifest = SourceAssetManifest.from_dict(json.loads(path.read_text(encoding="utf-8")))
             if manifest.source_id in manifests:
                 raise ValueError(f"duplicate source asset {manifest.source_id!r}")
@@ -248,11 +261,12 @@ class SourceAssetStore:
     ) -> StagedSourceAsset:
         if source_kind not in SOURCE_ASSET_KINDS:
             raise ValueError(f"unknown source_kind {source_kind!r}")
+        asset_dirname = _asset_dirname_for_source_id(source_id)
         source_path = Path(path)
         if not source_path.is_file():
             raise FileNotFoundError(source_path)
         original_name = safe_original_name(source_path.name)
-        staging_dir = self.staging_root / f"{escaped_source_id(source_id)}-{uuid4().hex}"
+        staging_dir = self.staging_root / f"{asset_dirname}-{uuid4().hex}"
         stored_path = str(PurePosixPath(SOURCE_ASSET_ORIGINALS_DIRNAME) / original_name)
         original_path = staging_dir / SOURCE_ASSET_ORIGINALS_DIRNAME / original_name
         original_path.parent.mkdir(parents=True, exist_ok=False)
@@ -272,10 +286,11 @@ class SourceAssetStore:
         )
 
     def stage_delete(self, source_id: str) -> StagedSourceAssetDeletion | None:
+        asset_dirname = _asset_dirname_for_source_id(source_id)
         path = self.asset_dir(source_id)
         if not path.exists():
             return None
-        staging_dir = self.staging_root / f"{escaped_source_id(source_id)}-delete-{uuid4().hex}"
+        staging_dir = self.staging_root / f"{asset_dirname}-delete-{uuid4().hex}"
         staging_dir.parent.mkdir(parents=True, exist_ok=True)
         path.replace(staging_dir)
         return StagedSourceAssetDeletion(
@@ -311,7 +326,9 @@ def sha256_for_path(path: str | Path) -> str:
 
 def safe_original_name(name: str | None) -> str:
     safe_name = Path((name or "original").replace("\\", "/")).name
-    return safe_name or "original"
+    if safe_name in {"", ".", ".."}:
+        return "original"
+    return safe_name
 
 
 def mime_type_for_path(path: str | Path) -> str:
@@ -334,6 +351,13 @@ def _require_text(value: Any, field_name: str) -> str:
     if not isinstance(value, str) or not value.strip():
         raise ValueError(f"{field_name} must be a non-empty string")
     return value
+
+
+def _asset_dirname_for_source_id(source_id: str) -> str:
+    dirname = escaped_source_id(source_id)
+    if dirname in {".", "..", SOURCE_ASSET_STAGING_DIRNAME}:
+        raise ValueError(f"source_id {source_id!r} maps to a reserved source asset path")
+    return dirname
 
 
 def _require_relative_path(value: Any, field_name: str) -> None:

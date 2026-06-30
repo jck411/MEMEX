@@ -9,7 +9,6 @@ from .records import SourceRecord
 from .source_assets import (
     SOURCE_ASSET_MANIFEST,
     SOURCE_ASSET_ORIGINALS_DIRNAME,
-    SOURCE_ASSET_STAGING_DIRNAME,
     SOURCE_ASSETS_DIRNAME,
     SourceAssetManifest,
     SourceAssetStore,
@@ -51,8 +50,6 @@ def load_asset_manifests(
     manifest_locations: dict[str, Path] = {}
     store = SourceAssetStore(data_root)
     for path in sorted(assets_dir.glob(f"*/{SOURCE_ASSET_MANIFEST}")):
-        if SOURCE_ASSET_STAGING_DIRNAME in path.parts:
-            continue
         payload = read_required_json_object(path, data_root, issues)
         if payload is None:
             continue

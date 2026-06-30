@@ -2,6 +2,7 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from app.wiki.ledger import WikiLedger
 from app.wiki.source_assets import (
@@ -193,6 +194,94 @@ class WikiStorageTests(unittest.TestCase):
                 "../nested/source 1",
                 store.duplicate_source_id_for_sha256(manifest.sha256),
             )
+
+    def test_source_asset_store_rejects_reserved_asset_source_ids(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            original = root / "note.txt"
+            original.write_text("Alice joined Example Co.", encoding="utf-8")
+            store = SourceAssetStore(root / "data")
+
+            for source_id in (".", "..", ".staging"):
+                with self.subTest(source_id=source_id):
+                    with self.assertRaisesRegex(ValueError, "reserved source asset path"):
+                        store.asset_dir(source_id)
+                    with self.assertRaisesRegex(ValueError, "reserved source asset path"):
+                        store.stage_file(source_id, original, source_kind="local_path")
+
+    def test_source_asset_commit_restores_existing_asset_when_replace_fails(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            old_original = root / "old.txt"
+            new_original = root / "new.txt"
+            old_original.write_text("old asset", encoding="utf-8")
+            new_original.write_text("new asset", encoding="utf-8")
+            store = SourceAssetStore(root / "data")
+
+            old_manifest = store.stage_file(
+                "source-1",
+                old_original,
+                source_kind="local_path",
+            ).commit(
+                extraction_provider="local",
+                extraction_model="test",
+                extracted_at="2026-06-23T00:00:00Z",
+            )
+            asset_dir = store.asset_dir("source-1")
+            staged_new = store.stage_file(
+                "source-1",
+                new_original,
+                source_kind="local_path",
+            )
+            path_type = type(staged_new.staging_dir)
+            original_replace = path_type.replace
+
+            def fail_new_asset_replace(path: Path, target: Path) -> Path:
+                if path == staged_new.staging_dir and Path(target) == asset_dir:
+                    raise OSError("simulated replace failure")
+                return original_replace(path, target)
+
+            with mock.patch.object(path_type, "replace", fail_new_asset_replace):
+                with self.assertRaisesRegex(OSError, "simulated replace failure"):
+                    staged_new.commit(
+                        extraction_provider="local",
+                        extraction_model="test",
+                        extracted_at="2026-06-23T00:01:00Z",
+                    )
+
+            self.assertEqual(old_manifest, store.load_manifest("source-1"))
+            self.assertEqual("old asset", (asset_dir / old_manifest.stored_path).read_text())
+            self.assertTrue(staged_new.staging_dir.exists())
+            staged_new.discard()
+
+    def test_source_asset_store_does_not_silently_skip_reserved_staging_manifest(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            store = SourceAssetStore(root / "data")
+            manifest_dir = store.assets_dir / ".staging"
+            manifest_dir.mkdir(parents=True)
+            (manifest_dir / "manifest.json").write_text(
+                json.dumps(
+                    {
+                        "source_id": ".staging",
+                        "source_kind": "local_path",
+                        "original_name": "note.txt",
+                        "stored_path": "original/note.txt",
+                        "mime_type": "text/plain",
+                        "size_bytes": 4,
+                        "sha256": "0" * 64,
+                        "created_at": "2026-06-23T00:00:00Z",
+                        "extraction_provider": "local",
+                        "extraction_model": "test",
+                        "extracted_at": "2026-06-23T00:00:00Z",
+                    }
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(ValueError, "reserved source asset path"):
+                store.load_manifests()
 
 
 if __name__ == "__main__":

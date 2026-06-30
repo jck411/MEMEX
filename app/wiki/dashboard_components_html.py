@@ -52,8 +52,8 @@ STATUS_LABELS = {
     "accepted": "Accepted",
     "rejected": "Rejected",
     "pending": "Needs review",
-    "staleaccepted": "Needs review",
-    "stalerejected": "Needs review",
+    "stale accepted": "Needs review",
+    "stale rejected": "Needs review",
 }
 
 

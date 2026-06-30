@@ -96,7 +96,9 @@ def safe_return_to(value: str) -> str:
 
 def safe_upload_filename(filename: str | None) -> str:
     safe_name = Path((filename or "upload").replace("\\", "/")).name
-    return safe_name or "upload"
+    if safe_name in {"", ".", ".."}:
+        return "upload"
+    return safe_name
 
 
 def source_id_from_filename(filename: str) -> str:

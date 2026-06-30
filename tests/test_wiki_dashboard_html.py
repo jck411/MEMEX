@@ -2,6 +2,7 @@ import unittest
 from decimal import Decimal
 
 from app.wiki.dashboard import SourceDashboardFilter, dashboard_snapshot
+from app.wiki.dashboard_components_html import display_label
 from app.wiki.dashboard_html import DashboardRenderOptions, render_dashboard_html
 from app.wiki.ledger import ReviewDecision, WikiLedger
 from app.wiki.model_profiles import DEFAULT_EXTRACTION_PROFILE_ID
@@ -18,6 +19,10 @@ from tests.html_helpers import parse_html
 
 
 class WikiDashboardHtmlTests(unittest.TestCase):
+    def test_display_label_treats_stale_fact_decisions_as_needing_review(self):
+        self.assertEqual("Needs review", display_label("stale accepted"))
+        self.assertEqual("Needs review", display_label("stale rejected"))
+
     def test_render_dashboard_html_includes_filters_status_and_assignment_forms(self):
         registry = wiki_registry(
             wiki_record(
