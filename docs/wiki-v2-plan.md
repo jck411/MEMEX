@@ -18,6 +18,25 @@ The wiki is the product. Sources, ledgers, manifests, provider calls, and the
 dashboard exist to keep the markdown wikis accurate, inspectable, and
 source-grounded.
 
+## Current Status
+
+MEMEX V2 is at a usable checkpoint. The default posture is now to use the app
+on real source material instead of continuing speculative feature development.
+
+Near-term work should come from repeated friction found during normal use. The
+main expected next step is source acquisition: importing or uploading source
+material from the pre-V1 Knowledge database at `/home/jack/REPOS/Knowledge` so
+new wikis can be started here. No import workflow has been designed or
+implemented yet.
+
+Before adding that workflow, inspect the Knowledge database shape and choose the
+lowest-complexity path that preserves MEMEX V2 boundaries:
+
+- preserved originals go through `data/source-assets/`
+- extracted facts go into SourceRecords under `data/sources/`
+- wiki assignment and review state stay in the central ledger
+- Knowledge remains a source archive, not a revived legacy runtime
+
 ## Architecture Rules
 
 - Wiki assignment is manual through source/wiki bubbles.
@@ -99,7 +118,10 @@ Wiki description changes are scope changes:
 - Build prompts include the current wiki description when configured; generated
   markdown stays clean external-facing prose.
 
-## Next Development Priorities
+## Use-Driven Development Priorities
+
+These are not required before using MEMEX. Treat them as candidates to revisit
+only after real use shows the need.
 
 ### 1. Wiki Build Refinement
 
