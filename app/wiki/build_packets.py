@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass
 from typing import Iterable, Mapping
 
 from .citations import (
-    compact_fact_notes_in_text,
     fact_sort_key,
     inline_text,
 )
@@ -89,11 +87,10 @@ def existing_markdown_context(markdown: str) -> str:
     _validate_marker_pair(markdown, SYNTHESIS_START, SYNTHESIS_END, "synthesis")
     _validate_marker_pair(markdown, FACTS_START, FACTS_END, "facts")
     _validate_marker_pair(markdown, REFERENCES_START, REFERENCES_END, "references")
-    context = _remove_marked_section(markdown, FACTS_START, FACTS_END)
+    context = _remove_marked_section(markdown, SYNTHESIS_START, SYNTHESIS_END)
+    context = _remove_marked_section(context, FACTS_START, FACTS_END)
     context = _remove_marked_section(context, REFERENCES_START, REFERENCES_END)
-    context = context.replace(SYNTHESIS_START, "").replace(SYNTHESIS_END, "")
     context = remove_obsolete_markdown_sections(context)
-    context = _remove_compact_cited_blocks(context)
     context = remove_cjk_dominant_blocks(context)
     return _clip(context.strip(), MAX_EXISTING_MARKDOWN_CONTEXT)
 
@@ -114,16 +111,6 @@ def _remove_marked_section(markdown: str, start_marker: str, end_marker: str) ->
         return markdown
     end += len(end_marker)
     return (markdown[:start].rstrip() + "\n\n" + markdown[end:].lstrip()).strip() + "\n"
-
-
-def _remove_compact_cited_blocks(markdown: str) -> str:
-    blocks = [block.strip() for block in re.split(r"\n\s*\n", markdown) if block.strip()]
-    kept: list[str] = []
-    for block in blocks:
-        if compact_fact_notes_in_text(block):
-            continue
-        kept.append(block)
-    return "\n\n".join(kept).strip() + ("\n" if kept else "")
 
 
 def _clip(value: object, max_chars: int) -> str:

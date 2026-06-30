@@ -72,6 +72,7 @@ class WikiBuildSynthesisTests(unittest.TestCase):
             "# Career\n\n"
             f"{SYNTHESIS_START}\n"
             "## Wiki Brief\n\n"
+            "Previous uncited synthesis that should not anchor the next build.\n\n"
             "Previous supported prose. "
             "([S1:1](#memex-fact-s1-1)[,2](#memex-fact-s1-2))\n\n"
             "### 国籍与公民身份\n\n"
@@ -118,6 +119,7 @@ class WikiBuildSynthesisTests(unittest.TestCase):
         self.assertNotIn("source_key", fact_payload)
         self.assertNotIn("citation", fact_payload)
         context = payload["existing_markdown_context"]["markdown"]
+        self.assertNotIn("Previous uncited synthesis", context)
         self.assertNotIn("Previous supported prose.", context)
         self.assertNotIn("国籍", context)
         self.assertNotIn("平台团队", context)
