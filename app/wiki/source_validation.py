@@ -10,10 +10,14 @@ from .source_validation_sources import load_sources
 from .source_validation_types import SourceValidationIssue, SourceValidationReport
 
 
-def validate_source_workspace(data_root: str | Path) -> SourceValidationReport:
+def validate_source_workspace(
+    data_root: str | Path,
+    vault_root: str | Path | None = None,
+) -> SourceValidationReport:
     """Validate SourceRecords, source assets, and ledger references."""
 
     root = Path(data_root)
+    vault = Path(vault_root) if vault_root is not None else None
     issues: list[SourceValidationIssue] = []
     registry = load_registry(root, issues)
     sources = load_sources(root, issues)
@@ -21,7 +25,7 @@ def validate_source_workspace(data_root: str | Path) -> SourceValidationReport:
     validate_source_asset_links(root, sources, manifests, issues)
     ledger = load_ledger(root, issues)
     if ledger is not None:
-        validate_ledger_references(ledger, registry, sources, issues)
+        validate_ledger_references(ledger, registry, sources, issues, vault)
     return SourceValidationReport(
         data_root=root,
         checked_source_count=len(sources),

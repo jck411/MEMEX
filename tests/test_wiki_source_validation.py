@@ -5,9 +5,10 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from app.wiki.ledger import WikiLedger
+from app.wiki.ledger import ReviewDecision, WikiLedger
 from app.wiki.source_assets import SourceAssetStore
 from app.wiki.source_validation import validate_source_workspace
+from app.wiki.status import mark_build_current
 from app.wiki.storage import WikiDataStore, source_record_path
 from tests.helpers import (
     fact_record,
@@ -69,6 +70,101 @@ class WikiSourceValidationTests(unittest.TestCase):
             self.assertTrue(report.ok, report.to_dict())
             self.assertEqual(1, report.checked_source_count)
             self.assertEqual(1, report.checked_asset_count)
+
+    def test_validation_reports_stale_assigned_decision_signatures(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            store = WikiDataStore(root / "data")
+            source = source_with_evidence()
+            wiki = wiki_record(
+                "career",
+                "Career",
+                "career.md",
+                description="Track current career facts.",
+            )
+            store.save_registry(wiki_registry(wiki))
+            store.save_source(source)
+            self._commit_asset(root, source.source_id)
+            ledger = WikiLedger.empty()
+            ledger.assign_source("career", source.source_id)
+            ledger.set_decision(
+                "career",
+                source.source_id,
+                "fact-1",
+                ReviewDecision(
+                    ticked=True,
+                    fact_signature="old-fact-signature",
+                    wiki_scope_signature="old-scope-signature",
+                ),
+            )
+            store.save_ledger(ledger)
+
+            report = validate_source_workspace(root / "data")
+            messages = "\n".join(issue.message for issue in report.issues)
+
+            self.assertFalse(report.ok)
+            self.assertIn("stale fact signature", messages)
+            self.assertIn("stale wiki scope signature", messages)
+
+    def test_validation_allows_unassigned_historical_decisions(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            store = WikiDataStore(root / "data")
+            source = source_with_evidence()
+            wiki = wiki_record("career", "Career", "career.md")
+            store.save_registry(wiki_registry(wiki))
+            store.save_source(source)
+            self._commit_asset(root, source.source_id)
+            ledger = WikiLedger.empty()
+            ledger.set_decision(
+                "career",
+                source.source_id,
+                "fact-1",
+                ReviewDecision(
+                    ticked=True,
+                    fact_signature="old-fact-signature",
+                    wiki_scope_signature="old-scope-signature",
+                ),
+            )
+            store.save_ledger(ledger)
+
+            report = validate_source_workspace(root / "data")
+
+            self.assertTrue(report.ok, report.to_dict())
+
+    def test_cli_reports_missing_built_wiki_page(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            store = WikiDataStore(root / "data")
+            source = source_with_evidence()
+            wiki = wiki_record("career", "Career", "career.md")
+            store.save_registry(wiki_registry(wiki))
+            store.save_source(source)
+            self._commit_asset(root, source.source_id)
+            ledger = WikiLedger.empty()
+            ledger.assign_source("career", source.source_id)
+            ledger.set_decision(
+                "career",
+                source.source_id,
+                "fact-1",
+                review_decision_for_fact(
+                    source.facts[0],
+                    wiki=wiki,
+                    ticked=True,
+                ),
+            )
+            mark_build_current(wiki, ledger, {source.source_id: source})
+            store.save_ledger(ledger)
+            script = Path(__file__).resolve().parents[1] / "scripts" / "wiki_validate.py"
+
+            result = subprocess.run(
+                [sys.executable, str(script), "--repo-root", str(root)],
+                text=True,
+                capture_output=True,
+            )
+
+            self.assertEqual(1, result.returncode)
+            self.assertIn("built wiki page is missing at career.md", result.stdout)
 
     def test_validation_reports_asset_hash_and_evidence_reference_errors(self):
         with tempfile.TemporaryDirectory() as temp_dir:

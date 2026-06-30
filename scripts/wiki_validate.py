@@ -20,17 +20,20 @@ from app.wiki.source_validation import (  # noqa: E402
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Validate V2 source records, source assets, and ledger references"
+        description="Validate V2 source records, source assets, ledger references, and builds"
     )
     parser.add_argument("--repo-root", default=ROOT, help="repository root")
     parser.add_argument("--data-dir", default="data", help="data directory under repo root")
+    parser.add_argument("--vault-dir", default="vault", help="vault directory under repo root")
     parser.add_argument("--json", action="store_true", help="print machine-readable JSON")
     return parser
 
 
 def run(args: argparse.Namespace) -> int:
-    data_root = Path(args.repo_root) / args.data_dir
-    report = validate_source_workspace(data_root)
+    repo_root = Path(args.repo_root)
+    data_root = repo_root / args.data_dir
+    vault_root = repo_root / args.vault_dir
+    report = validate_source_workspace(data_root, vault_root=vault_root)
     if args.json:
         print(json.dumps(report.to_dict(), ensure_ascii=True, indent=2, sort_keys=True))
     else:
