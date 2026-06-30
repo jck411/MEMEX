@@ -1,6 +1,7 @@
 import json
 import tempfile
 import unittest
+from email.message import Message
 from io import BytesIO
 from pathlib import Path
 from urllib.error import HTTPError
@@ -359,7 +360,7 @@ class WikiBuildSynthesisTests(unittest.TestCase):
                 request.full_url,
                 400,
                 "Bad Request",
-                {},
+                Message(),
                 BytesIO(
                     json.dumps(
                         {
