@@ -55,18 +55,25 @@ class WorkspaceSourceMixin:
         original_ledger = self.data_store.load_ledger()
         updated_ledger = type(original_ledger).from_dict(original_ledger.to_dict())
         updated_ledger.remove_source(source_id)
-        self.data_store.save_ledger(updated_ledger)
+        staged_asset_deletion = self.source_assets().stage_delete(source_id)
+        ledger_saved = False
         source_deleted = False
         try:
+            self.data_store.save_ledger(updated_ledger)
+            ledger_saved = True
             if not self.data_store.delete_source(source_id):
                 raise FileNotFoundError(source_id)
             source_deleted = True
-            self.source_assets().delete(source_id)
         except Exception:
+            if staged_asset_deletion is not None:
+                staged_asset_deletion.rollback()
             if source_deleted:
                 self.data_store.save_source(source)
-            self.data_store.save_ledger(original_ledger)
+            if ledger_saved:
+                self.data_store.save_ledger(original_ledger)
             raise
+        if staged_asset_deletion is not None:
+            staged_asset_deletion.discard()
         return source
 
     def import_source(self, source: SourceRecord) -> SourceRecord:

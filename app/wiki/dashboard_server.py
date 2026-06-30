@@ -13,6 +13,11 @@ from .dashboard_action_types import (
     SourceReviewRunner,
     WikiBuildRunner,
 )
+from .dashboard_processes import (
+    DASHBOARD_HOST,
+    DASHBOARD_PORT,
+    require_canonical_dashboard_port,
+)
 from .dashboard_routes import (
     DashboardResponse,
     handle_dashboard_get,
@@ -20,11 +25,6 @@ from .dashboard_routes import (
 )
 from .dashboard_runtime import DashboardRuntime
 from .model_profiles import DEFAULT_EXTRACTION_PROFILE_ID
-from .dashboard_processes import (
-    DASHBOARD_HOST,
-    DASHBOARD_PORT,
-    require_canonical_dashboard_port,
-)
 from .runtime_services import dashboard_runtime_from_env
 from .workflows import WikiWorkspace
 

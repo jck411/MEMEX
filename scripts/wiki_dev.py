@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from app.wiki.builders import FixtureWikiBuildProvider  # noqa: E402
 from app.wiki.dashboard import (  # noqa: E402
     SourceDashboardFilter,
     filter_sources,
@@ -43,7 +44,6 @@ from app.wiki.openrouter_review import (  # noqa: E402
 )
 from app.wiki.records import SourceRecord  # noqa: E402
 from app.wiki.review import ReviewResult  # noqa: E402
-from app.wiki.builders import FixtureWikiBuildProvider  # noqa: E402
 from app.wiki.reviewers import FixtureReviewProvider  # noqa: E402
 from app.wiki.workflows import WikiWorkspace, workspace_for_repo  # noqa: E402
 

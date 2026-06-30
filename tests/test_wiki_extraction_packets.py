@@ -49,6 +49,7 @@ class WikiExtractionPacketTests(unittest.TestCase):
         self.assertEqual("fact_joined", source.facts[0].fact_id)
         self.assertNotIn("sensitivity", source.facts[0].provenance)
         self.assertNotIn("run", source.facts[0].provenance)
+        self.assertNotIn("source_fact_id", source.facts[0].provenance)
         self.assertEqual("ev_joined", source.facts[0].provenance["evidence"][0]["id"])
 
     def test_packet_validation_fails_closed_on_shape_errors(self):

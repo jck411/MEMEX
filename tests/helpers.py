@@ -4,11 +4,11 @@ import json
 from pathlib import Path
 from typing import Any, Iterable, Mapping
 
+from app.wiki.builders import FixtureWikiBuildProvider
 from app.wiki.ledger import ReviewDecision
 from app.wiki.records import FactRecord, SourceRecord, WikiRecord, WikiRegistry
 from app.wiki.review import ReviewResult
 from app.wiki.reviewers import FixtureReviewProvider
-from app.wiki.builders import FixtureWikiBuildProvider
 from app.wiki.storage import WikiDataStore
 from app.wiki.wiki_scope import wiki_scope_signature
 from app.wiki.workflows import WikiWorkspace

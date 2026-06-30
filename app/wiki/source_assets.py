@@ -153,6 +153,24 @@ class StagedSourceAsset:
 
 
 @dataclass(frozen=True)
+class StagedSourceAssetDeletion:
+    original_dir: Path
+    staging_dir: Path
+
+    def rollback(self) -> None:
+        if not self.staging_dir.exists():
+            return
+        self.original_dir.parent.mkdir(parents=True, exist_ok=True)
+        self.staging_dir.replace(self.original_dir)
+
+    def discard(self) -> None:
+        try:
+            shutil.rmtree(self.staging_dir)
+        except OSError:
+            pass
+
+
+@dataclass(frozen=True)
 class SourceAssetStore:
     data_root: Path | str
 
@@ -253,12 +271,17 @@ class SourceAssetStore:
             created_at=created_at or utc_now(),
         )
 
-    def delete(self, source_id: str) -> bool:
+    def stage_delete(self, source_id: str) -> StagedSourceAssetDeletion | None:
         path = self.asset_dir(source_id)
         if not path.exists():
-            return False
-        shutil.rmtree(path)
-        return True
+            return None
+        staging_dir = self.staging_root / f"{escaped_source_id(source_id)}-delete-{uuid4().hex}"
+        staging_dir.parent.mkdir(parents=True, exist_ok=True)
+        path.replace(staging_dir)
+        return StagedSourceAssetDeletion(
+            original_dir=path,
+            staging_dir=staging_dir,
+        )
 
     def duplicate_source_id_for_sha256(
         self,

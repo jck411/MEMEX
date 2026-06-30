@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-
 POSITION_PERSISTENCE_JS = """
 (function () {
   var positionKey = "memex:page-position";

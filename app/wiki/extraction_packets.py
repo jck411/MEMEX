@@ -196,7 +196,6 @@ def _fact_provenance(
     provenance: dict[str, Any] = {
         "extractor": LLM_EXTRACTOR_VERSION,
         "schema": EXTRACTION_SCHEMA_NAME,
-        "source_fact_id": fact["id"],
         "evidence_ids": list(fact["evidence_ids"]),
         "evidence": [
             dict(evidence_by_id[evidence_id])
