@@ -45,6 +45,7 @@ def render_source_detail_html(
         message_type=options.message_type,
         body=body,
         scripts=source_detail_script(),
+        back_href="/",
     )
 
 

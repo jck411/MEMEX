@@ -1,24 +1,111 @@
-/* -- Responsive -- */
+/* -------------------------------------------------
+   Responsive — mobile layout (≤ 760px)
+   ------------------------------------------------- */
 @media (max-width: 760px) {
+
+  /* -- Layout & spacing -- */
   main { padding: 16px; }
+  .topbar, .ingest-band, .filter-band, .section { padding: 16px 0; }
+  h1 { font-size: 22px; }
+
+  /* -- Sticky header -- */
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    margin: -16px -16px 0;
+    padding: 12px 16px;
+    background: rgba(16, 17, 15, 0.88);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--line);
+  }
+
+  /* -- Header layout -- */
   .topbar, .wiki-row, .source-row, .detail-heading, .detail-actions { display: block; }
-  .topbar-side { justify-items: start; margin-top: 12px; }
-  .metrics, .wiki-stats, .bubbles, .balances, .acceptance-list { margin-top: 12px; justify-content: flex-start; }
-  .wiki-row { position: relative; }
+  .topbar-side { justify-items: start; margin-top: 10px; }
+
+  /* -- Metrics: compact horizontal scroll -- */
+  .metrics {
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    gap: 6px;
+    padding-bottom: 2px;
+    margin-top: 8px;
+    scrollbar-width: none;
+  }
+  .metrics::-webkit-scrollbar { display: none; }
+  .metric {
+    min-width: 76px;
+    padding: 6px 10px;
+    flex-shrink: 0;
+  }
+  .metric strong { font-size: 18px; }
+
+  /* -- Balances & stats -- */
+  .wiki-stats, .bubbles, .balances, .acceptance-list { margin-top: 12px; justify-content: flex-start; }
+  .balances { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; gap: 6px; }
+  .balances::-webkit-scrollbar { display: none; }
+  .balance-chip { min-width: 100px; flex-shrink: 0; }
+
+  /* -- Wiki rows -- */
+  .wiki-row { position: relative; padding: 12px; }
   .wiki-actions {
     position: absolute;
-    top: 14px;
-    right: 16px;
+    top: 12px;
+    right: 12px;
     border-left: none;
     padding-left: 0;
   }
+
+  /* -- Source rows -- */
+  .source-row { padding: 12px; }
+  .bubbles {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--line);
+    gap: 8px;
+  }
+
+  /* -- Filters -- */
+  .filter-controls { flex-wrap: wrap; gap: 6px 10px; }
+  .filters input[type="search"] { width: 100%; }
+
+  /* -- Ingest -- */
+  .ingest-heading { flex-direction: column; align-items: stretch; gap: 8px; }
   .upload-form { grid-template-columns: 1fr; }
+  .extract-form .button { width: 100%; }
+
+  /* -- Wiki create -- */
   .wiki-create-actions { justify-content: stretch; }
   .wiki-create-actions .button { width: 100%; }
-  .decision-tool-group, .llm-review-inline { flex-wrap: wrap; }
-  .issue-row, .wiki-description-form { display: block; }
-  .wiki-description-form button { margin-top: 8px; }
+  .wiki-description-form { display: block; }
+  .wiki-description-form button { margin-top: 8px; width: 100%; }
+
+  /* -- Source detail -- */
+  .fact-heading { flex-direction: column; gap: 6px; }
+  .editable-text-form { grid-template-columns: 1fr; }
+  .editable-text-form .button { justify-self: end; }
   .row-tools { margin-top: 8px; }
+  .decision-tool-group { flex-wrap: wrap; gap: 6px; }
+  .decision-tool-group .button { flex: 1 1 auto; min-width: 0; }
+  .llm-review-inline { flex-wrap: wrap; }
+  .issue-row { display: block; }
   .source-actions-row { justify-content: stretch; }
   .source-actions-row form { width: 100%; }
+  .source-actions-row .button { width: 100%; }
+
+  /* -- Wiki page viewer -- */
+  .wiki-view-heading { flex-direction: column; gap: 10px; }
+  .wiki-view-actions { width: 100%; justify-content: flex-start; }
+
+  /* -- Toast: bottom center on mobile -- */
+  .toast {
+    left: 16px;
+    right: 16px;
+    bottom: 12px;
+    max-width: none;
+  }
 }

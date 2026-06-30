@@ -57,6 +57,7 @@ def render_wiki_page_html(
         message=message,
         message_type=message_type,
         body=body,
+        back_href="/",
     )
 
 

@@ -61,6 +61,7 @@ def render_wiki_facts_html(
         message=message,
         message_type=message_type,
         body=body,
+        back_href="/",
     )
 
 

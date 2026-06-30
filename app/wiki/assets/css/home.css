@@ -51,13 +51,20 @@
   border: 1px solid transparent;
   border-radius: var(--radius);
   background: var(--surface);
-  transition: border-color var(--transition), background var(--transition);
+  transition: border-color var(--transition), background var(--transition),
+    transform var(--transition), box-shadow var(--transition);
 }
 .wiki-row:hover, .source-row:hover {
   border-color: var(--line);
   background: var(--surface-alt);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+}
+@media (pointer: coarse) {
+  .wiki-row:active, .source-row:active {
+    transform: scale(0.99);
+    transition-duration: 60ms;
+  }
 }
 
 /* -- Source row state indicators -- */

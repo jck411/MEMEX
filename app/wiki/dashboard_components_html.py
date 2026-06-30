@@ -67,6 +67,7 @@ def render_dashboard_page(
     body: str,
     message_type: str = "",
     scripts: str = "",
+    back_href: str = "",
 ) -> str:
     return "\n".join(
         (
@@ -76,11 +77,16 @@ def render_dashboard_page(
             '<meta charset="utf-8">',
             '<meta name="viewport" content="width=device-width, initial-scale=1">',
             f"<title>{escape(document_title)}</title>",
+            '<link rel="preconnect" href="https://fonts.googleapis.com">',
+            '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>',
+            '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">',
             f"<style>{DASHBOARD_CSS}</style>",
             "</head>",
             "<body>",
             "<main>",
-            render_dashboard_header(snapshot, provider_balances, page_heading),
+            render_dashboard_header(
+                snapshot, provider_balances, page_heading, back_href=back_href,
+            ),
             body,
             "</main>",
             render_toast(message, message_type),
@@ -97,12 +103,20 @@ def render_dashboard_header(
     snapshot: WikiDashboardSnapshot,
     provider_balances: tuple[ProviderBalance, ...],
     page_heading: str,
+    *,
+    back_href: str = "",
 ) -> str:
     review = sum(1 for row in snapshot.wikis if "needs_review" in row.state)
     build = sum(1 for row in snapshot.wikis if "needs_build" in row.state)
+    back_link = (
+        f'<a class="back-link" href="{escape(back_href)}" aria-label="Back">← Back</a>'
+        if back_href
+        else ""
+    )
     return f"""
 <header class="topbar">
   <div>
+    {back_link}
     <a class="wordmark" href="/" aria-label="MEMEX — dashboard">MEMEX</a>
     <h1>{escape(page_heading)}</h1>
   </div>
