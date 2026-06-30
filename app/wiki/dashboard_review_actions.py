@@ -7,6 +7,8 @@ import json
 from .dashboard_action_types import SourceReviewRunner
 from .dashboard_action_urls import source_detail_location
 from .dashboard_forms import DashboardForm
+from .review import ReviewResult
+from .timestamps import utc_now
 from .workflows import ReviewWorkflowResult, WikiWorkspace
 
 
@@ -14,14 +16,19 @@ def apply_source_decisions(workspace: WikiWorkspace, form: DashboardForm) -> Non
     source_id = form.first("source_id").strip()
     accepted = {_decision_pair(value) for value in form.all("accepted_decision")}
     changed = {_decision_pair(value) for value in form.all("changed_decision")}
+    reason = form.first("reason").strip()
+    reviewed_at = utc_now()
+    by_wiki: dict[str, list[ReviewResult]] = {}
     for fact_id, wiki_id in sorted(changed):
-        workspace.set_fact_decision(
-            wiki_id,
-            source_id,
-            fact_id,
-            (fact_id, wiki_id) in accepted,
-            reason=form.first("reason").strip(),
+        by_wiki.setdefault(wiki_id, []).append(
+            ReviewResult(
+                fact_id=fact_id,
+                ticked=(fact_id, wiki_id) in accepted,
+                reason=reason,
+            )
         )
+    for wiki_id, results in by_wiki.items():
+        workspace.review_source(wiki_id, source_id, results, reviewed_at=reviewed_at)
 
 
 def apply_source_llm_review(

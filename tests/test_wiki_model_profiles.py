@@ -1,3 +1,4 @@
+import os
 import subprocess
 import sys
 import tempfile
@@ -125,6 +126,7 @@ class WikiModelProfileTests(unittest.TestCase):
             env_path.write_text("OPENAI_API_KEY=secret-value\n", encoding="utf-8")
             script = Path(__file__).resolve().parents[1] / "scripts" / "wiki_dev.py"
 
+            clean_env = {"PATH": os.environ.get("PATH", ""), "HOME": os.environ.get("HOME", "")}
             result = subprocess.run(
                 [
                     sys.executable,
@@ -138,6 +140,7 @@ class WikiModelProfileTests(unittest.TestCase):
                 check=True,
                 text=True,
                 capture_output=True,
+                env=clean_env,
             )
 
             self.assertIn(
