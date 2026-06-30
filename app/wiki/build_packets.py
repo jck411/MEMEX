@@ -19,6 +19,7 @@ from .markdown import (
     SYNTHESIS_END,
     SYNTHESIS_START,
     remove_obsolete_markdown_sections,
+    remove_marked_sections,
 )
 from .records import SourceRecord, WikiRecord, source_index
 from .status import accepted_facts_for_wiki
@@ -84,33 +85,27 @@ def build_fact_packet(
 def existing_markdown_context(markdown: str) -> str:
     if not markdown.strip():
         return ""
-    _validate_marker_pair(markdown, SYNTHESIS_START, SYNTHESIS_END, "synthesis")
-    _validate_marker_pair(markdown, FACTS_START, FACTS_END, "facts")
-    _validate_marker_pair(markdown, REFERENCES_START, REFERENCES_END, "references")
-    context = _remove_marked_section(markdown, SYNTHESIS_START, SYNTHESIS_END)
-    context = _remove_marked_section(context, FACTS_START, FACTS_END)
-    context = _remove_marked_section(context, REFERENCES_START, REFERENCES_END)
+    context = remove_marked_sections(
+        markdown,
+        SYNTHESIS_START,
+        SYNTHESIS_END,
+        error="existing markdown has incomplete MEMEX synthesis markers",
+    )
+    context = remove_marked_sections(
+        context,
+        FACTS_START,
+        FACTS_END,
+        error="existing markdown has incomplete MEMEX facts markers",
+    )
+    context = remove_marked_sections(
+        context,
+        REFERENCES_START,
+        REFERENCES_END,
+        error="existing markdown has incomplete MEMEX references markers",
+    )
     context = remove_obsolete_markdown_sections(context)
     context = remove_cjk_dominant_blocks(context)
     return _clip(context.strip(), MAX_EXISTING_MARKDOWN_CONTEXT)
-
-
-def _validate_marker_pair(markdown: str, start_marker: str, end_marker: str, name: str) -> None:
-    start = markdown.find(start_marker)
-    end = markdown.find(end_marker)
-    if start == -1 and end == -1:
-        return
-    if start == -1 or end == -1 or end < start:
-        raise ValueError(f"existing markdown has incomplete MEMEX {name} markers")
-
-
-def _remove_marked_section(markdown: str, start_marker: str, end_marker: str) -> str:
-    start = markdown.find(start_marker)
-    end = markdown.find(end_marker)
-    if start == -1 and end == -1:
-        return markdown
-    end += len(end_marker)
-    return (markdown[:start].rstrip() + "\n\n" + markdown[end:].lstrip()).strip() + "\n"
 
 
 def _clip(value: object, max_chars: int) -> str:

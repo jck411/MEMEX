@@ -3,11 +3,14 @@ from http.server import BaseHTTPRequestHandler
 from pathlib import Path
 from unittest.mock import patch
 
+import app.wiki.dashboard_routes as dashboard_routes
 from app.wiki.dashboard_server import (
     create_dashboard_handler,
     create_dashboard_server,
     run_dashboard_server,
 )
+from app.wiki.dashboard_runtime import DashboardRuntime
+from app.wiki.dashboard_routes import handle_dashboard_get
 from app.wiki.markdown import build_wiki_markdown
 from app.wiki.review import ReviewResult
 from app.wiki.vault import write_wiki_page
@@ -34,6 +37,36 @@ class WikiDashboardServerTests(DashboardServerTestCase):
     def test_run_dashboard_server_rejects_alternate_port(self):
         with self.assertRaisesRegex(ValueError, "canonical port 8765"):
             run_dashboard_server(object(), port=9999)
+
+    def test_dashboard_get_routes_reuse_one_read_snapshot(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            workspace = wiki_workspace(Path(temp_dir))
+            workspace.add_wiki("career", "Career", "career.md")
+            workspace.save_source(
+                source_record(
+                    "source-1",
+                    fact_record("fact-1", "Alice joined Example Co."),
+                )
+            )
+            workspace.assign_source("career", "source-1")
+            runtime = DashboardRuntime(workspace)
+            original_snapshot = dashboard_routes.workspace_read_snapshot
+
+            def counting_snapshot(workspace_arg):
+                calls.append(workspace_arg)
+                return original_snapshot(workspace_arg)
+
+            for target in ("/", "/source/source-1", "/wiki/career", "/wiki/career/facts"):
+                with self.subTest(target=target):
+                    calls = []
+                    with patch(
+                        "app.wiki.dashboard_routes.workspace_read_snapshot",
+                        side_effect=counting_snapshot,
+                    ):
+                        response = handle_dashboard_get(runtime, target)
+
+                    self.assertEqual(200, response.status)
+                    self.assertEqual([workspace], calls)
 
     def test_dashboard_server_renders_built_wiki_page(self):
         with tempfile.TemporaryDirectory() as temp_dir:

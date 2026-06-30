@@ -239,6 +239,26 @@ class WikiReviewBuildTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "incomplete MEMEX facts markers"):
                     remove_fact_audit_section(existing)
 
+    def test_duplicate_memex_fact_audit_sections_are_all_removed(self):
+        existing = (
+            "# Career\n\n"
+            "Human intro.\n\n"
+            f"{FACTS_START}\nold audit one\n{FACTS_END}\n\n"
+            "Human middle.\n\n"
+            f"{FACTS_START}\nold audit two\n{FACTS_END}\n\n"
+            "Human footer.\n"
+        )
+
+        updated = remove_fact_audit_section(existing)
+
+        self.assertIn("Human intro.", updated)
+        self.assertIn("Human middle.", updated)
+        self.assertIn("Human footer.", updated)
+        self.assertNotIn("old audit one", updated)
+        self.assertNotIn("old audit two", updated)
+        self.assertNotIn(FACTS_START, updated)
+        self.assertNotIn(FACTS_END, updated)
+
     def test_incomplete_memex_references_markers_are_rejected(self):
         cases = (
             f"# Career\n\n{REFERENCES_START}\nold generated text\n",

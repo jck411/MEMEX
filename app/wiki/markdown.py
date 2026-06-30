@@ -56,7 +56,7 @@ def replace_references_section(existing_markdown: str, section: str) -> str:
 
 
 def remove_fact_audit_section(existing_markdown: str) -> str:
-    return _remove_marked_section(
+    return remove_marked_sections(
         existing_markdown,
         FACTS_START,
         FACTS_END,
@@ -65,7 +65,7 @@ def remove_fact_audit_section(existing_markdown: str) -> str:
 
 
 def remove_references_section(existing_markdown: str) -> str:
-    return _remove_marked_section(
+    return remove_marked_sections(
         existing_markdown,
         REFERENCES_START,
         REFERENCES_END,
@@ -111,25 +111,27 @@ def _replace_or_insert_marked_section(
     return "\n\n".join(pieces) + "\n"
 
 
-def _remove_marked_section(
+def remove_marked_sections(
     existing_markdown: str,
     start_marker: str,
     end_marker: str,
     *,
     error: str,
 ) -> str:
-    start = existing_markdown.find(start_marker)
-    end = existing_markdown.find(end_marker)
-    if start == -1 and end == -1:
-        return existing_markdown
-    if start == -1 or end == -1 or end < start:
-        raise ValueError(error)
+    markdown = existing_markdown
+    while True:
+        start = markdown.find(start_marker)
+        end = markdown.find(end_marker)
+        if start == -1 and end == -1:
+            return markdown
+        if start == -1 or end == -1 or end < start:
+            raise ValueError(error)
 
-    end += len(end_marker)
-    prefix = existing_markdown[:start].rstrip()
-    suffix = existing_markdown[end:].lstrip()
-    pieces = [piece for piece in (prefix, suffix) if piece]
-    return "\n\n".join(pieces) + ("\n" if pieces else "")
+        end += len(end_marker)
+        prefix = markdown[:start].rstrip()
+        suffix = markdown[end:].lstrip()
+        pieces = [piece for piece in (prefix, suffix) if piece]
+        markdown = "\n\n".join(pieces) + ("\n" if pieces else "")
 
 
 def _prepare_existing_markdown(wiki: WikiRecord, existing_markdown: str) -> str:

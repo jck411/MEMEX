@@ -223,33 +223,6 @@ class SourceAssetStore:
             manifests[manifest.source_id] = manifest
         return manifests
 
-    def update_extraction_run(
-        self,
-        source_id: str,
-        *,
-        extraction_provider: str,
-        extraction_model: str,
-        extracted_at: str,
-        usage: Mapping[str, Any] | None = None,
-    ) -> SourceAssetManifest:
-        manifest = self.load_manifest(source_id)
-        updated = SourceAssetManifest(
-            source_id=manifest.source_id,
-            source_kind=manifest.source_kind,
-            original_name=manifest.original_name,
-            stored_path=manifest.stored_path,
-            mime_type=manifest.mime_type,
-            size_bytes=manifest.size_bytes,
-            sha256=manifest.sha256,
-            created_at=manifest.created_at,
-            extraction_provider=extraction_provider,
-            extraction_model=extraction_model,
-            extracted_at=extracted_at,
-            usage=usage or {},
-        )
-        _write_json(self.manifest_path(source_id), updated.to_dict())
-        return updated
-
     def stage_file(
         self,
         source_id: str,

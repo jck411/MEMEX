@@ -8,7 +8,7 @@ from typing import Any, Iterable, Mapping
 from .dashboard import WikiAssignmentBubble, status_label
 from .ledger import WikiLedger
 from .records import FactRecord, SourceRecord, WikiRegistry, source_index
-from .status import statuses_for_registry
+from .status import WikiStatus, statuses_for_registry
 from .wiki_scope import wiki_scope_signature
 
 
@@ -67,17 +67,22 @@ def source_detail_view(
     ledger: WikiLedger,
     sources: Mapping[str, SourceRecord] | Iterable[SourceRecord],
     source_id: str,
+    statuses: Mapping[str, WikiStatus] | None = None,
 ) -> SourceDetailView:
     source_map = source_index(sources)
     source = source_map.get(source_id)
     if source is None:
         raise KeyError(f"unknown source_id {source_id!r}")
 
-    statuses = statuses_for_registry(registry, ledger, source_map)
+    status_map = statuses if statuses is not None else statuses_for_registry(
+        registry,
+        ledger,
+        source_map,
+    )
     bubbles: list[WikiAssignmentBubble] = []
     assigned_wiki_ids: list[str] = []
     for wiki_id in registry.active_ids():
-        status = statuses[wiki_id]
+        status = status_map[wiki_id]
         assigned = source.source_id in ledger.assigned_sources(wiki_id)
         bubble = WikiAssignmentBubble(
             wiki_id=wiki_id,

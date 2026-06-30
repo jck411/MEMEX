@@ -49,6 +49,7 @@ def wiki_facts_view(
     ledger: WikiLedger,
     sources: Mapping[str, SourceRecord] | Iterable[SourceRecord],
     wiki_id: str,
+    status: WikiStatus | None = None,
 ) -> WikiFactsView:
     wiki = registry.wikis.get(wiki_id)
     if wiki is None:
@@ -64,7 +65,7 @@ def wiki_facts_view(
             groups.append(group)
     return WikiFactsView(
         wiki=wiki,
-        status=status_for_wiki(wiki, ledger, source_map),
+        status=status if status is not None else status_for_wiki(wiki, ledger, source_map),
         groups=tuple(groups),
     )
 

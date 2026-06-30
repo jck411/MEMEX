@@ -16,10 +16,13 @@ from .source_detail_html import render_source_detail_html
 from .wiki_facts_html import render_wiki_facts_html
 from .wiki_page_html import render_wiki_page_html
 from .workspace_queries import (
-    dashboard_view,
-    duplicate_source_hints,
-    wiki_facts_page_view,
-    wiki_page_view,
+    WorkspaceReadSnapshot,
+    dashboard_view_from_snapshot,
+    duplicate_source_hints_from_snapshot,
+    source_detail_view_from_snapshot,
+    wiki_facts_page_view_from_snapshot,
+    wiki_page_view_from_snapshot,
+    workspace_read_snapshot,
 )
 
 
@@ -35,18 +38,25 @@ def handle_dashboard_get(runtime: DashboardRuntime, target: str) -> DashboardRes
     parsed = urlparse(target)
     params = parse_qs(parsed.query)
     if parsed.path in ("", "/", "/dashboard"):
+        snapshot = workspace_read_snapshot(runtime.workspace)
         return _html_response(
             render_dashboard_html(
-                dashboard_view(runtime.workspace),
-                _dashboard_render_options(runtime, params),
+                dashboard_view_from_snapshot(snapshot),
+                _dashboard_render_options(runtime, params, snapshot),
             )
         )
     if parsed.path.startswith("/source/"):
-        return _render_source_detail(runtime, parsed.path, params)
+        return _render_source_detail(
+            runtime,
+            workspace_read_snapshot(runtime.workspace),
+            parsed.path,
+            params,
+        )
     if parsed.path.startswith("/wiki/"):
+        snapshot = workspace_read_snapshot(runtime.workspace)
         if parsed.path.endswith("/facts"):
-            return _render_wiki_facts(runtime, parsed.path, params)
-        return _render_wiki_page(runtime, parsed.path, params)
+            return _render_wiki_facts(runtime, snapshot, parsed.path, params)
+        return _render_wiki_page(runtime, snapshot, parsed.path, params)
     return _text_response(HTTPStatus.NOT_FOUND, "not found")
 
 
@@ -65,6 +75,7 @@ def handle_dashboard_post(
 
 def _render_wiki_page(
     runtime: DashboardRuntime,
+    snapshot: WorkspaceReadSnapshot,
     path: str,
     params: dict[str, list[str]],
 ) -> DashboardResponse:
@@ -72,12 +83,12 @@ def _render_wiki_page(
     if not wiki_id:
         return _text_response(HTTPStatus.NOT_FOUND, "not found")
     try:
-        page = wiki_page_view(runtime.workspace, wiki_id)
+        page = wiki_page_view_from_snapshot(snapshot, wiki_id)
     except KeyError:
         return _text_response(HTTPStatus.NOT_FOUND, "not found")
     return _html_response(
         render_wiki_page_html(
-            snapshot=dashboard_view(runtime.workspace),
+            snapshot=dashboard_view_from_snapshot(snapshot),
             wiki=page.wiki,
             status=page.status,
             markdown=page.markdown,
@@ -90,6 +101,7 @@ def _render_wiki_page(
 
 def _render_wiki_facts(
     runtime: DashboardRuntime,
+    snapshot: WorkspaceReadSnapshot,
     path: str,
     params: dict[str, list[str]],
 ) -> DashboardResponse:
@@ -97,12 +109,12 @@ def _render_wiki_facts(
     if not wiki_id:
         return _text_response(HTTPStatus.NOT_FOUND, "not found")
     try:
-        facts_view = wiki_facts_page_view(runtime.workspace, wiki_id)
+        facts_view = wiki_facts_page_view_from_snapshot(snapshot, wiki_id)
     except KeyError:
         return _text_response(HTTPStatus.NOT_FOUND, "not found")
     return _html_response(
         render_wiki_facts_html(
-            snapshot=dashboard_view(runtime.workspace),
+            snapshot=dashboard_view_from_snapshot(snapshot),
             facts_view=facts_view,
             provider_balances=_safe_provider_balances(runtime.balance_provider),
             message=_first(params, "message"),
@@ -113,6 +125,7 @@ def _render_wiki_facts(
 
 def _render_source_detail(
     runtime: DashboardRuntime,
+    snapshot: WorkspaceReadSnapshot,
     path: str,
     params: dict[str, list[str]],
 ) -> DashboardResponse:
@@ -120,12 +133,12 @@ def _render_source_detail(
     if not source_id:
         return _text_response(HTTPStatus.NOT_FOUND, "not found")
     try:
-        detail = runtime.workspace.source_detail(source_id)
+        detail = source_detail_view_from_snapshot(snapshot, source_id)
     except KeyError:
         return _text_response(HTTPStatus.NOT_FOUND, "not found")
     return _html_response(
         render_source_detail_html(
-            dashboard_view(runtime.workspace),
+            dashboard_view_from_snapshot(snapshot),
             detail,
             _source_render_options(runtime, params),
         )
@@ -135,6 +148,7 @@ def _render_source_detail(
 def _dashboard_render_options(
     runtime: DashboardRuntime,
     params: dict[str, list[str]],
+    snapshot: WorkspaceReadSnapshot,
 ) -> DashboardRenderOptions:
     options = _source_render_options(runtime, params)
     return DashboardRenderOptions(
@@ -146,7 +160,7 @@ def _dashboard_render_options(
         extraction_model_spec=options.extraction_model_spec,
         source_fix_enabled=options.source_fix_enabled,
         source_llm_review_enabled=options.source_llm_review_enabled,
-        duplicate_sources=duplicate_source_hints(runtime.workspace),
+        duplicate_sources=duplicate_source_hints_from_snapshot(snapshot),
     )
 
 

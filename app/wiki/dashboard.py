@@ -86,15 +86,20 @@ def dashboard_snapshot(
     ledger: WikiLedger,
     sources: Mapping[str, SourceRecord] | Iterable[SourceRecord],
     source_created_at_by_id: Mapping[str, str] | None = None,
+    statuses: Mapping[str, WikiStatus] | None = None,
 ) -> WikiDashboardSnapshot:
     source_map = source_index(sources)
-    statuses = statuses_for_registry(registry, ledger, source_map)
+    status_map = statuses if statuses is not None else statuses_for_registry(
+        registry,
+        ledger,
+        source_map,
+    )
     wiki_rows = tuple(
-        _wiki_row(wiki_id, registry, ledger, source_map, statuses[wiki_id])
+        _wiki_row(wiki_id, registry, ledger, source_map, status_map[wiki_id])
         for wiki_id in registry.active_ids()
     )
     source_rows = tuple(
-        _source_row(source, registry, ledger, source_map, statuses)
+        _source_row(source, registry, ledger, source_map, status_map)
         for source in _sources_newest_first(
             source_map.values(),
             source_created_at_by_id or {},
