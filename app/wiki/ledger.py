@@ -55,6 +55,14 @@ class ReviewDecision:
 
 @dataclass
 class WikiLedger:
+    """Central wiki ledger.
+
+    Wiki existence is owned by the registry, not the ledger. ``__post_init__``
+    prunes wikis/sources with no assignments and no decisions, so absence is
+    the only representation of "none" — passing ``{wiki_id: ()}`` will not be
+    preserved.
+    """
+
     assignments: dict[str, tuple[str, ...]] = field(default_factory=dict)
     decisions: dict[str, dict[str, dict[str, ReviewDecision]]] = field(default_factory=dict)
     build_baselines: dict[str, str] = field(default_factory=dict)

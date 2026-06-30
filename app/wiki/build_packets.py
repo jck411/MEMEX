@@ -29,6 +29,7 @@ from .wiki_scope import wiki_description, wiki_intention_text
 MAX_EXISTING_MARKDOWN_CONTEXT = 30_000
 MAX_FACT_TEXT = 1_500
 
+
 @dataclass(frozen=True)
 class WikiBuildFact:
     source_id: str

@@ -172,7 +172,7 @@ def _safe_provider_balances(
         return ()
     try:
         return tuple(balance_provider())
-    except Exception as error:  # pragma: no cover - defensive UI fallback
+    except Exception as error:  # defensive UI fallback
         return (
             ProviderBalance(
                 provider="provider_balances",
