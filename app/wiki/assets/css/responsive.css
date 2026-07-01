@@ -23,7 +23,7 @@
 
   /* -- Header layout -- */
   .topbar, .source-row, .detail-heading, .detail-actions { display: block; }
-  .topbar-side { justify-items: start; margin-top: 10px; }
+  .topbar-side { justify-items: stretch; margin-top: 10px; max-width: 100%; }
 
   /* -- Metrics: compact horizontal scroll -- */
   .metrics {
@@ -32,6 +32,7 @@
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     gap: 6px;
+    min-width: 0;
     padding-bottom: 2px;
     margin-top: 8px;
     scrollbar-width: none;
@@ -46,9 +47,10 @@
 
   /* -- Balances & stats -- */
   .wiki-stats, .bubbles, .balances, .acceptance-list { margin-top: 12px; justify-content: flex-start; }
-  .balances { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; gap: 6px; }
+  .balances { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; gap: 6px; min-width: 0; }
   .balances::-webkit-scrollbar { display: none; }
-  .balance-chip { min-width: 100px; flex-shrink: 0; }
+  .balance-chip { min-width: 88px; flex: 1 1 0; padding: 7px 10px; }
+  .balance-chip span, .balance-chip strong { overflow-wrap: anywhere; }
 
   /* -- Wiki rows -- */
   .wiki-row {

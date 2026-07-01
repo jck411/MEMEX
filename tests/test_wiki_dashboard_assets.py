@@ -57,6 +57,23 @@ class WikiDashboardAssetTests(unittest.TestCase):
         self.assertIn("min-height: 32px;", DASHBOARD_CSS)
         self.assertIn("line-height: 1;", DASHBOARD_CSS)
 
+    def test_mobile_header_card_rows_fit_inside_viewport(self):
+        mobile_css = DASHBOARD_CSS[DASHBOARD_CSS.index("@media (max-width: 760px)") :]
+        self.assertIn(
+            ".topbar-side { justify-items: stretch; margin-top: 10px; max-width: 100%; }",
+            mobile_css,
+        )
+        self.assertIn(".balances {", mobile_css)
+        self.assertIn("min-width: 0;", mobile_css)
+        self.assertIn(
+            ".balance-chip { min-width: 88px; flex: 1 1 0; padding: 7px 10px; }",
+            mobile_css,
+        )
+        self.assertIn(
+            ".balance-chip span, .balance-chip strong { overflow-wrap: anywhere; }",
+            mobile_css,
+        )
+
     def test_editor_action_buttons_have_extra_horizontal_spacing(self):
         self.assertIn("row-gap: 8px;", DASHBOARD_CSS)
         self.assertIn("column-gap: 14px;", DASHBOARD_CSS)
