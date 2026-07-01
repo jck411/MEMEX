@@ -75,6 +75,9 @@ The foundation is in place:
 - Upload, typed text, CLI local-path extraction, and deterministic text import
   preserve originals before extraction and deduplicate byte-identical originals
   by SHA256.
+- `scripts/wiki_recover_databases.py` exports old Proxmox app databases into
+  markdown drafts under `data/source-drafts/recovered-databases/` for normal
+  MEMEX source extraction.
 - Shared extraction supports text/Markdown-like files, PDFs, and images through
   direct Anthropic, OpenAI Responses, and Google Gemini adapters.
 - Manual source repair and source-level LLM source fix edit SourceRecords while
