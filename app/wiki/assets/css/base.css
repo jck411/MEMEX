@@ -136,7 +136,6 @@ summary.button::-webkit-details-marker { display: none; }
   justify-content: center;
   width: 32px;
   height: 32px;
-  margin-right: 4px;
   margin-left: -8px;
   border-radius: var(--radius);
   color: var(--accent);
@@ -154,16 +153,6 @@ summary.button::-webkit-details-marker { display: none; }
   width: 14px;
   height: 14px;
   display: block;
-}
-.back-icon-svg {
-  width: 25px;
-  height: 18px;
-}
-.back-link + .wordmark {
-  display: inline-flex;
-  align-items: center;
-  min-height: 32px;
-  line-height: 1;
 }
 
 .extract-form textarea, .wiki-create-form textarea, .fix-form textarea,
@@ -186,16 +175,19 @@ input:focus, textarea:focus, select:focus {
 }
 
 /* -- Header / topbar -- */
-.topbar { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 24px; }
+.topbar { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 24px; }
 .topbar-side { display: grid; justify-items: end; gap: 10px; }
 .eyebrow { margin: 0 0 2px; color: var(--accent); font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
-.topbar-brand { display: flex; align-items: center; margin-bottom: 2px; }
+.topbar-brand { display: inline-flex; align-items: center; gap: 4px; min-height: 32px; margin-bottom: 2px; }
 .wordmark {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
   color: var(--accent);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.08em;
+  line-height: 1;
   text-transform: uppercase;
   text-decoration: none;
   transition: color var(--transition), filter var(--transition);

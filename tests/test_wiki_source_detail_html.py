@@ -85,6 +85,7 @@ class WikiSourceDetailHtmlTests(unittest.TestCase):
         back_link = detail_page.require("a", {"href": "/", "aria-label": "Back"})
         back_icon = back_link.require("svg", {"class": "button-icon-svg back-icon-svg"})
         back_path = back_icon.require("path")
+        self.assertEqual("0 0 16 16", back_icon.attrs["viewbox"])
         self.assertEqual("M5 8l6-5v10z", back_path.attrs["d"])
         self.assertEqual("currentColor", back_path.attrs["fill"])
         self.assertNotIn("stroke", back_path.attrs)

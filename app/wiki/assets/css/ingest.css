@@ -3,6 +3,7 @@
 .ingest-heading h2 { margin-bottom: 0; }
 .ingest-forms { display: grid; gap: 12px; max-width: 760px; }
 .extract-form { display: grid; gap: 8px; }
+.extract-form .button { justify-self: start; }
 .upload-form { grid-template-columns: 1fr auto; align-items: center; }
 .extract-form textarea { min-height: 52px; resize: vertical; }
 .model-select { min-height: 36px; display: inline-flex; align-items: center; gap: 8px; }
