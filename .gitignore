@@ -34,4 +34,4 @@ data/sources/
 data/source-assets/
 vault/**
 !vault/
-!vault/README.md
+!vault/.gitkeep
