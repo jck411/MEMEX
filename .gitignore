@@ -29,6 +29,7 @@ data/cache/
 # MEMEX local user state and generated wiki output
 data/wiki-ledger.json
 data/wiki-registry.json
+data/source-drafts/
 data/sources/
 data/source-assets/
 vault/**
