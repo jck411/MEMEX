@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Developer CLI for the MEMEX V2 wiki slice."""
+"""Developer CLI for MEMEX wiki workflows."""
 
 from __future__ import annotations
 
@@ -79,7 +79,7 @@ def _bubble_text(bubble) -> str:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="MEMEX V2 wiki developer workflow")
+    parser = argparse.ArgumentParser(description="MEMEX wiki developer workflow")
     parser.add_argument("--repo-root", default=ROOT, help="repository root")
     subparsers = parser.add_subparsers(dest="command", required=True)
 

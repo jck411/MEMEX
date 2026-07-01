@@ -1,19 +1,8 @@
-# AGENTS.md - MEMEX V2 Project Guide
+# AGENTS.md - MEMEX Project Guide
 
-MEMEX is being rebuilt as a fresh single-git project. This file is the stable
-operating contract for agents working in this repo. Use
-`docs/wiki-v2-plan.md` as the living roadmap and update it when product or
-architecture direction changes.
-
-The old project was moved intact to:
-
-```text
-/home/jack/MEMEX-legacy-2026-06-22/
-```
-
-Treat that folder as borrow-only reference material. Do not patch or revive
-legacy V1 code unless the user explicitly asks for work inside the legacy
-folder.
+MEMEX is an active single-git project. This file is the stable operating
+contract for agents working in this repo. Use `docs/wiki-plan.md` as the living
+roadmap and update it when product or architecture direction changes.
 
 ## Product Goal
 
@@ -34,7 +23,7 @@ source-grounded.
 ## Development Bias
 
 This project is in active development. Clean iteration matters more than
-preserving legacy behavior.
+preserving retired behavior.
 
 For implementation work, inspect the relevant subsystem first and decide whether
 the right move is delete, simplify, replace, refactor, or patch. Prefer the
@@ -43,7 +32,7 @@ option that leaves the codebase smaller, clearer, and easier to maintain.
 Backward compatibility is not required unless explicitly requested. Avoid
 compatibility branches, stale fallbacks, and preserving old paths just in case.
 
-## V2 Architecture Rules
+## Architecture Rules
 
 Use:
 
@@ -71,7 +60,7 @@ Avoid:
 - manual edits to vault wiki markdown
 - whole-page rewrites that discard existing managed markdown outside the
   intended generated sections
-- compatibility branches for V1 behavior
+- compatibility branches for retired workflows
 
 Wiki description changes are scope changes. They make old fact decisions stale
 by derivation and should block builds until review is current for the new scope.
@@ -82,9 +71,10 @@ by derivation and should block builds until review is current for the new scope.
 /home/jack/MEMEX/
   AGENTS.md
   docs/
-    wiki-v2-plan.md
+    wiki-plan.md
   app/
   data/
+    source-drafts/
     source-assets/
     sources/
     wiki-ledger.json
@@ -99,7 +89,8 @@ Responsibilities:
 - `app/` contains implementation logic, UI/API code, orchestration, adapters,
   and domain modules.
 - `data/` contains local state, ledgers, source records, preserved source
-  originals/manifests, and runtime artifacts that are not markdown wiki pages.
+  originals/manifests, source drafts, and runtime artifacts that are not
+  markdown wiki pages.
 - `vault/` contains markdown wiki output.
 - `tests/` contains automated validation.
 - `scripts/` contains developer utilities and one-off maintenance helpers.
@@ -116,13 +107,18 @@ starts mixing those concerns, split it before adding more behavior.
   validation. Do not start dashboard servers on alternate ports; if the port or
   process state is stale, rerun the start script so it kills existing MEMEX
   dashboard processes and restarts the canonical port.
-- Validate persisted V2 state with `uv run python scripts/wiki_validate.py`.
+- Validate persisted state with `uv run python scripts/wiki_validate.py`.
 - Run tests with `uv run pytest` or targeted `uv run pytest tests/<file>.py`.
 - Create a wiki from the dashboard with name and description scope; the
   dashboard derives the stable wiki id and Obsidian markdown file path from the
   name.
 - Use `uv run python scripts/wiki_dev.py add-wiki <wiki_id> <title> <path>` for
   scripted wiki creation.
+
+The current development phase is source recovery and wiki construction. Put
+recovered old source material in `/home/jack/MEMEX/data/source-drafts/`, then
+extract it into SourceRecords, assign it to wikis, review facts, and build
+markdown pages.
 
 The dashboard currently supports source ingest, assignment, review, repair,
 re-extraction, wiki descriptions, builds, source deletion, wiki deletion, and
@@ -142,11 +138,11 @@ and command execution whenever possible.
   the task.
 
 When touching external libraries, frameworks, APIs, MCP servers, package
-configuration, or tooling, retrieve current version-specific docs first and use
+configuration, or tooling, retrieve current package-specific docs first and use
 documented modern APIs.
 
 ## Current Plan
 
-Use `/home/jack/MEMEX/docs/wiki-v2-plan.md` for current priorities. The plan is
+Use `/home/jack/MEMEX/docs/wiki-plan.md` for current priorities. The plan is
 future-focused; keep completed implementation detail out of it unless it changes
 an architectural rule or operating baseline.

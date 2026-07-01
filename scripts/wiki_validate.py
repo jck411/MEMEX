@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate MEMEX V2 source persistence."""
+"""Validate MEMEX source persistence."""
 
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ from app.wiki.source_validation import (  # noqa: E402
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Validate V2 source records, source assets, ledger references, and builds"
+        description="Validate source records, source assets, ledger references, and builds"
     )
     parser.add_argument("--repo-root", default=ROOT, help="repository root")
     parser.add_argument("--data-dir", default="data", help="data directory under repo root")

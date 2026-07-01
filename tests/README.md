@@ -1,6 +1,6 @@
 # tests
 
-Automated validation for MEMEX V2.
+Automated validation for MEMEX.
 
 Early tests should focus on ledger fingerprints, derived wiki status, review
 deltas, and build deltas.

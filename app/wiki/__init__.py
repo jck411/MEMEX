@@ -1,3 +1,3 @@
-"""Wiki V2 package."""
+"""Wiki package."""
 
 __all__: list[str] = []

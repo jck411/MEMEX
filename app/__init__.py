@@ -1,1 +1,1 @@
-"""MEMEX V2 application package."""
+"""MEMEX application package."""

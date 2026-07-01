@@ -1,6 +1,6 @@
-# MEMEX Wiki V2 Plan
+# MEMEX Wiki Plan
 
-Last updated: 2026-06-30
+Last updated: 2026-07-01
 
 ## Direction
 
@@ -18,24 +18,35 @@ The wiki is the product. Sources, ledgers, manifests, provider calls, and the
 dashboard exist to keep the markdown wikis accurate, inspectable, and
 source-grounded.
 
-## Current Status
+## Current Phase
 
-MEMEX V2 is at a usable checkpoint. The default posture is now to use the app
-on real source material instead of continuing speculative feature development.
+MEMEX is now in source recovery and wiki construction mode.
 
-Near-term work should come from repeated friction found during normal use. The
-main expected next step is source acquisition: importing or uploading source
-material from the pre-V1 Knowledge database at `/home/jack/REPOS/Knowledge` so
-new wikis can be started here. No import workflow has been designed or
-implemented yet.
+The app is usable for normal wiki work. Development should come from friction
+found while recovering old source material, turning that material into
+SourceRecords, assigning sources to wikis, reviewing facts, and building useful
+markdown pages.
 
-Before adding that workflow, inspect the Knowledge database shape and choose the
-lowest-complexity path that preserves MEMEX V2 boundaries:
+Current working loop:
 
-- preserved originals go through `data/source-assets/`
-- extracted facts go into SourceRecords under `data/sources/`
-- wiki assignment and review state stay in the central ledger
-- Knowledge remains a source archive, not a revived legacy runtime
+1. Put recovered source drafts in `/home/jack/MEMEX/data/source-drafts/`.
+2. Extract each useful draft or uploaded file into a SourceRecord under
+   `data/sources/`.
+3. Preserve the original material through `data/source-assets/`.
+4. Assign sources to wikis manually from the dashboard.
+5. Review source facts for each assigned wiki.
+6. Build the wiki markdown in `vault/`.
+
+The immediate wiki-building focus is:
+
+- populate Jack's Biography from recovered source drafts
+- populate Jack's Identity from stable identifying source material
+- continue refining Jack's Worldview and Self Motivation & Operating Principles
+  as better sources are recovered
+
+Do not add broad infrastructure before normal use proves it is needed. The next
+useful work should usually be another recovered source, another review pass, or
+another wiki build.
 
 ## Architecture Rules
 
@@ -49,15 +60,14 @@ lowest-complexity path that preserves MEMEX V2 boundaries:
 - Build baselines update only after successful markdown writes.
 - Vault wiki markdown is managed output. Humans do not hand-edit wiki files;
   wiki changes are written by code or LLM build workflows.
-- Legacy code in `/home/jack/MEMEX-legacy-2026-06-22/` is borrow-only reference.
 
 ## Implemented Baseline
 
-The V2 foundation is in place:
+The foundation is in place:
 
 - Persistence is split across registry, ledger, SourceRecords, source asset
   manifests/originals, and markdown vault output.
-- `python scripts/wiki_server.py` runs the local dashboard.
+- `uv run python scripts/wiki_server.py` runs the local dashboard.
 - The dashboard supports ingest, source detail, assignment bubbles, manual
   review, LLM review, manual source repair, source-level LLM source fix, source
   re-extraction, wiki descriptions, wiki creation/deletion, provider balances,
@@ -82,8 +92,8 @@ The V2 foundation is in place:
 - Dashboard wiki pages link to a wiki facts inspection page that shows current
   accepted facts and not-used facts grouped by source, with links back to source
   detail pages.
-- `python scripts/wiki_validate.py` validates source records, source assets,
-  originals, evidence references, and ledger references.
+- `uv run python scripts/wiki_validate.py` validates source records, source
+  assets, originals, evidence references, and ledger references.
 
 ## Current Semantics
 
@@ -111,8 +121,8 @@ markdown.
 Wiki description changes are scope changes:
 
 - `WikiRecord.description` is stored in the central registry.
-- Decisions from the old scope become stale by derivation.
-- Accepted facts from the old scope are excluded from the current build
+- Decisions from the prior scope become stale by derivation.
+- Accepted facts from the prior scope are excluded from the current build
   fingerprint.
 - Wikis with stale review are not buildable until review is current.
 - Build prompts include the current wiki description when configured; generated
@@ -120,10 +130,29 @@ Wiki description changes are scope changes:
 
 ## Use-Driven Development Priorities
 
-These are not required before using MEMEX. Treat them as candidates to revisit
-only after real use shows the need.
+These are candidates to revisit only after real use shows the need.
 
-### 1. Wiki Build Refinement
+### 1. Source Recovery Workflow
+
+Goal: make it easy to turn old source material into durable MEMEX inputs.
+
+Needed:
+
+- Keep hand-recovered drafts in `data/source-drafts/` until they are ready for
+  extraction.
+- Add only the smallest import helper needed if repeated source recovery becomes
+  tedious.
+- Preserve originals under `data/source-assets/` before extraction.
+- Keep recovered source text, extracted facts, and wiki review/build state in
+  their separate stores.
+
+Design preference:
+
+- Prefer plain markdown drafts and the existing dashboard/CLI ingest path before
+  adding a bulk import system.
+- Treat source recovery as input preparation, not as a separate runtime.
+
+### 2. Wiki Build Refinement
 
 Goal: make builds trustworthy enough that the markdown vault becomes the main
 working surface.
@@ -146,7 +175,7 @@ Design preference:
 - Prefer a small generated-section contract over whole-page rewrites.
 - Treat the existing markdown file as input, not disposable output.
 
-### 2. Provenance And Evidence UX
+### 3. Provenance And Evidence UX
 
 Goal: make it easy to inspect why a wiki claim exists and which source fact
 supports it.
@@ -165,7 +194,7 @@ Design preference:
   consumption.
 - Provenance should be auditable without making every paragraph noisy.
 
-### 3. Review Queue And Bulk Work
+### 4. Review Queue And Bulk Work
 
 Goal: make normal operation obvious when many sources and wikis exist.
 
@@ -184,7 +213,7 @@ Design preference:
   baselines at read time.
 - Avoid storing lifecycle flags just to make the UI easier.
 
-### 4. Wiki Administration
+### 5. Wiki Administration
 
 Goal: support active development of wiki boundaries without entangling it with
 source ingest.
@@ -202,7 +231,7 @@ Design preference:
 - Wiki identity should remain stable and explicit.
 - Migration scripts should be boring, validated, and reversible from git.
 
-### 5. Public Release And Path Portability
+### 6. Public Release And Path Portability
 
 Goal: make MEMEX safe to publish and easy to relocate before inviting other
 people to run it or deploying it outside a local checkout.
@@ -254,7 +283,7 @@ Design preference:
 - Auto-populate or word matching.
 - Source manifests as wiki metadata.
 - Stored `needs_review`, `needs_build`, or `current` flags.
-- V1 compatibility branches.
+- Compatibility branches for retired workflows.
 - Row-level LLM repair buttons.
 - Dashboard UI for every development-only operation before the workflow is
   stable.
@@ -267,6 +296,7 @@ For implementation work:
 2. Delete, simplify, replace, or refactor before patching old code.
 3. Keep source extraction, wiki state, markdown output, UI, validation, and LLM
    orchestration as separate responsibilities.
-4. Run `python scripts/wiki_validate.py` when state shape or persistence changes.
+4. Run `uv run python scripts/wiki_validate.py` when state shape or persistence
+   changes.
 5. Run targeted `uv run pytest ...` tests for touched code paths.
 6. Update this plan only when the direction or future work changes.

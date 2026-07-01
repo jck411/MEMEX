@@ -1,4 +1,4 @@
-"""OpenAI source extraction adapter for MEMEX V2."""
+"""OpenAI source extraction adapter for MEMEX."""
 
 from __future__ import annotations
 

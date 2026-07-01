@@ -1,11 +1,11 @@
 # scripts
 
-Developer utilities and maintenance helpers for MEMEX V2.
+Developer utilities and maintenance helpers for MEMEX.
 
 Use scripts for rare operations such as wiki rename, merge, split, or cleanup
 when those actions do not belong in the regular UI.
 
-Current V2 developer workflow:
+Current developer workflow:
 
 ```bash
 python scripts/wiki_dev.py --help

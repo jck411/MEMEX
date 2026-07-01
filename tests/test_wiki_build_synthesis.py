@@ -85,7 +85,7 @@ class WikiBuildSynthesisTests(unittest.TestCase):
             f"- [Facts used to build this page](career/facts)\n{OBSOLETE_REFERENCES_END}\n\n"
             "## LLM Context\n\n"
             "### Default Conversation Context\n\n"
-            "legacy prompt text\n"
+            "retired prompt text\n"
         )
 
         packet = reviewed_packet(existing)

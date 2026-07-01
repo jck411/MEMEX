@@ -1,4 +1,4 @@
-"""Validation and V2 normalization for MEMEX extraction packets."""
+"""Validation and normalization for MEMEX extraction packets."""
 
 from __future__ import annotations
 

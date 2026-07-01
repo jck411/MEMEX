@@ -1,17 +1,19 @@
 # data
 
-Local state for MEMEX V2.
+Local state for MEMEX.
 
 This directory is intentionally local-user state. Source records, preserved
 source originals, ledgers, and registries may contain private information and
 are ignored by Git by default. A fresh clone starts empty so each user can build
 their own wikis.
 
-Expected contents include source records, extracted facts, the wiki registry,
-and the central wiki ledger.
+Expected contents include source drafts, preserved source originals, source
+records, extracted facts, the wiki registry, and the central wiki ledger.
 
-Current V2 JSON layout:
+Current layout:
 
+- `data/source-drafts/` stores recovered source text before extraction.
+- `data/source-assets/` stores preserved originals and source asset manifests.
 - `data/wiki-ledger.json` stores assignments, review decisions, and baselines.
 - `data/wiki-registry.json` stores stable wiki ids, titles, optional wiki
   descriptions/intentions, and vault paths.

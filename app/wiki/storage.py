@@ -1,4 +1,4 @@
-"""JSON persistence for V2 wiki data."""
+"""JSON persistence for MEMEX wiki data."""
 
 from __future__ import annotations
 

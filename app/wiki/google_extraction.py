@@ -1,4 +1,4 @@
-"""Google Gemini source extraction adapter for MEMEX V2."""
+"""Google Gemini source extraction adapter for MEMEX."""
 
 from __future__ import annotations
 

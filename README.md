@@ -1,17 +1,18 @@
 # MEMEX
 
-MEMEX V2 is a fresh single-git rebuild of the personal Wiki LLM.
+MEMEX is a personal Wiki LLM. It turns source material into persistent markdown
+wikis.
 
-Current status: usable V2 checkpoint. The app is ready to use on real source
-material, with future development driven by repeated friction rather than
-speculative feature work.
+Current status: usable local app. The main development phase is source recovery
+and wiki construction: put recovered old source material in
+`/home/jack/MEMEX/data/source-drafts/`, extract useful drafts into source
+records, assign sources to wikis, review facts, and build markdown pages.
 
-The old project is preserved at `/home/jack/MEMEX-legacy-2026-06-22/` for
-reference only.
+Run the dashboard with:
 
-The next expected source-acquisition step is to import or upload material from
-the pre-V1 Knowledge database at `/home/jack/REPOS/Knowledge`. That workflow is
-not implemented yet; it is tracked in the V2 plan.
+```bash
+uv run python scripts/wiki_server.py
+```
 
 The repository does not track generated wikis, source records, preserved source
 originals, or local ledgers. Those files live under `vault/` and `data/` as
@@ -19,5 +20,5 @@ private local state so each user can build their own MEMEX.
 
 Start with:
 
-- [docs/wiki-v2-plan.md](docs/wiki-v2-plan.md)
+- [docs/wiki-plan.md](docs/wiki-plan.md)
 - [AGENTS.md](AGENTS.md)

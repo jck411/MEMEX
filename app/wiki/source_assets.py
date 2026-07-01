@@ -1,4 +1,4 @@
-"""Original source artifact storage for MEMEX V2."""
+"""Original source artifact storage for MEMEX."""
 
 from __future__ import annotations
 

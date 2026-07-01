@@ -1,4 +1,4 @@
-"""Anthropic source extraction adapter for MEMEX V2."""
+"""Anthropic source extraction adapter for MEMEX."""
 
 from __future__ import annotations
 

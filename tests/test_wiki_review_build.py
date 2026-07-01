@@ -175,7 +175,7 @@ class WikiReviewBuildTests(unittest.TestCase):
             f"- [Facts used to build this page](old/facts)\n{OBSOLETE_REFERENCES_END}\n\n"
             "## LLM Context\n\n"
             "### Default Conversation Context\n\n"
-            "legacy context\n\n"
+            "retired context\n\n"
             "Human-written footer.\n"
         )
         updated = build_wiki_markdown(wiki, synthesis, existing)

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run direct-provider LLM extraction into MEMEX V2 source records."""
+"""Run direct-provider LLM extraction into MEMEX source records."""
 
 from __future__ import annotations
 
