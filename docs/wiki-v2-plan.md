@@ -202,6 +202,37 @@ Design preference:
 - Wiki identity should remain stable and explicit.
 - Migration scripts should be boring, validated, and reversible from git.
 
+### 5. Public Release And Path Portability
+
+Goal: make MEMEX safe to publish and easy to relocate before inviting other
+people to run it or deploying it outside a local checkout.
+
+This is not required before current local use, and hosting is not an immediate
+milestone. Revisit it before making the repository public for broad use or
+before moving MEMEX state into a hosted environment.
+
+Needed:
+
+- Remove personal absolute paths from public docs, examples, and tests.
+- Keep generated vault pages, source records, source originals, ledgers, and
+  registries ignored by Git by default.
+- Add an explicit configuration story for data and vault roots so users can
+  choose storage locations outside the repository when desired.
+- Keep registry wiki paths relative to the configured vault root.
+- Avoid persisting absolute local source paths in SourceRecords or manifests;
+  store display-safe names, asset-relative references, or import metadata that
+  does not reveal a user's filesystem layout.
+- Add validation or release checks that flag tracked runtime state and hardcoded
+  personal filesystem paths.
+
+Design preference:
+
+- Local development should keep working with repo-relative `data/` and `vault/`
+  defaults.
+- Hosted or multi-user deployments should provide storage roots through
+  explicit configuration, not through assumptions about the checkout path.
+- Runtime state should be portable between machines without editing JSON paths.
+
 ## Backlog
 
 - Audit OpenRouter prompt/schema workflows so prompt payloads contain task data
@@ -213,6 +244,8 @@ Design preference:
 - Failed-provider debug artifacts for extraction and review.
 - Repair scripts for common validation failures.
 - Import/export utilities for moving a wiki project between machines.
+- Public-release hygiene pass for docs, tests, ignored runtime state, and
+  path-portability validation.
 
 ## Keep Out
 
