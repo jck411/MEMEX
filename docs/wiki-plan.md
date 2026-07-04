@@ -1,6 +1,6 @@
 # MEMEX Wiki Plan
 
-Last updated: 2026-07-01
+Last updated: 2026-07-04
 
 ## Direction
 
@@ -20,16 +20,15 @@ source-grounded.
 
 ## Current Phase
 
-MEMEX is now in source recovery and wiki construction mode.
+MEMEX is now in source-draft import and wiki construction mode.
 
 The app is usable for normal wiki work. Development should come from friction
-found while recovering old source material, turning that material into
-SourceRecords, assigning sources to wikis, reviewing facts, and building useful
-markdown pages.
+found while turning the prepared source drafts into SourceRecords, assigning
+sources to wikis, reviewing facts, and building useful markdown pages.
 
 Current working loop:
 
-1. Put recovered source drafts in `/home/jack/MEMEX/data/source-drafts/`.
+1. Use the prepared source drafts in `/home/jack/MEMEX/data/source-drafts/`.
 2. Extract each useful draft or uploaded file into a SourceRecord under
    `data/sources/`.
 3. Preserve the original material through `data/source-assets/`.
@@ -39,14 +38,14 @@ Current working loop:
 
 The immediate wiki-building focus is:
 
-- populate Jack's Biography from recovered source drafts
+- populate Jack's Biography from prepared source drafts
 - populate Jack's Identity from stable identifying source material
 - continue refining Jack's Worldview and Self Motivation & Operating Principles
-  as better sources are recovered
+  from the prepared drafts
 
 Do not add broad infrastructure before normal use proves it is needed. The next
-useful work should usually be another recovered source, another review pass, or
-another wiki build.
+useful work should usually be source extraction, source review, or another wiki
+build.
 
 ## Architecture Rules
 
@@ -75,9 +74,6 @@ The foundation is in place:
 - Upload, typed text, CLI local-path extraction, and deterministic text import
   preserve originals before extraction and deduplicate byte-identical originals
   by SHA256.
-- `scripts/wiki_recover_databases.py` exports old Proxmox app databases into
-  markdown drafts under `data/source-drafts/recovered-databases/` for normal
-  MEMEX source extraction.
 - Shared extraction supports text/Markdown-like files, PDFs, and images through
   direct Anthropic, OpenAI Responses, and Google Gemini adapters.
 - Manual source repair and source-level LLM source fix edit SourceRecords while
@@ -135,25 +131,25 @@ Wiki description changes are scope changes:
 
 These are candidates to revisit only after real use shows the need.
 
-### 1. Source Recovery Workflow
+### 1. Source Draft Import Workflow
 
-Goal: make it easy to turn old source material into durable MEMEX inputs.
+Goal: make it easy to turn prepared source drafts into durable MEMEX inputs.
 
 Needed:
 
-- Keep hand-recovered drafts in `data/source-drafts/` until they are ready for
+- Keep prepared drafts in `data/source-drafts/` until they are ready for
   extraction.
-- Add only the smallest import helper needed if repeated source recovery becomes
+- Add only the smallest import helper needed if repeated draft import becomes
   tedious.
 - Preserve originals under `data/source-assets/` before extraction.
-- Keep recovered source text, extracted facts, and wiki review/build state in
+- Keep source draft text, extracted facts, and wiki review/build state in
   their separate stores.
 
 Design preference:
 
 - Prefer plain markdown drafts and the existing dashboard/CLI ingest path before
   adding a bulk import system.
-- Treat source recovery as input preparation, not as a separate runtime.
+- Treat draft preparation as input preparation, not as a separate runtime.
 
 ### 2. Wiki Build Refinement
 

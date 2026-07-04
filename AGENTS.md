@@ -115,9 +115,9 @@ starts mixing those concerns, split it before adding more behavior.
 - Use `uv run python scripts/wiki_dev.py add-wiki <wiki_id> <title> <path>` for
   scripted wiki creation.
 
-The current development phase is source recovery and wiki construction. Put
-recovered old source material in `/home/jack/MEMEX/data/source-drafts/`, then
-extract it into SourceRecords, assign it to wikis, review facts, and build
+The current development phase is source-draft import and wiki construction. Use
+the prepared source drafts in `/home/jack/MEMEX/data/source-drafts/`, then
+extract them into SourceRecords, assign them to wikis, review facts, and build
 markdown pages.
 
 The dashboard currently supports source ingest, assignment, review, repair,
