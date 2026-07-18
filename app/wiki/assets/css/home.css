@@ -2,7 +2,7 @@
 .filters { display: grid; gap: 8px; }
 .filter-band h2 { font-size: 15px; margin-bottom: 12px; }
 .filters input[type="search"] { width: min(100%, 520px); justify-self: start; }
-.filter-controls { display: flex; flex-wrap: nowrap; gap: 8px 10px; align-items: center; overflow-x: auto; padding-bottom: 2px; }
+.filter-controls { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center; }
 .filters label { min-height: 36px; display: inline-flex; align-items: center; gap: 6px; color: var(--ink); font-size: 13px; font-weight: 600; white-space: nowrap; }
 .clear { display: inline-flex; align-items: center; }
 
@@ -32,7 +32,7 @@
 .field-help code { color: var(--ink); font-size: 11px; }
 .wiki-create-actions { display: flex; justify-content: flex-end; }
 .wiki-create-actions .button { min-width: 132px; }
-.wiki-description-edit { grid-area: description; margin-top: 0; }
+.wiki-description-edit { grid-column: 1 / -1; margin-top: 0; }
 .wiki-description-edit > summary { width: fit-content; color: var(--accent); cursor: pointer; font-size: 12px; font-weight: 700; }
 .wiki-description-form { width: 100%; margin-top: 8px; }
 .wiki-description-field { position: relative; display: grid; gap: 8px; }
@@ -54,8 +54,8 @@
 /* -- Row cards (wiki + source) -- */
 .wiki-row, .source-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+  align-items: start;
   gap: 16px;
   padding: 14px 16px;
   border: 1px solid transparent;
@@ -80,15 +80,9 @@
 /* -- Source row state indicators -- */
 .source-row:has(.bubble.state-needs_review) { border-left: 3px solid var(--warn); }
 .source-row:has(.bubble.state-needs_build) { border-left: 3px solid var(--build); }
-.wiki-row {
-  align-items: start;
-  grid-template-areas:
-    "main controls"
-    "description description";
-}
-.wiki-main { grid-area: main; min-width: 0; }
+.wiki-main { min-width: 0; }
 .wiki-controls {
-  grid-area: controls;
+  min-width: 0;
   display: grid;
   justify-items: end;
   gap: 8px;
@@ -113,7 +107,7 @@
 .wiki-actions:empty { display: none; }
 
 /* -- Source/wiki links -- */
-.source-link { display: block; min-width: 0; color: inherit; text-decoration: none; }
+.source-link { display: block; min-width: 0; color: inherit; overflow-wrap: anywhere; text-decoration: none; }
 .source-link:hover .row-title, .wiki-link:hover { text-decoration: underline; }
 .wiki-link { display: inline-block; max-width: 100%; color: var(--accent); font-size: 12px; font-weight: 700; overflow-wrap: anywhere; text-decoration: none; }
 .wiki-row-links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; font-size: 12px; font-weight: 700; }
@@ -134,14 +128,21 @@
 .state-needs_review { border-color: #a08040; color: var(--warn); background: var(--warn-dim); }
 .state-needs_build { border-color: #7a60b0; color: var(--build); background: var(--build-dim); }
 
-/* -- Bubbles -- */
+/* -- Source assignment actions -- */
 .bubbles { gap: 10px; }
+.source-actions {
+  min-width: 0;
+  align-content: flex-start;
+  justify-content: flex-start;
+}
+.source-actions form { min-width: 0; max-width: 100%; }
 .bubble {
-  min-height: 34px; padding: 4px 12px;
+  min-height: 34px; max-width: 100%; padding: 4px 12px;
   display: inline-flex; align-items: center; gap: 6px;
   cursor: pointer; font: inherit; font-size: 13px;
   transition: border-color var(--transition), background var(--transition);
 }
+.bubble-label { min-width: 0; overflow-wrap: anywhere; }
 .bubble.assigned { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
 .bubble:hover { border-color: var(--accent); background: var(--accent-dim); }
 .bubble.assigned:hover { background: rgba(56, 191, 167, 0.24); }

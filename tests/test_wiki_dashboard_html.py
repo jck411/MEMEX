@@ -125,6 +125,7 @@ class WikiDashboardHtmlTests(unittest.TestCase):
             "button",
             {"type": "submit", "class": "button button-danger delete-button"},
         )
+        source_row.require("div", {"class": "bubbles source-actions"})
         self.assertEqual("Delete source", source_delete_button.normalized_text())
         self.assertEqual(0, source_delete_form.count("button", {"aria-label": "Delete source"}))
         self.assertIn("memex:page-position", html)

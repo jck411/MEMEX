@@ -1,7 +1,7 @@
 /* -- Detail heading -- */
-.detail-heading { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 18px; align-items: start; }
+.detail-heading { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: 18px; align-items: start; }
 .detail-title { max-width: 72ch; margin: 2px 0 4px; font-size: 20px; font-weight: 800; }
-.detail-actions { display: grid; justify-items: end; gap: 14px; }
+.detail-actions { min-width: 0; display: grid; justify-items: start; gap: 14px; }
 
 /* -- Fact / metadata rows -- */
 .fact-row, .metadata-row { display: grid; gap: 10px; padding: 14px 0; border-top: 1px solid var(--line); }

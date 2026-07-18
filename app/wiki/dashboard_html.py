@@ -123,7 +123,7 @@ def _render_source(row, query: str) -> str:
     <div class="muted">{escape(row.source_id)} · {escape(meta)}</div>
     {summary}
   </a>
-  <div class="bubbles">{actions}</div>
+  <div class="bubbles source-actions">{actions}</div>
 </article>
 """
 

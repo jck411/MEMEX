@@ -22,7 +22,7 @@
   }
 
   /* -- Header layout -- */
-  .topbar, .source-row, .detail-heading, .detail-actions { display: block; }
+  .topbar { display: block; }
   .topbar-side { justify-items: stretch; margin-top: 10px; max-width: 100%; }
 
   /* -- Metrics: compact horizontal scroll -- */
@@ -54,11 +54,6 @@
 
   /* -- Wiki rows -- */
   .wiki-row {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-areas:
-      "main"
-      "controls"
-      "description";
     gap: 10px;
     padding: 12px;
   }
@@ -81,16 +76,14 @@
   }
 
   /* -- Source rows -- */
-  .source-row { padding: 12px; }
-  .bubbles {
-    margin-top: 10px;
+  .source-row { gap: 10px; padding: 12px; }
+  .source-actions {
     padding-top: 10px;
     border-top: 1px solid var(--line);
     gap: 8px;
   }
 
   /* -- Filters -- */
-  .filter-controls { flex-wrap: wrap; gap: 6px 10px; }
   .filters input[type="search"] { width: 100%; }
 
   /* -- Ingest -- */

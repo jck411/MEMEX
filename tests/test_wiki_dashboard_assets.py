@@ -74,6 +74,27 @@ class WikiDashboardAssetTests(unittest.TestCase):
             mobile_css,
         )
 
+    def test_rows_use_fluid_tracks_instead_of_intrinsic_action_columns(self):
+        row_block = DASHBOARD_CSS[
+            DASHBOARD_CSS.index(".wiki-row, .source-row {") : DASHBOARD_CSS.index(
+                ".wiki-row:hover"
+            )
+        ]
+        self.assertIn(
+            "grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));",
+            row_block,
+        )
+        self.assertNotIn("grid-template-columns: minmax(0, 1fr) auto;", row_block)
+        self.assertIn(".source-actions {", DASHBOARD_CSS)
+        self.assertIn(".source-actions form { min-width: 0; max-width: 100%; }", DASHBOARD_CSS)
+        self.assertIn(".bubble-label { min-width: 0; overflow-wrap: anywhere; }", DASHBOARD_CSS)
+
+    def test_filters_wrap_without_horizontal_scrolling(self):
+        start = DASHBOARD_CSS.index(".filter-controls {")
+        filter_block = DASHBOARD_CSS[start : DASHBOARD_CSS.index(".filters label", start)]
+        self.assertIn("flex-wrap: wrap;", filter_block)
+        self.assertNotIn("overflow-x", filter_block)
+
     def test_editor_action_buttons_have_extra_horizontal_spacing(self):
         self.assertIn("row-gap: 8px;", DASHBOARD_CSS)
         self.assertIn("column-gap: 14px;", DASHBOARD_CSS)
