@@ -1,176 +1,82 @@
-# AGENTS.md - MEMEX Project Guide
+# MEMEX Agent Guide
 
-MEMEX is an active single-git project. This file is the stable operating
-contract for agents working in this repo. Use `docs/wiki-plan.md` as the living
-roadmap and update it when product or architecture direction changes.
-
-## Product Goal
-
-MEMEX is a Wiki LLM. It turns source material into persistent markdown wikis
-instead of doing classic RAG at question time.
-
-The core loop is:
+MEMEX turns source material into persistent, source-grounded markdown wikis:
 
 ```text
 source -> extracted facts -> source-to-wiki assignment -> per-wiki fact review
 -> accepted fact delta -> markdown wiki build
 ```
 
-The wiki is the product. Sources, ledgers, manifests, provider calls, and the
-dashboard exist to keep the markdown wikis accurate, inspectable, and
-source-grounded.
+The wiki is the product. Sources, ledgers, provider calls, and the dashboard
+exist to keep it accurate and inspectable. Use `docs/wiki-plan.md` for current
+priorities and update it when product or architecture direction changes.
 
-## Development Bias
+## Development
 
-This project is in active development. Clean iteration matters more than
-preserving retired behavior.
+This project favors clean iteration over legacy compatibility. Before editing,
+inspect the relevant subsystem and choose deletion, simplification, replacement,
+refactoring, or patching based on which leaves the codebase clearest. Remove
+obsolete paths rather than preserving them just in case.
 
-For implementation work, inspect the relevant subsystem first and decide whether
-the right move is delete, simplify, replace, refactor, or patch. Prefer the
-option that leaves the codebase smaller, clearer, and easier to maintain.
+Keep source extraction, source assets, wiki state, markdown output, UI,
+validation, and LLM orchestration as separate responsibilities.
 
-Backward compatibility is not required unless explicitly requested. Avoid
-compatibility branches, stale fallbacks, and preserving old paths just in case.
-
-## Architecture Rules
+## Architecture
 
 Use:
 
-- manual source-to-wiki assignment bubbles
+- manual source-to-wiki assignment
 - one central ledger for assignments, fact decisions, and build baselines
 - preserved source originals in `data/source-assets/`
-- SourceRecords in `data/sources/` that contain extracted facts, not asset or
-  wiki lifecycle metadata
+- fact-only SourceRecords in `data/sources/`
 - derived `needs_review` from missing or stale fact decisions
-- derived `needs_build` from accepted facts and the latest successful build
-  baseline
-- wiki description scope as part of review/build fingerprints
-- vault wiki markdown is managed output edited only by code or LLM build
-  workflows, not by human hand edits
-- LLM review to decide fact relevance for assigned or changed sources
-- incremental wiki builds from accepted fact deltas plus existing markdown
+- derived `needs_build` from accepted facts and the last successful baseline
+- wiki description scope in review and build fingerprints
+- LLM relevance review for assigned or changed sources
+- incremental builds from accepted fact deltas and existing markdown
 
 Avoid:
 
-- domains, categories, sensitivity tags, privacy routing, auto-populate, or word
-  matching for wiki routing
-- wiki assignment or review state duplicated into source manifests
-- stored lifecycle flags when they can be derived
-- build baselines that update before a successful markdown write
-- manual edits to vault wiki markdown
-- whole-page rewrites that discard existing managed markdown outside the
-  intended generated sections
-- compatibility branches for retired workflows
+- automatic, tag-based, or word-matching wiki routing
+- wiki assignment or review state in source manifests
+- stored lifecycle flags that can be derived
+- build baseline updates before a successful markdown write
+- manual edits to vault wiki markdown or `data/wiki-ledger.json`
+- whole-page rewrites that discard managed markdown outside generated sections
+- compatibility paths for retired workflows
 
 Wiki description changes are scope changes. They make old fact decisions stale
-by derivation and should block builds until review is current for the new scope.
+and block builds until review is current for the new scope.
 
-## Layout
+## Agent-Run Wiki Updates
 
-```text
-/home/jack/MEMEX/
-  AGENTS.md
-  docs/
-    wiki-plan.md
-  app/
-  data/
-    source-drafts/
-    source-assets/
-    sources/
-    wiki-ledger.json
-    wiki-registry.json
-  vault/
-  tests/
-  scripts/
-```
+When Jack asks to update or refresh a wiki, or names a wiki and material to
+incorporate, run the complete workflow in `docs/wiki-update-runbook.md`: ingest
+or extract, assign, review, build, inspect, and validate. If the wiki and source
+are clear, proceed without asking Jack to operate the dashboard.
 
-Responsibilities:
+Choose the smallest grounded source operation:
 
-- `app/` contains implementation logic, UI/API code, orchestration, adapters,
-  and domain modules.
-- `data/` contains local state, ledgers, source records, preserved source
-  originals/manifests, source drafts, and runtime artifacts that are not
-  markdown wiki pages.
-- `vault/` contains markdown wiki output.
-- `tests/` contains automated validation.
-- `scripts/` contains developer utilities and one-off maintenance helpers.
-- `docs/` contains active design notes and handoff documents.
+- repair a minor extraction error using its preserved original
+- re-extract when coverage or fact boundaries are poor
+- ingest when supplied material is not grounded in an existing original
+- review and build when source facts are already complete
 
-Keep source extraction, source asset storage, wiki state, markdown output, UI,
-validation, and LLM orchestration as separate responsibilities. If a module
-starts mixing those concerns, split it before adding more behavior.
+Do not edit vault markdown or the ledger by hand. Before reporting success,
+inspect the generated markdown for coverage and fidelity, then run
+`uv run python scripts/wiki_validate.py`. Report the source operation,
+review/build result, output path, and validation result.
 
-## Current Operations
+Prepared source drafts are in `data/source-drafts/`.
 
-- Run the dashboard with `uv run python scripts/wiki_server.py`. Use the
-  canonical dashboard port (`127.0.0.1:8765`) for local and production-like
-  validation. Do not start dashboard servers on alternate ports; if the port or
-  process state is stale, rerun the start script so it kills existing MEMEX
-  dashboard processes and restarts the canonical port.
-- Validate persisted state with `uv run python scripts/wiki_validate.py`.
-- Run tests with `uv run pytest` or targeted `uv run pytest tests/<file>.py`.
-- Create a wiki from the dashboard with name and description scope; the
-  dashboard derives the stable wiki id and Obsidian markdown file path from the
-  name.
-- Use `uv run python scripts/wiki_dev.py add-wiki <wiki_id> <title> <path>` for
-  scripted wiki creation.
+## Commands
 
-### Agent-Run Wiki Updates
+- Dashboard: `uv run python scripts/wiki_server.py`
+- Tests: `uv run pytest` or `uv run pytest tests/<file>.py`
+- Validation: `uv run python scripts/wiki_validate.py`
+- Scripted wiki creation:
+  `uv run python scripts/wiki_dev.py add-wiki <wiki_id> <title> <path>`
 
-When Jack asks an agent to "update the wiki," "refresh the wiki," or names a
-wiki and source material to incorporate, treat that as a request to run the
-normal MEMEX source-to-wiki workflow end to end. Follow
-`docs/wiki-update-runbook.md`.
-
-The request authorizes in-repository source ingest or extraction, explicit
-assignment to the named wiki, review of the resulting fact delta, a managed
-wiki build, and validation. It does not authorize editing vault markdown or
-`data/wiki-ledger.json` by hand. If the target wiki or source is clear from the
-request and repository state, proceed without asking Jack to operate the
-dashboard or repeat the context.
-
-Choose the input operation based on the actual change:
-
-- repair a SourceRecord for a small extraction correction grounded in its
-  preserved original
-- re-extract the preserved original when coverage or fact boundaries are poor
-- ingest a new source when Jack supplies new source material or facts not
-  grounded in an existing original
-- review and build only when source facts are already complete
-
-Before declaring success, inspect the finished markdown for useful coverage and
-fidelity, not merely a successful provider response. Run
-`uv run python scripts/wiki_validate.py` after persisted changes and report the
-source operation, review/build result, output path, and validation result.
-
-The current development phase is source-draft import and wiki construction. Use
-the prepared source drafts in `/home/jack/MEMEX/data/source-drafts/`, then
-extract them into SourceRecords, assign them to wikis, review facts, and build
-markdown pages.
-
-The dashboard currently supports source ingest, assignment, review, repair,
-re-extraction, wiki descriptions, builds, source deletion, wiki deletion, and
-provider balance visibility. Wiki rename/split/merge remain
-development/configuration operations until those workflows need dashboard UI.
-
-## Tooling
-
-Prefer `uv` for Python dependency management, virtual environments, locking,
-and command execution whenever possible.
-
-- Add runtime dependencies with `uv add`.
-- Add development tools with `uv add --dev`.
-- Use `uv sync --locked --dev` when recreating the project environment from the
-  lockfile.
-- Avoid ad hoc `pip` or system-interpreter installs unless `uv` cannot handle
-  the task.
-
-When touching external libraries, frameworks, APIs, MCP servers, package
-configuration, or tooling, retrieve current package-specific docs first and use
-documented modern APIs.
-
-## Current Plan
-
-Use `/home/jack/MEMEX/docs/wiki-plan.md` for current priorities. The plan is
-future-focused; keep completed implementation detail out of it unless it changes
-an architectural rule or operating baseline.
+Use only the canonical dashboard address `127.0.0.1:8765`. If its process state
+is stale, rerun the start script so it restarts the canonical port. Prefer `uv`
+for Python dependencies, environments, and commands.
