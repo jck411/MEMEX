@@ -115,6 +115,34 @@ starts mixing those concerns, split it before adding more behavior.
 - Use `uv run python scripts/wiki_dev.py add-wiki <wiki_id> <title> <path>` for
   scripted wiki creation.
 
+### Agent-Run Wiki Updates
+
+When Jack asks an agent to "update the wiki," "refresh the wiki," or names a
+wiki and source material to incorporate, treat that as a request to run the
+normal MEMEX source-to-wiki workflow end to end. Follow
+`docs/wiki-update-runbook.md`.
+
+The request authorizes in-repository source ingest or extraction, explicit
+assignment to the named wiki, review of the resulting fact delta, a managed
+wiki build, and validation. It does not authorize editing vault markdown or
+`data/wiki-ledger.json` by hand. If the target wiki or source is clear from the
+request and repository state, proceed without asking Jack to operate the
+dashboard or repeat the context.
+
+Choose the input operation based on the actual change:
+
+- repair a SourceRecord for a small extraction correction grounded in its
+  preserved original
+- re-extract the preserved original when coverage or fact boundaries are poor
+- ingest a new source when Jack supplies new source material or facts not
+  grounded in an existing original
+- review and build only when source facts are already complete
+
+Before declaring success, inspect the finished markdown for useful coverage and
+fidelity, not merely a successful provider response. Run
+`uv run python scripts/wiki_validate.py` after persisted changes and report the
+source operation, review/build result, output path, and validation result.
+
 The current development phase is source-draft import and wiki construction. Use
 the prepared source drafts in `/home/jack/MEMEX/data/source-drafts/`, then
 extract them into SourceRecords, assign them to wikis, review facts, and build
