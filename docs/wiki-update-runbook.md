@@ -16,7 +16,7 @@ Examples:
 
 ```text
 Update Home Lab from the Proxmox server hardware source.
-Refresh Home Lab after I update the hardware draft.
+Refresh Home Lab after I supply updated hardware notes.
 Add these notes to Jack's Biography and update the wiki: <notes or path>.
 ```
 
@@ -57,6 +57,10 @@ Use the least complex operation that preserves source grounding:
   that are not contained in the preserved original. Preserve them as a new
   source asset and SourceRecord; do not rewrite history by making the old
   original appear to contain them.
+
+There is no intermediate source-draft state. Do not write supplied material to
+a staging directory or manufacture a preparatory markdown file before
+ingestion.
 
 Do not patch a generated wiki to compensate for weak extraction. Fix the input
 layer and let review and build propagate the change.

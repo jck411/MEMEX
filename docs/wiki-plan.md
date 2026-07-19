@@ -20,28 +20,27 @@ source-grounded.
 
 ## Current Phase
 
-MEMEX is now in source-draft import and wiki construction mode.
+MEMEX is now in source ingestion and wiki construction mode.
 
 The app is usable for normal wiki work. Development should come from friction
-found while turning the prepared source drafts into SourceRecords, assigning
-sources to wikis, reviewing facts, and building useful markdown pages.
+found while ingesting material into SourceRecords, assigning sources to wikis,
+reviewing facts, and building useful markdown pages.
 
 Current working loop:
 
-1. Use the prepared source drafts in `/home/jack/MEMEX/data/source-drafts/`.
-2. Extract each useful draft or uploaded file into a SourceRecord under
-   `data/sources/`.
-3. Preserve the original material through `data/source-assets/`.
-4. Assign sources to wikis manually from the dashboard.
-5. Review source facts for each assigned wiki.
-6. Build the wiki markdown in `vault/`.
+1. Ingest supplied or recovered material directly.
+2. Preserve its original through `data/source-assets/` and write its
+   SourceRecord under `data/sources/` as one operation.
+3. Assign sources to wikis manually from the dashboard.
+4. Review source facts for each assigned wiki.
+5. Build the wiki markdown in `vault/`.
 
 The immediate wiki-building focus is:
 
-- populate Jack's Biography from prepared source drafts
+- populate Jack's Biography from grounded source material
 - populate Jack's Identity from stable identifying source material
 - continue refining Jack's Worldview and Self Motivation & Operating Principles
-  from the prepared drafts
+  from grounded source material
 
 Do not add broad infrastructure before normal use proves it is needed. The next
 useful work should usually be source extraction, source review, or another wiki
@@ -131,25 +130,24 @@ Wiki description changes are scope changes:
 
 These are candidates to revisit only after real use shows the need.
 
-### 1. Source Draft Import Workflow
+### 1. Direct Source Ingestion
 
-Goal: make it easy to turn prepared source drafts into durable MEMEX inputs.
+Goal: make supplied or recovered material a durable MEMEX source in one
+operation.
 
 Needed:
 
-- Keep prepared drafts in `data/source-drafts/` until they are ready for
-  extraction.
-- Add only the smallest import helper needed if repeated draft import becomes
-  tedious.
-- Preserve originals under `data/source-assets/` before extraction.
-- Keep source draft text, extracted facts, and wiki review/build state in
-  their separate stores.
+- Preserve originals under `data/source-assets/` as part of ingestion.
+- Write extracted facts to `data/sources/` in the same workflow.
+- Keep source assets, extracted facts, and wiki review/build state in their
+  separate stores.
+- Reject any workflow that introduces a source-draft or source-staging state.
 
 Design preference:
 
-- Prefer plain markdown drafts and the existing dashboard/CLI ingest path before
-  adding a bulk import system.
-- Treat draft preparation as input preparation, not as a separate runtime.
+- Use the existing dashboard/CLI ingest path directly.
+- If repeated ingestion becomes tedious, improve that canonical path instead of
+  adding a preparatory file workflow.
 
 ### 2. Wiki Build Refinement
 

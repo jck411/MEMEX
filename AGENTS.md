@@ -67,7 +67,11 @@ inspect the generated markdown for coverage and fidelity, then run
 `uv run python scripts/wiki_validate.py`. Report the source operation,
 review/build result, output path, and validation result.
 
-Prepared source drafts are in `data/source-drafts/`.
+There is no source-draft or source-staging state. Material is either ingested as
+a preserved source asset plus SourceRecord, or it is not part of MEMEX. When
+Jack supplies notes, a file, or recovered material for a wiki, ingest it
+directly through the canonical source workflow; do not create an intermediate
+markdown draft.
 
 ## Commands
 
