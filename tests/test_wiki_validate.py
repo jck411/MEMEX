@@ -74,18 +74,15 @@ def test_inbox_file_warns_without_failing(tmp_path: Path) -> None:
     assert report.warnings == ("unprocessed Inbox source: Sources/Inbox/new-notes.txt",)
 
 
-def test_legacy_state_and_managed_markers_fail(tmp_path: Path) -> None:
+def test_sources_must_be_the_final_section(tmp_path: Path) -> None:
     root = _valid_repo(tmp_path)
-    (root / "data").mkdir()
-    (root / "data" / "wiki-ledger.json").write_text("{}", encoding="utf-8")
     wiki = root / "vault" / "home-lab.md"
     wiki.write_text(
-        wiki.read_text(encoding="utf-8") + "\n<!-- MEMEX:SYNTHESIS:START -->\n",
+        wiki.read_text(encoding="utf-8") + "\n## Later section\n",
         encoding="utf-8",
     )
 
     report = validate_repo(root)
 
     assert not report.ok
-    assert any("legacy MEMEX state" in error for error in report.errors)
-    assert any("obsolete managed marker" in error for error in report.errors)
+    assert any("Sources must be the final" in error for error in report.errors)

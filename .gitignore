@@ -3,27 +3,16 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 .ruff_cache/
-.mypy_cache/
 .venv/
-venv/
-
-# Node / frontend tooling
-node_modules/
-dist/
-build/
-.next/
-.vite/
 
 # Local secrets and machine state
 .env
 .env.*
-!.env.example
 .DS_Store
 
 # Private source library and wiki output
 vault/**
 !vault/
-!vault/.gitkeep
 !vault/Sources/
 !vault/Sources/Inbox/
 !vault/Sources/Inbox/.gitkeep

@@ -20,8 +20,8 @@ vault/
 └── <wiki-id>.md               # finished wiki page
 ```
 
-The private contents of `vault/` are ignored by Git. The tracked `.gitkeep`
-files retain the empty folder structure in a fresh checkout.
+The private contents of `vault/` are ignored by Git. The tracked Inbox
+placeholder retains the source drop location in a fresh checkout.
 
 ## Normal Use
 
@@ -37,17 +37,14 @@ Example:
 Use the new source in Inbox to update Home Lab.
 ```
 
-See [docs/wiki-update-runbook.md](docs/wiki-update-runbook.md) for the exact
-agent workflow.
-
 ## Validation
 
 ```bash
 uv run python scripts/wiki_validate.py
 ```
 
-The validator checks source placement, source links, Inbox state, legacy-state
-removal, and obsolete generated markers.
+The validator checks wiki structure, source placement, source links, and Inbox
+state.
 
 Run the tests with:
 

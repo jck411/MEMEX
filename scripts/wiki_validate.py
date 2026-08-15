@@ -10,17 +10,6 @@ from pathlib import Path
 from urllib.parse import unquote
 
 SOURCE_LINK_RE = re.compile(r"\[[^\]]*\]\((?P<target>[^)]+)\)")
-MANAGED_MARKERS = (
-    "<!-- MEMEX:SYNTHESIS:",
-    "<!-- MEMEX:FACTS:",
-    "<!-- MEMEX:REFERENCES:",
-)
-LEGACY_PATHS = (
-    "data/source-assets",
-    "data/sources",
-    "data/wiki-ledger.json",
-    "data/wiki-registry.json",
-)
 
 
 @dataclass(frozen=True)
@@ -44,10 +33,6 @@ def validate_repo(repo_root: str | Path) -> ValidationReport:
     inbox = sources_root / "Inbox"
     errors: list[str] = []
     warnings: list[str] = []
-
-    for relative_path in LEGACY_PATHS:
-        if (root / relative_path).exists():
-            errors.append(f"legacy MEMEX state still exists: {relative_path}")
 
     if not vault.is_dir():
         errors.append("missing vault directory")
@@ -96,8 +81,10 @@ def validate_repo(repo_root: str | Path) -> ValidationReport:
                 continue
             referenced_sources.add(source_path)
 
-    library_sources = _source_files(sources_root, include_inbox=False)
-    inbox_sources = _source_files(inbox, include_inbox=True)
+    inbox_sources = _source_files(inbox)
+    library_sources = tuple(
+        path for path in _source_files(sources_root) if not _is_within(path, inbox)
+    )
     for source_path in library_sources:
         if source_path.resolve() not in referenced_sources:
             errors.append(
@@ -126,9 +113,6 @@ def _validate_wiki_shape(path: Path, text: str, errors: list[str]) -> None:
         errors.append(f"{path.name}: wiki must start with one level-one title")
     if sum(1 for line in text.splitlines() if line.startswith("# ")) != 1:
         errors.append(f"{path.name}: wiki must contain exactly one level-one title")
-    for marker in MANAGED_MARKERS:
-        if marker in text:
-            errors.append(f"{path.name}: obsolete managed marker remains: {marker}")
 
 
 def _source_section(path: Path, text: str, errors: list[str]) -> str | None:
@@ -143,14 +127,12 @@ def _source_section(path: Path, text: str, errors: list[str]) -> str | None:
     return "\n".join(lines[start + 1 :]).strip()
 
 
-def _source_files(root: Path, *, include_inbox: bool) -> tuple[Path, ...]:
+def _source_files(root: Path) -> tuple[Path, ...]:
     if not root.is_dir():
         return ()
     files: list[Path] = []
     for path in sorted(root.rglob("*")):
         if not path.is_file() or path.name.startswith("."):
-            continue
-        if not include_inbox and "Inbox" in path.relative_to(root).parts:
             continue
         files.append(path)
     return tuple(files)

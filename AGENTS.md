@@ -16,7 +16,6 @@ generated build state.
 - `vault/Sources/Inbox/` is the drop location for new material.
 - `vault/Sources/<wiki-id>/` contains the original sources used by that wiki.
 - `vault/<wiki-id>.md` is the finished wiki page.
-- `docs/wiki-update-runbook.md` contains the complete update procedure.
 
 Source folder names and wiki filenames use the same `wiki-id`. Source files may
 be text, Markdown, PDFs, images, or other documents Codex can inspect.
@@ -26,15 +25,16 @@ be text, Markdown, PDFs, images, or other documents Codex can inspect.
 When Jack asks to add, update, or refresh a wiki, complete the workflow without
 asking him to operate another interface:
 
-1. Resolve the target wiki and named source material.
-2. Preserve new material under `vault/Sources/<wiki-id>/`. Move a supplied Inbox
-   file there without changing its contents. When Jack supplies notes in the
-   conversation, save the notes verbatim as a dated Markdown source.
+1. Resolve the target wiki and named source material from Inbox, a local or
+   attached file, conversation notes, or an existing source.
+2. Preserve new material under `vault/Sources/<wiki-id>/`: move an Inbox file,
+   copy an external file, or save conversation notes verbatim as dated Markdown.
+   Use a stable filename and never overwrite a different source silently.
 3. Read the target wiki and its source files. Use only claims grounded in those
    sources or clearly identified existing wiki material.
 4. Edit the wiki Markdown directly. Preserve accurate existing material,
-   reconcile conflicts, and remove claims contradicted by newer authoritative
-   sources.
+   include only material relevant to its subject, represent uncertainty, and
+   reconcile conflicts or newer authoritative information.
 5. Maintain a final `## Sources` section with relative links of the form
    `Sources/<wiki-id>/<filename>`.
 6. Inspect the finished page for fidelity and run
@@ -42,6 +42,9 @@ asking him to operate another interface:
 
 If the target or source relationship is genuinely ambiguous, ask Jack. Otherwise
 proceed from the request and repository context.
+
+Report the target wiki, source preserved or reused, important changes or
+unresolved conflicts, final path, and validation result.
 
 ## Source Rules
 
@@ -52,8 +55,8 @@ proceed from the request and repository context.
 - Do not silently use sources from another wiki folder.
 - If one source genuinely needs to support multiple wikis, ask before changing
   the simple one-folder ownership convention.
-- Do not recreate SourceRecords, fact ledgers, lifecycle flags, model routing,
-  provider calls, or a source-staging system.
+- Do not add databases, lifecycle state, model-provider calls, or another user
+  interface without a repeated workflow demonstrating the need.
 
 ## Development
 
