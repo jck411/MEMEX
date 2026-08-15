@@ -20,17 +20,10 @@ build/
 !.env.example
 .DS_Store
 
-# MEMEX runtime scratch space
-data/runtime/
-data/tmp/
-data/cache/
-.memex/
-
-# MEMEX local user state and generated wiki output
-data/wiki-ledger.json
-data/wiki-registry.json
-data/sources/
-data/source-assets/
+# Private source library and wiki output
 vault/**
 !vault/
 !vault/.gitkeep
+!vault/Sources/
+!vault/Sources/Inbox/
+!vault/Sources/Inbox/.gitkeep

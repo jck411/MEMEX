@@ -1,86 +1,71 @@
 # MEMEX Agent Guide
 
-MEMEX turns source material into persistent, source-grounded markdown wikis:
+MEMEX is a source library and a set of source-grounded Markdown wikis. Codex is
+the only semantic processor: it reads sources, decides what belongs in a wiki,
+and edits that wiki directly.
 
 ```text
-source -> extracted facts -> source-to-wiki assignment -> per-wiki fact review
--> accepted fact delta -> markdown wiki build
+source file -> Codex -> wiki Markdown
 ```
 
-The wiki is the product. Sources, ledgers, provider calls, and the dashboard
-exist to keep it accurate and inspectable. Use `docs/wiki-plan.md` for current
-priorities and update it when product or architecture direction changes.
+There is no dashboard, provider API, extraction database, review ledger, or
+generated build state.
+
+## Layout
+
+- `vault/Sources/Inbox/` is the drop location for new material.
+- `vault/Sources/<wiki-id>/` contains the original sources used by that wiki.
+- `vault/<wiki-id>.md` is the finished wiki page.
+- `docs/wiki-update-runbook.md` contains the complete update procedure.
+
+Source folder names and wiki filenames use the same `wiki-id`. Source files may
+be text, Markdown, PDFs, images, or other documents Codex can inspect.
+
+## Wiki Updates
+
+When Jack asks to add, update, or refresh a wiki, complete the workflow without
+asking him to operate another interface:
+
+1. Resolve the target wiki and named source material.
+2. Preserve new material under `vault/Sources/<wiki-id>/`. Move a supplied Inbox
+   file there without changing its contents. When Jack supplies notes in the
+   conversation, save the notes verbatim as a dated Markdown source.
+3. Read the target wiki and its source files. Use only claims grounded in those
+   sources or clearly identified existing wiki material.
+4. Edit the wiki Markdown directly. Preserve accurate existing material,
+   reconcile conflicts, and remove claims contradicted by newer authoritative
+   sources.
+5. Maintain a final `## Sources` section with relative links of the form
+   `Sources/<wiki-id>/<filename>`.
+6. Inspect the finished page for fidelity and run
+   `uv run python scripts/wiki_validate.py`.
+
+If the target or source relationship is genuinely ambiguous, ask Jack. Otherwise
+proceed from the request and repository context.
+
+## Source Rules
+
+- Source files are canonical originals. Do not rewrite their contents to make a
+  wiki claim easier to support.
+- An Inbox file is not assigned until Jack names its target or the relationship
+  is unambiguous from the request.
+- Do not silently use sources from another wiki folder.
+- If one source genuinely needs to support multiple wikis, ask before changing
+  the simple one-folder ownership convention.
+- Do not recreate SourceRecords, fact ledgers, lifecycle flags, model routing,
+  provider calls, or a source-staging system.
 
 ## Development
 
-This project favors clean iteration over legacy compatibility. Before editing,
-inspect the relevant subsystem and choose deletion, simplification, replacement,
-refactoring, or patching based on which leaves the codebase clearest. Remove
-obsolete paths rather than preserving them just in case.
+Prefer deletion and simple filesystem conventions over new infrastructure.
+Before implementing a feature, decide whether the real need can be handled by
+the source folders, Markdown, agent instructions, or the validator.
 
-Keep source extraction, source assets, wiki state, markdown output, UI,
-validation, and LLM orchestration as separate responsibilities.
-
-## Architecture
-
-Use:
-
-- manual source-to-wiki assignment
-- one central ledger for assignments, fact decisions, and build baselines
-- preserved source originals in `data/source-assets/`
-- fact-only SourceRecords in `data/sources/`
-- derived `needs_review` from missing or stale fact decisions
-- derived `needs_build` from accepted facts and the last successful baseline
-- wiki description scope in review and build fingerprints
-- LLM relevance review for assigned or changed sources
-- incremental builds from accepted fact deltas and existing markdown
-
-Avoid:
-
-- automatic, tag-based, or word-matching wiki routing
-- wiki assignment or review state in source manifests
-- stored lifecycle flags that can be derived
-- build baseline updates before a successful markdown write
-- manual edits to vault wiki markdown or `data/wiki-ledger.json`
-- whole-page rewrites that discard managed markdown outside generated sections
-- compatibility paths for retired workflows
-
-Wiki description changes are scope changes. They make old fact decisions stale
-and block builds until review is current for the new scope.
-
-## Agent-Run Wiki Updates
-
-When Jack asks to update or refresh a wiki, or names a wiki and material to
-incorporate, run the complete workflow in `docs/wiki-update-runbook.md`: ingest
-or extract, assign, review, build, inspect, and validate. If the wiki and source
-are clear, proceed without asking Jack to operate the dashboard.
-
-Choose the smallest grounded source operation:
-
-- repair a minor extraction error using its preserved original
-- re-extract when coverage or fact boundaries are poor
-- ingest when supplied material is not grounded in an existing original
-- review and build when source facts are already complete
-
-Do not edit vault markdown or the ledger by hand. Before reporting success,
-inspect the generated markdown for coverage and fidelity, then run
-`uv run python scripts/wiki_validate.py`. Report the source operation,
-review/build result, output path, and validation result.
-
-There is no source-draft or source-staging state. Material is either ingested as
-a preserved source asset plus SourceRecord, or it is not part of MEMEX. When
-Jack supplies notes, a file, or recovered material for a wiki, ingest it
-directly through the canonical source workflow; do not create an intermediate
-markdown draft.
+Keep `scripts/wiki_validate.py` small and standard-library-only. Add tooling only
+after repeated real use demonstrates a need.
 
 ## Commands
 
-- Dashboard: `uv run python scripts/wiki_server.py`
-- Tests: `uv run pytest` or `uv run pytest tests/<file>.py`
 - Validation: `uv run python scripts/wiki_validate.py`
-- Scripted wiki creation:
-  `uv run python scripts/wiki_dev.py add-wiki <wiki_id> <title> <path>`
-
-Use only the canonical dashboard address `127.0.0.1:8765`. If its process state
-is stale, rerun the start script so it restarts the canonical port. Prefer `uv`
-for Python dependencies, environments, and commands.
+- Tests: `uv run pytest`
+- Lint: `uv run ruff check scripts tests`

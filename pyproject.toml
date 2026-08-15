@@ -1,7 +1,7 @@
 [project]
 name = "memex"
-version = "0.1.0"
-description = "Personal Wiki LLM rebuilt around persistent markdown knowledge bases."
+version = "0.2.0"
+description = "A source-grounded Markdown wiki maintained by Codex."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = []
@@ -21,18 +21,7 @@ pythonpath = ["."]
 [tool.ruff]
 line-length = 100
 target-version = "py311"
-src = ["app", "scripts", "tests"]
+src = ["scripts", "tests"]
 
 [tool.ruff.lint]
-select = [
-    "B",
-    "C90",
-    "E4",
-    "E7",
-    "E9",
-    "F",
-    "I",
-]
-
-[tool.ruff.lint.mccabe]
-max-complexity = 18
+select = ["B", "E4", "E7", "E9", "F", "I"]
