@@ -41,9 +41,17 @@ def validate_repo(repo_root: str | Path) -> ValidationReport:
     if not inbox.is_dir():
         errors.append("missing vault/Sources/Inbox directory")
 
-    wiki_paths = sorted(vault.glob("*.md")) if vault.is_dir() else []
+    root_markdown = sorted(vault.glob("*.md")) if vault.is_dir() else []
+    wiki_paths = [path for path in root_markdown if (sources_root / path.stem).is_dir()]
+    non_wiki_paths = [path for path in root_markdown if path not in wiki_paths]
     referenced_sources: set[Path] = set()
     source_link_count = 0
+
+    for note_path in non_wiki_paths:
+        warnings.append(
+            f"root Markdown is not a MEMEX wiki because it has no matching source folder: "
+            f"{note_path.relative_to(vault)}"
+        )
 
     for wiki_path in wiki_paths:
         text = wiki_path.read_text(encoding="utf-8")

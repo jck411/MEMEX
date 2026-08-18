@@ -20,6 +20,8 @@ the materialized Markdown vault remains canonical.
 
 Source folder names and wiki filenames use the same `wiki-id`. Source files may
 be text, Markdown, PDFs, images, or other documents Codex can inspect.
+This paired folder-and-file convention identifies MEMEX wikis; unrelated
+Obsidian Markdown may coexist in the vault without being validated as a wiki.
 
 ## Wiki Updates
 
@@ -68,22 +70,20 @@ the source folders, Markdown, agent instructions, or the validator.
 Keep `scripts/wiki_validate.py` small and standard-library-only. Add tooling only
 after repeated real use demonstrates a need.
 
-## Synchronization and MCP
+## Companion Service Boundary
 
-- Obsidian devices replicate through CouchDB to the official headless LiveSync
-  client in LXC 118.
-- The headless client materializes `/srv/memex/vault`; it does not semantically
-  process notes.
-- `memex_mcp` provides read-only, bearer-authenticated tools over all user
-  Markdown in that materialized vault.
-- Keep LiveSync and MCP credentials out of Git. Do not expose CouchDB or MCP by
-  router port forwarding; public HTTPS is owned by the NETWORK repository's
-  Cloudflare Tunnel configuration.
-- LiveSync is not a backup. Preserve independent vault archives before changing
-  synchronization topology or rebuilding a client.
+- MEMEX owns the source-grounded wiki workflow, source layout, validator, and
+  local private vault.
+- The separate `obsidian-vault-service` repository owns CouchDB, headless
+  LiveSync, the server-side vault mirror, read-only Markdown MCP, deployment,
+  credentials, and backups on LXC 118.
+- Do not add synchronization, remote access, authentication, or deployment code
+  here. Coordinate cross-repository contract changes explicitly.
+- LiveSync remains transport rather than a backup; preserve independent vault
+  archives before changing synchronization topology.
 
 ## Commands
 
 - Validation: `uv run python scripts/wiki_validate.py`
 - Tests: `uv run pytest`
-- Lint: `uv run ruff check memex_mcp scripts tests`
+- Lint: `uv run ruff check scripts tests`

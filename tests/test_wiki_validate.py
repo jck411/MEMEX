@@ -74,6 +74,23 @@ def test_inbox_file_warns_without_failing(tmp_path: Path) -> None:
     assert report.warnings == ("unprocessed Inbox source: Sources/Inbox/new-notes.txt",)
 
 
+def test_unrelated_root_markdown_is_not_validated_as_a_wiki(tmp_path: Path) -> None:
+    root = _valid_repo(tmp_path)
+    (root / "vault" / "phone-sync-check.md").write_text(
+        "# Phone sync check\n",
+        encoding="utf-8",
+    )
+
+    report = validate_repo(root)
+
+    assert report.ok
+    assert report.wiki_count == 1
+    assert report.warnings == (
+        "root Markdown is not a MEMEX wiki because it has no matching source folder: "
+        "phone-sync-check.md",
+    )
+
+
 def test_sources_must_be_the_final_section(tmp_path: Path) -> None:
     root = _valid_repo(tmp_path)
     wiki = root / "vault" / "home-lab.md"

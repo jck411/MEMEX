@@ -1,13 +1,9 @@
 [project]
 name = "memex"
-version = "0.2.0"
+version = "0.3.0"
 description = "A source-grounded Markdown wiki maintained by Codex."
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = [
-    "fastmcp>=3,<4",
-    "uvicorn>=0.35,<1",
-]
 
 [dependency-groups]
 dev = [
@@ -25,7 +21,6 @@ pythonpath = ["."]
 line-length = 100
 target-version = "py311"
 src = ["scripts", "tests"]
-extend-include = ["memex_mcp/**/*.py"]
 
 [tool.ruff.lint]
 select = ["B", "E4", "E7", "E9", "F", "I"]

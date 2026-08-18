@@ -20,6 +20,10 @@ vault/
 └── <wiki-id>.md               # finished wiki page
 ```
 
+A root Markdown file is a MEMEX wiki when it has a matching
+`Sources/<wiki-id>/` folder. Other synchronized Obsidian notes may coexist in
+the vault and are not interpreted as MEMEX wikis.
+
 The private contents of `vault/` are ignored by Git. The tracked Inbox
 placeholder retains the source drop location in a fresh checkout.
 
@@ -52,38 +56,22 @@ Run the tests with:
 uv run pytest
 ```
 
-## Synchronization and external LLM access
+## Companion vault service
 
-The private vault is also materialized on dedicated Proxmox LXC 118:
+MEMEX owns the source-grounded wiki workflow and the private local `vault/`.
+The separate `obsidian-vault-service` repository owns synchronization, the
+server-side vault mirror, read-only MCP access, authentication, deployment, and
+backups on Proxmox LXC 118.
 
 ```text
 Obsidian desktop / phone
-          ↓ Self-hosted LiveSync
-      CouchDB 3.5.2
-          ↓ official LiveSync CLI 1.0.15
-  /srv/memex/vault
-          ↓ read-only Markdown tools
-      MEMEX MCP
+          ↓
+  obsidian-vault-service
+          ↓
+  synchronized Markdown vault
 ```
 
-CouchDB is transport state, not the source of truth. Notes remain ordinary files,
-and the headless client keeps a complete server-side vault for MCP and backup.
-The MCP recursively exposes every user `.md` file regardless of whether it was
-created by MEMEX, Obsidian desktop, or a phone. Obsidian/LiveSync internal state
-and recovery flag files are excluded.
-
-- LiveSync: `https://obsidian.jackshome.com`
-- Streamable HTTP MCP: `https://memex.jackshome.com/mcp`
-- Unauthenticated health check: `https://memex.jackshome.com/health`
-
-MCP clients must send `Authorization: Bearer <token>`. The token and CouchDB
-credentials are stored only in `.local-backups/memex-service.env` (mode `0600`).
-
-The desktop, phone, and headless client are pinned together to Self-hosted
-LiveSync 1.0.15. For a new device, install that same version in a new empty
-vault and use the encrypted URI and passphrase from
-`.local-backups/livesync-client-setup.txt` (or scan
-`.local-backups/livesync-client-setup.png`). Treat both setup artifacts as
-credentials and choose the established remote as the source of truth.
-
-Deployment and recovery details are in `deploy/README.md`.
+Its local checkout is expected at
+`/home/jack/REPOS/obsidian-vault-service`. Operational documentation and
+Git-ignored recovery artifacts live there. MEMEX does not implement or deploy
+the synchronization and access service.
