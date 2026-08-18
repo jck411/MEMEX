@@ -75,3 +75,7 @@ Its local checkout is expected at
 `/home/jack/REPOS/obsidian-vault-service`. Operational documentation and
 Git-ignored recovery artifacts live there. MEMEX does not implement or deploy
 the synchronization and access service.
+
+For ordinary work on both the Markdown and MCP layers, open this repository and
+`/home/jack/REPOS/obsidian-vault-service` as a two-root workspace. Use
+`vault/` here for Markdown and `obsidian_vault_service/` there for MCP code.
