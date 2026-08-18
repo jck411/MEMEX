@@ -1,0 +1,13 @@
+[Unit]
+Description=Back up the materialized MEMEX vault
+After=local-fs.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/memex-vault-backup
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadOnlyPaths=/srv/memex/vault
+ReadWritePaths=/srv/memex/backups

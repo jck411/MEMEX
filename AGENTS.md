@@ -8,8 +8,9 @@ and edits that wiki directly.
 source file -> Codex -> wiki Markdown
 ```
 
-There is no dashboard, provider API, extraction database, review ledger, or
-generated build state.
+There is no dashboard, model-provider API, semantic extraction database, review
+ledger, or generated wiki build state. CouchDB exists only as LiveSync transport;
+the materialized Markdown vault remains canonical.
 
 ## Layout
 
@@ -67,8 +68,22 @@ the source folders, Markdown, agent instructions, or the validator.
 Keep `scripts/wiki_validate.py` small and standard-library-only. Add tooling only
 after repeated real use demonstrates a need.
 
+## Synchronization and MCP
+
+- Obsidian devices replicate through CouchDB to the official headless LiveSync
+  client in LXC 118.
+- The headless client materializes `/srv/memex/vault`; it does not semantically
+  process notes.
+- `memex_mcp` provides read-only, bearer-authenticated tools over all user
+  Markdown in that materialized vault.
+- Keep LiveSync and MCP credentials out of Git. Do not expose CouchDB or MCP by
+  router port forwarding; public HTTPS is owned by the NETWORK repository's
+  Cloudflare Tunnel configuration.
+- LiveSync is not a backup. Preserve independent vault archives before changing
+  synchronization topology or rebuilding a client.
+
 ## Commands
 
 - Validation: `uv run python scripts/wiki_validate.py`
 - Tests: `uv run pytest`
-- Lint: `uv run ruff check scripts tests`
+- Lint: `uv run ruff check memex_mcp scripts tests`

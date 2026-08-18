@@ -9,6 +9,7 @@ __pycache__/
 .env
 .env.*
 .DS_Store
+.local-backups/
 
 # Private source library and wiki output
 vault/**
