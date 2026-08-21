@@ -64,8 +64,8 @@ server-side vault mirror, read-only MCP access, authentication, deployment, and
 backups on Proxmox LXC 118.
 
 ```text
-Obsidian desktop / phone
-          ↓
+Obsidian phone / event-triggered workstation CLI
+          ↕
   obsidian-vault-service
           ↓
   synchronized Markdown vault
@@ -76,6 +76,7 @@ Its local checkout is expected at
 Git-ignored recovery artifacts live there. MEMEX does not implement or deploy
 the synchronization and access service.
 
-For ordinary work on both the Markdown and MCP layers, open this repository and
-`/home/jack/REPOS/obsidian-vault-service` as a two-root workspace. Use
-`vault/` here for Markdown and `obsidian_vault_service/` there for MCP code.
+For ordinary work on both the Markdown and MCP layers, open
+`/home/jack/REPOS/MEMEX` and `/home/jack/REPOS/obsidian-vault-service` as a
+two-root workspace. Use `vault/` in MEMEX for Markdown and
+`obsidian_vault_service/` in the companion repository for MCP code.
