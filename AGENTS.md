@@ -16,6 +16,7 @@ the materialized Markdown vault remains canonical.
 
 - `vault/Sources/Inbox/` is the drop location for new material.
 - `vault/Sources/<wiki-id>/` contains the original sources used by that wiki.
+- `vault/Temp/` contains synchronized scratch notes excluded from MCP results.
 - `vault/<wiki-id>.md` is the finished wiki page.
 
 Source folder names and wiki filenames use the same `wiki-id`. Source files may
