@@ -64,7 +64,7 @@ server-side vault mirror, read-only MCP access, authentication, deployment, and
 backups on Proxmox LXC 118.
 
 ```text
-Obsidian phone / event-triggered workstation CLI
+Obsidian phone / workstation apps
           ↕
   obsidian-vault-service
           ↓
