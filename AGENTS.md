@@ -71,14 +71,6 @@ the source folders, Markdown, agent instructions, or the validator.
 Keep `scripts/wiki_validate.py` small and standard-library-only. Add tooling only
 after repeated real use demonstrates a need.
 
-## Local Privilege
-
-For an authorized host-level operation that requires sudo, load
-`SUDO_PASSWORD` from the Git-ignored `deploy/.env` and pass it only to
-`sudo -S -p ''` over standard input. Never print, log, commit, or copy the
-credential into another file. Its availability does not replace any explicit
-authorization required for destructive or otherwise sensitive operations.
-
 ## Companion Service Boundary
 
 - MEMEX owns the source-grounded wiki workflow, source layout, validator, and
