@@ -35,14 +35,18 @@ ordinary permission or notification-policy changes.
 
 Require explicit authorization immediately before a factory reset, bootloader
 or recovery change, reboot or power-off, credential or ADB-key rotation,
-eSIM/cellular-plan change, app uninstall or app-data clearing, data deletion,
-or a change that could break the only available device connection. Verify the
-exact target model before every mutation; the helper does this automatically.
+changing whether ADB authorizations expire, enabling a new network ADB
+transport, eSIM/cellular-plan change, app uninstall or app-data clearing, data
+deletion, or a change that could break the only available device connection.
+Verify the exact target model before every mutation; the helper does this
+automatically.
 
 ## Connectivity
 
 - `phone` is the Pixel 11 Pro XL and prefers its USB data connection.
 - `watch` is the Pixel Watch 5 and uses secure wireless ADB.
+- Android 17 trusted-network auto-reconnection requires ADB 37 or newer. On
+  the workstation, `adb` resolves through `~/.local/bin/adb`.
 - Stable IPs come from
   `/home/jack/REPOS/NETWORK/dhcp/reservations.json`. Runtime wireless
   endpoints stay outside Git under
