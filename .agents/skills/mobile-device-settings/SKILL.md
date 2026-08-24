@@ -43,7 +43,7 @@ automatically.
 
 ## Connectivity
 
-- `phone` is the Pixel 11 Pro XL and prefers its USB data connection.
+- `phone` is the Pixel 11 Pro XL, prefers USB, and falls back to secure wireless ADB.
 - `watch` is the Pixel Watch 5 and uses secure wireless ADB.
 - Android 17 trusted-network auto-reconnection requires ADB 37 or newer. On
   the workstation, `adb` resolves through `~/.local/bin/adb`.
