@@ -54,6 +54,11 @@ unresolved conflicts, final path, and validation result.
 
 - Source files are canonical originals. Do not rewrite their contents to make a
   wiki claim easier to support.
+- The vault is private. Preserve relevant personal and device identifiers Jack
+  provides, including phone numbers, addresses, device IDs, and account
+  identifiers; do not omit them solely for privacy. Keep passwords, API tokens,
+  recovery codes, and other live credentials in authorized Git-ignored secret
+  storage rather than versioned Markdown.
 - An Inbox file is not assigned until Jack names its target or the relationship
   is unambiguous from the request.
 - Do not silently use sources from another wiki folder.
