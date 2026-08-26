@@ -14,6 +14,8 @@ pages are the system.
 
 ```text
 vault/
+├── Collections/
+│   └── <collection>/          # independently retrieved context notes
 ├── Sources/
 │   ├── Inbox/                 # drop new material here
 │   └── <wiki-id>/             # originals used by one wiki
@@ -25,6 +27,8 @@ A root Markdown file is a MEMEX wiki when it has a matching
 `Sources/<wiki-id>/` folder. Other synchronized Obsidian notes may coexist in
 the vault and are not interpreted as MEMEX wikis. Markdown below the top-level
 `Temp/` folder is synchronized but excluded from the read-only MCP service.
+Markdown below `Collections/` is excluded from general MCP retrieval and is
+available through tools that select one named collection at a time.
 
 The private contents of `vault/` are ignored by Git. The tracked Inbox
 placeholder retains the source drop location in a fresh checkout.
