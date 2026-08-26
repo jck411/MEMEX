@@ -14,8 +14,8 @@ the materialized Markdown vault remains canonical.
 
 ## Layout
 
-- `vault/Collections/<collection>/` contains context notes retrieved independently
-  from general notes and other collections.
+- `vault/<context>/` contains notes exposed through that folder's independent MCP
+  context; `Sources/` and `Temp/` are reserved exceptions.
 - `vault/Sources/Inbox/` is the drop location for new material.
 - `vault/Sources/<wiki-id>/` contains the original sources used by that wiki.
 - `vault/Temp/` contains synchronized scratch notes excluded from MCP results.
@@ -25,7 +25,7 @@ Source folder names and wiki filenames use the same `wiki-id`. Source files may
 be text, Markdown, PDFs, images, or other documents Codex can inspect.
 This paired folder-and-file convention identifies MEMEX wikis; unrelated
 Obsidian Markdown may coexist in the vault without being validated as a wiki.
-Collection notes are not MEMEX wikis and do not participate in source validation.
+Folder-context notes are not MEMEX wikis and do not participate in source validation.
 
 ## Wiki Updates
 
