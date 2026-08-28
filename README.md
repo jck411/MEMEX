@@ -14,22 +14,29 @@ pages are the system.
 
 ```text
 vault/
-├── <context>/                 # independent folder-rooted MCP notes
 ├── Sources/
 │   ├── Inbox/                 # drop new material here
-│   └── <wiki-id>/             # originals used by one wiki
-├── Temp/                     # synchronized scratch notes hidden from MCP
-└── <wiki-id>.md               # finished wiki page
+│   └── <wiki-id>/             # sources for a general MCP wiki
+├── <context>/                 # independent folder-rooted MCP
+│   ├── Sources/
+│   │   └── <wiki-id>/         # sources for a wiki in this context
+│   ├── <wiki-id>.md           # source-grounded wiki
+│   └── <ordinary-note>.md     # free-form note
+├── Temp/                      # synchronized scratch notes hidden from MCP
+└── <wiki-id>.md               # general MCP wiki
 ```
 
-A root Markdown file is a MEMEX wiki when it has a matching
-`Sources/<wiki-id>/` folder. Other synchronized Obsidian notes may coexist in
-the vault and are not interpreted as MEMEX wikis. Markdown below the top-level
-`Temp/` folder is synchronized but excluded from the read-only MCP service.
-Root-level Markdown is available through the general MCP. Each other direct,
-non-hidden top-level folder is available through its own folder-bound MCP URL;
-its notes are not included in general retrieval or another folder's retrieval.
-`Sources/` and `Temp/` are reserved and never receive folder MCPs.
+The vault root and each direct, non-hidden top-level folder are independent wiki
+roots. A Markdown file directly inside one of those roots is a MEMEX wiki when
+it has a matching `Sources/<wiki-id>/` folder in the same root. Markdown without
+that source folder remains an ordinary note and is not validated as a wiki.
+
+Root-level Markdown is available through the general MCP. Each top-level folder
+is available through its own folder-bound MCP URL, and its notes are not
+included in general retrieval or another folder's retrieval. Every wiki root's
+`Sources/` directory and the top-level `Temp/` workspace are excluded from MCP
+results. Top-level `Sources/` and `Temp/` are reserved and never receive folder
+MCPs.
 
 The private contents of `vault/` are ignored by Git. The tracked Inbox
 placeholder retains the source drop location in a fresh checkout.
@@ -39,13 +46,15 @@ placeholder retains the source drop location in a fresh checkout.
 1. Put a document in `vault/Sources/Inbox/`, attach it to the Codex conversation,
    provide its local path, or paste notes directly.
 2. Ask Codex to update a named wiki.
-3. Codex preserves the source, edits the wiki, maintains its `## Sources` links,
-   and validates the result.
+3. Codex resolves the general or folder MCP context, preserves the source in
+   that context's `Sources/<wiki-id>/`, edits the wiki, maintains its
+   `## Sources` links, and validates the result.
 
 Example:
 
 ```text
 Use the new source in Inbox to update Home Lab.
+Use these measurements to update the Shoes wiki in Health.
 ```
 
 ## Validation

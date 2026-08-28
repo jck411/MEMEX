@@ -18,6 +18,22 @@ def _valid_repo(tmp_path: Path) -> Path:
     return tmp_path
 
 
+def _add_topic_wiki(root: Path) -> None:
+    topic = root / "vault" / "health"
+    source_dir = topic / "Sources" / "shoes"
+    source_dir.mkdir(parents=True)
+    (source_dir / "measurements.md").write_text(
+        "# Foot measurements\n",
+        encoding="utf-8",
+    )
+    (topic / "shoes.md").write_text(
+        "# Shoes\n\nMy current fit information.\n\n"
+        "## Sources\n\n"
+        "- [Foot measurements](Sources/shoes/measurements.md)\n",
+        encoding="utf-8",
+    )
+
+
 def test_valid_repo_passes(tmp_path: Path) -> None:
     report = validate_repo(_valid_repo(tmp_path))
 
@@ -74,10 +90,16 @@ def test_inbox_file_warns_without_failing(tmp_path: Path) -> None:
     assert report.warnings == ("unprocessed Inbox source: Sources/Inbox/new-notes.txt",)
 
 
-def test_unrelated_root_markdown_is_not_validated_as_a_wiki(tmp_path: Path) -> None:
+def test_ordinary_notes_do_not_participate_in_wiki_validation(tmp_path: Path) -> None:
     root = _valid_repo(tmp_path)
     (root / "vault" / "phone-sync-check.md").write_text(
         "# Phone sync check\n",
+        encoding="utf-8",
+    )
+    topic = root / "vault" / "health"
+    topic.mkdir()
+    (topic / "buy-shoe-laces.md").write_text(
+        "# Buy shoe laces\n",
         encoding="utf-8",
     )
 
@@ -85,9 +107,49 @@ def test_unrelated_root_markdown_is_not_validated_as_a_wiki(tmp_path: Path) -> N
 
     assert report.ok
     assert report.wiki_count == 1
-    assert report.warnings == (
-        "root Markdown is not a MEMEX wiki because it has no matching source folder: "
-        "phone-sync-check.md",
+    assert report.warnings == ()
+
+
+def test_topic_folder_wiki_uses_its_own_source_library(tmp_path: Path) -> None:
+    root = _valid_repo(tmp_path)
+    _add_topic_wiki(root)
+    (root / "vault" / "health" / "buy-shoe-laces.md").write_text(
+        "# Buy shoe laces\n",
+        encoding="utf-8",
+    )
+
+    report = validate_repo(root)
+
+    assert report.ok
+    assert report.errors == ()
+    assert report.warnings == ()
+    assert report.wiki_count == 2
+    assert report.source_count == 2
+    assert report.source_link_count == 2
+
+
+def test_topic_wiki_cannot_link_to_general_sources(tmp_path: Path) -> None:
+    root = _valid_repo(tmp_path)
+    _add_topic_wiki(root)
+    topic_wiki = root / "vault" / "health" / "shoes.md"
+    topic_wiki.write_text(
+        "# Shoes\n\n## Sources\n\n"
+        "- [Hardware](../Sources/home-lab/hardware.md)\n",
+        encoding="utf-8",
+    )
+
+    report = validate_repo(root)
+
+    assert not report.ok
+    assert any(
+        "health/shoes.md: Sources link must point inside its context's Sources"
+        in error
+        for error in report.errors
+    )
+    assert any(
+        "source is not linked by its wiki: health/Sources/shoes/measurements.md"
+        in error
+        for error in report.errors
     )
 
 

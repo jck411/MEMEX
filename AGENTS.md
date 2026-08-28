@@ -14,18 +14,21 @@ the materialized Markdown vault remains canonical.
 
 ## Layout
 
-- `vault/<context>/` contains notes exposed through that folder's independent MCP
-  context; `Sources/` and `Temp/` are reserved exceptions.
+- A wiki root is either `vault/` for the general MCP or a direct, non-hidden
+  `vault/<context>/` folder for that folder's independent MCP.
 - `vault/Sources/Inbox/` is the drop location for new material.
-- `vault/Sources/<wiki-id>/` contains the original sources used by that wiki.
+- `<wiki-root>/Sources/<wiki-id>/` contains the original sources used by one
+  wiki in that context.
 - `vault/Temp/` contains synchronized scratch notes excluded from MCP results.
-- `vault/<wiki-id>.md` is the finished wiki page.
+- `<wiki-root>/<wiki-id>.md` is the finished wiki page.
 
 Source folder names and wiki filenames use the same `wiki-id`. Source files may
 be text, Markdown, PDFs, images, or other documents Codex can inspect.
 This paired folder-and-file convention identifies MEMEX wikis; unrelated
 Obsidian Markdown may coexist in the vault without being validated as a wiki.
-Folder-context notes are not MEMEX wikis and do not participate in source validation.
+Wiki pages must be direct children of their wiki root. Other Markdown in a
+folder context remains an ordinary note and does not participate in source
+validation. Every context's `Sources/` directory is excluded from MCP results.
 
 ## Wiki Updates
 
@@ -34,9 +37,10 @@ asking him to operate another interface:
 
 1. Resolve the target wiki and named source material from Inbox, a local or
    attached file, conversation notes, or an existing source.
-2. Preserve new material under `vault/Sources/<wiki-id>/`: move an Inbox file,
-   copy an external file, or save conversation notes verbatim as dated Markdown.
-   Use a stable filename and never overwrite a different source silently.
+2. Resolve the target's wiki root. Preserve new material under
+   `<wiki-root>/Sources/<wiki-id>/`: move an Inbox file, copy an external file,
+   or save conversation notes verbatim as dated Markdown. Use a stable filename
+   and never overwrite a different source silently.
 3. Read the target wiki and its source files. Use only claims grounded in those
    sources or clearly identified existing wiki material.
 4. Edit the wiki Markdown directly. Preserve accurate existing material,
@@ -64,7 +68,7 @@ unresolved conflicts, final path, and validation result.
   storage rather than versioned Markdown.
 - An Inbox file is not assigned until Jack names its target or the relationship
   is unambiguous from the request.
-- Do not silently use sources from another wiki folder.
+- Do not silently use sources from another wiki folder or MCP context.
 - If one source genuinely needs to support multiple wikis, ask before changing
   the simple one-folder ownership convention.
 - Do not add databases, lifecycle state, model-provider calls, or another user
