@@ -1,7 +1,7 @@
 [project]
 name = "memex"
 version = "0.3.0"
-description = "A source-grounded Markdown wiki maintained by Codex."
+description = "Source-grounded domain wikis authored with Hermes or Codex."
 readme = "README.md"
 requires-python = ">=3.11"
 
