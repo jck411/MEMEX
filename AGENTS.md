@@ -1,11 +1,11 @@
 # MEMEX Agent Guide
 
-MEMEX is a source library and a set of source-grounded Markdown wikis. Codex is
-the only semantic processor: it reads sources, decides what belongs in a wiki,
-and edits that wiki directly.
+MEMEX is a source library and a set of source-grounded Markdown wikis. Hermes is
+the preferred authoring assistant; Codex remains a fallback. The authorized
+assistant reads original references and edits wiki Markdown directly.
 
 ```text
-source file -> Codex -> wiki Markdown
+original references -> authorized assistant -> cited wiki Markdown
 ```
 
 There is no dashboard, model-provider API, semantic extraction database, review
@@ -14,21 +14,21 @@ the materialized Markdown vault remains canonical.
 
 ## Layout
 
-- A wiki root is either `vault/` for the general MCP or a direct, non-hidden
-  `vault/<context>/` folder for that folder's independent MCP.
+- `vault/<context>/` contains notes exposed through that folder's independent MCP
+  context; `Sources/` and `Temp/` are reserved exceptions.
 - `vault/Sources/Inbox/` is the drop location for new material.
-- `<wiki-root>/Sources/<wiki-id>/` contains the original sources used by one
-  wiki in that context.
+- `vault/Sources/<domain>/<reference-id>/` preserves originals shared by wikis
+  within that top-level domain; retain versions and stable filenames.
+- `vault/<domain>/` contains nested subject wikis and ordinary navigation notes.
 - `vault/Temp/` contains synchronized scratch notes excluded from MCP results.
-- `<wiki-root>/<wiki-id>.md` is the finished wiki page.
+- `vault/<wiki-id>.md` is the finished wiki page.
 
-Source folder names and wiki filenames use the same `wiki-id`. Source files may
-be text, Markdown, PDFs, images, or other documents Codex can inspect.
-This paired folder-and-file convention identifies MEMEX wikis; unrelated
-Obsidian Markdown may coexist in the vault without being validated as a wiki.
-Wiki pages must be direct children of their wiki root. Other Markdown in a
-folder context remains an ordinary note and does not participate in source
-validation. Every context's `Sources/` directory is excluded from MCP results.
+Nested wikis opt into validation with the exact standalone `<!-- memex:wiki -->`
+line immediately after the title (blank lines allowed). Unmarked indexes and
+ordinary notes are not evidence wikis. Legacy root `<wiki-id>.md` pages paired
+with `Sources/<wiki-id>/` remain supported without a marker. Source files may
+be text, Markdown, PDFs, images, or other documents the assistant can inspect.
+The vault may live outside the checkout; use its actual path, not another sync client.
 
 ## Wiki Updates
 
@@ -37,19 +37,26 @@ asking him to operate another interface:
 
 1. Resolve the target wiki and named source material from Inbox, a local or
    attached file, conversation notes, or an existing source.
-2. Resolve the target's wiki root. Preserve new material under
-   `<wiki-root>/Sources/<wiki-id>/`: move an Inbox file, copy an external file,
-   or save conversation notes verbatim as dated Markdown. Use a stable filename
-   and never overwrite a different source silently.
-3. Read the target wiki and its source files. Use only claims grounded in those
-   sources or clearly identified existing wiki material.
+2. Preserve new material under `vault/Sources/<domain>/<reference-id>/`: move an Inbox file,
+   copy an external file, or save conversation notes verbatim as dated Markdown.
+   Use a stable filename and never overwrite a different source silently.
+3. Read the target wiki and actual source files. Ground claims in inspected
+   references, not model memory, web substitutes, or unverified existing prose.
+   Record title, version/date, page/section and applicability where available.
+   Epic PDFs and excerpts may be proprietary and unavailable online. Preserve
+   excerpts verbatim, label their limited scope, and inspect diagrams when relevant.
 4. Edit the wiki Markdown directly. Preserve accurate existing material,
    include only material relevant to its subject, represent uncertainty, and
    reconcile conflicts or newer authoritative information.
-5. Maintain a final `## Sources` section with relative links of the form
-   `Sources/<wiki-id>/<filename>`.
+5. Maintain a final `## Sources` section with links relative to the wiki's parent
+   into `Sources/<domain>/`; include claim-level page/section citations where useful.
+   Encode spaces/parentheses in inline Markdown destinations; PDF `#page=N`
+   fragments identify physical pages. See README for supported link syntax.
 6. Inspect the finished page for fidelity and run
-   `uv run python scripts/wiki_validate.py`.
+   `python3 scripts/wiki_validate.py --vault-root /actual/vault/path`.
+   Structural validation does not verify claim accuracy or PDF page correctness.
+   Update the subject index when adding a wiki. Direct updates are the default;
+   no separate preview approval is required for a requested wiki update.
 
 If the target or source relationship is genuinely ambiguous, ask Jack. Otherwise
 proceed from the request and repository context.
@@ -68,9 +75,15 @@ unresolved conflicts, final path, and validation result.
   storage rather than versioned Markdown.
 - An Inbox file is not assigned until Jack names its target or the relationship
   is unambiguous from the request.
-- Do not silently use sources from another wiki folder or MCP context.
-- If one source genuinely needs to support multiple wikis, ask before changing
-  the simple one-folder ownership convention.
+- Reuse one original across wikis in the same top-level domain. Do not silently
+  cross domain ownership boundaries or duplicate originals per wiki. Legacy
+  root wikis retain their original source-folder ownership.
+- Keep scratch notes and temporary extraction work under `Temp/`; never
+  automatically promote them to evidence or delete them. Persistent derived
+  reference caches belong with their original under `Sources/` and must be
+  clearly distinguished from originals and cited if retained as assigned files.
+- Inventory existing paths and links, preserve a recoverable backup, and scope
+  live migrations separately. Do not overwrite populated destinations.
 - Do not add databases, lifecycle state, model-provider calls, or another user
   interface without a repeated workflow demonstrating the need.
 
@@ -94,9 +107,13 @@ after repeated real use demonstrates a need.
   here. Coordinate cross-repository contract changes explicitly.
 - LiveSync remains transport rather than a backup; preserve independent vault
   archives before changing synchronization topology.
+- MCP reads finished Markdown and ordinary notes within its selected domain,
+  never global `Sources/` or `Temp/`. General MCP is root-Markdown-only. A wiki
+  citation does not establish that the reader inspected an original. Authoring
+  needs separately authorized filesystem access; do not make MCP writable.
 
 ## Commands
 
-- Validation: `uv run python scripts/wiki_validate.py`
+- Validation: `python3 scripts/wiki_validate.py --vault-root /actual/vault/path`
 - Tests: `uv run pytest`
 - Lint: `uv run ruff check scripts tests`
